@@ -1,0 +1,13 @@
+BOLT V10 — ACESSOS + LOGIN ADMIN AZUL
+
+1. Substitua os arquivos do repositorio GitHub boltbuy pelo conteudo deste ZIP (na raiz). Cloudflare Pages faz deploy automatico.
+2. Cloudflare Pages > boltbuy > Settings > Variables and Secrets:
+   SUPABASE_URL = https://nhwgadetdgbmrxucvjzd.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY = chave SECRET service_role do Supabase (somente variavel secreta no Cloudflare, NUNCA no GitHub).
+   Configure para Production e publique novamente.
+3. No BOLT Master > BOLT Deploy: salve a empresa, depois use o formulario Acessos Cloud — Clientes para criar login com senha provisoria de 10+ caracteres.
+4. Cliente acessa https://boltbuy.pages.dev/Salgaditos/admin.html?tenant=SLUG_DA_EMPRESA
+5. O login do cliente requer que o provisionamento da etapa 3 retorne sucesso.
+
+LIMITACOES REAIS: cadastros financeiros/empresas do Master ainda usam localStorage; dados de pedidos/produtos do sistema original tambem podem ser locais, nao sincronizados entre aparelhos. Ainda nao esta pronto para operacao comercial real sem migrar esses dados para Supabase, implementar isolamento RLS, validacao de autorizacao de todas as operacoes e testes de ponta a ponta.
+Zoom: corrigido zoom acidental por double tap e foco em inputs; pinch zoom mantido por acessibilidade.
