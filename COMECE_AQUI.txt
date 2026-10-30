@@ -1,0 +1,27 @@
+BOLT — NETLIFY + SUPABASE (PREPARAÇÃO DE PUBLICAÇÃO)
+
+1) TESTE VISUAL NO NETLIFY
+- Acesse app.netlify.com e crie um site por deploy manual (arraste a PASTA extraída, não o ZIP, quando o painel pedir uma pasta).
+- A raiz possui index.html e netlify.toml; abra a URL que o Netlify gerar.
+- Admin: https://SEU-SITE.netlify.app/admin?tenant=salgaditos
+- Shop: https://SEU-SITE.netlify.app/shop?tenant=salgaditos
+- Teste em aba anônima e em outro celular. Você verá que o armazenamento ainda NÃO sincroniza.
+
+2) PREPARAR O SUPABASE
+- Crie projeto em supabase.com; SQL Editor > New Query.
+- Cole o arquivo supabase-schema.sql e execute. Ele cria tabelas com RLS habilitada.
+- IMPORTANTE: o aplicativo AINDA NÃO USA essas tabelas; são apenas a estrutura inicial.
+- Não coloque a service_role key em HTML/JS, no GitHub ou no Netlify público.
+- Antes de usar com clientes reais, implemente login e políticas RLS por tenant, backend de pedidos, cupons e pagamentos.
+
+3) LIMITAÇÕES DO PROTÓTIPO
+- Cadastro do Master e lojas são salvos em localStorage por navegador.
+- Pedidos NÃO aparecem em outros aparelhos. Cupons/fidelidade NÃO são antifraude.
+- O Master NÃO TEM LOGIN SEGURO; qualquer pessoa com o link pode abrir a interface.
+- Não coloque dados reais de clientes, telefones ou pagamentos neste teste.
+- PWA requer HTTPS, atendido pelo Netlify. O Shop usa manifesto dinâmico de compatibilidade limitada.
+
+4) PRÓXIMA ETAPA
+- Conectar front-end a Supabase Auth + RLS; trocar localStorage por banco.
+- Pedidos em tempo real e validação de cupons no servidor.
+- Separar acesso Master/tenant e aplicar permissões.

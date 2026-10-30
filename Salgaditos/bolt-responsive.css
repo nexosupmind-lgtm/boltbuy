@@ -1,0 +1,29 @@
+
+/* Responsive enhancements for BOLT tenant admin/shop */
+*,*:before,*:after{box-sizing:border-box}
+img{max-width:100%}
+@media(max-width:900px){
+ .shell{min-width:0!important}
+ .sidebar{max-width:100%;overflow-x:auto}
+ .main{min-width:0;max-width:100%;padding:15px}
+ .topbar{flex-wrap:wrap;gap:12px}
+ .top-actions{display:flex;flex-wrap:wrap;gap:8px}
+ .twocol{grid-template-columns:1fr!important}
+ .metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .products{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .tablewrap{overflow-x:auto;max-width:100%}
+ .tablewrap table{min-width:550px}
+}
+@media(max-width:540px){
+ .main{padding:12px}
+ .metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .formgrid{grid-template-columns:1fr!important}
+ .hero{flex-wrap:wrap;gap:12px}
+ .hero img{max-height:100px;object-fit:contain}
+ .quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .quick button{font-size:12px;white-space:normal}
+ .shophead{padding-left:14px;padding-right:14px}
+ .brand-text{min-width:0}
+ .brand-text strong{overflow-wrap:anywhere}
+}

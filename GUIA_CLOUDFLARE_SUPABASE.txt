@@ -1,0 +1,32 @@
+BOLT v9 — PUBLICAÇÃO E LOGIN
+
+1. SUPABASE
+- Crie/abra um projeto em supabase.com/dashboard.
+- SQL Editor > New Query: execute SUPABASE_EXECUTAR.sql.
+- Authentication > Users > Add user: crie seu e-mail e senha para o Master, com e-mail confirmado.
+- SQL Editor: execute a instrução INSERT comentada ao final do SQL, substituindo SEU_EMAIL_AQUI pelo seu e-mail.
+- Project Settings > API Keys: copie a URL do projeto e a chave publishable (ou anon). Não use service_role no arquivo público.
+- Edite bolt-config.js com URL e chave pública.
+
+2. CLOUDFLARE PAGES
+- Crie repositório PRIVADO no GitHub, coloque todos os arquivos e pastas desta distribuição na raiz do repositório.
+- Cloudflare > Workers & Pages > Create > Pages > Connect to Git > selecione repositório.
+- Framework: None; build command: vazio; build output directory: / (raiz).
+- Settings > Variables and Secrets: crie SUPABASE_URL (URL Supabase) e SUPABASE_SERVICE_ROLE_KEY (chave secreta service_role), como segredo de ambiente. Nunca publique esta chave no GitHub ou bolt-config.js.
+- Faça novo deploy após configurar os segredos. O endpoint /api/create-user exige Cloudflare Pages Functions, disponível via Git integration.
+
+3. TESTE DE LOGIN
+- Abra o endereço *.pages.dev; veja o BOLT animado. Clique ENTRAR para liberar o acesso. Se já houver sessão salva, o clique libera direto; se não houver, aparece formulário.
+- Faça login no Master com sua conta Supabase. Sem autorização no banco, o acesso é recusado.
+- Cadastre uma empresa no Master e use a seção Acessos Cloud, no final do painel, para criar e-mail/senha do proprietário.
+- Abra /admin?tenant=slug em outro navegador; clique ENTRAR e use o login criado. Um usuário não pode entrar no Admin de outro slug.
+- /shop?tenant=slug permanece público.
+
+LIMITAÇÕES IMPORTANTES
+- Login e autorização inicial são reais via Supabase. Provisionamento de empresa e usuário é real via Cloudflare Pages Function.
+- Dados operacionais do Master, Admin e Shop (produtos, pedidos, cupons, fidelidade, faturamento) ainda usam localStorage, não Supabase. NÃO use com clientes reais nem dados sensíveis.
+- Controle de plano visual não equivale a autorização de backend; não há sincronização de pedidos entre dispositivos.
+- Os dados já existentes no localStorage não migram automaticamente.
+- Não há recuperação de senha nem envio automático de convite; entregue senha provisória por canal seguro e depois implemente redefinição de senha.
+- O endpoint de criação de usuário não é idempotente: se o e-mail já existe, não cria outro e exige ajuste administrativo.
+- Domínio personalizado e subdomínios por empresa não são configurados automaticamente; o roteamento inicial usa ?tenant=slug.

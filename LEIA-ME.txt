@@ -1,0 +1,12 @@
+BOLT OPERATIONS v7 — DEMONSTRAÇÃO LOCAL
+
+Abra index.html e teste as abas Master, Deploy, Planos, Operações e Auditoria.
+Incluído: checklist de prontidão por loja, histórico local de operações do Master, exportação de auditoria CSV, backup completo local com restauração validada, layout responsivo e assistente BOLT.
+
+LIMITES IMPORTANTES:
+- Não existe backend, login, autorização real, notificações push em segundo plano nem pagamentos integrados.
+- Os dados permanecem no localStorage do mesmo navegador/origem; a auditoria local pode ser alterada pelo próprio usuário e não é prova de conformidade.
+- PWA Master só instala por HTTPS ou localhost. Admin e Shop ainda precisam de manifestos separados por subdomínio e infraestrutura de produção.
+- Para compartilhar dados entre páginas, execute em localhost em vez de file://.
+- O mascote é vetorial animado, não um modelo 3D real.
+- NÃO publicar esta demonstração com dados reais de clientes.

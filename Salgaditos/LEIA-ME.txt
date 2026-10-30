@@ -1,0 +1,13 @@
+SALGADITOS v9 - TESTE LOCAL
+Abra admin.html e cliente.html no mesmo navegador.
+O mascote Salgi e um personagem 3D estilizado em CSS com animacoes, assistente contextual baseado nos dados locais (nao e IA externa).
+Em Produtos, selecione uma imagem JPG/PNG/WebP (ate 1,5MB), marque Destaque e salve.
+Fotos sao compactadas e salvas no localStorage do navegador, com limite de armazenamento.
+A loja exibe destaques e fotos. A abertura tem splash azul com logo.
+Pedidos e status continuam locais; celulares distintos e push com app fechado exigem servidor, banco e notificacoes reais.
+Nao publique o admin sem autenticacao.
+
+VERSÃO 10: Mascote de coxinha em SVG, botão Falar com o Desenvolvedor via WhatsApp e nome do administrador configurável (padrão Fernanda) em Configurações. Sem login para testes locais.
+
+
+V11: banner com logo e nome, promoções automáticas editáveis em Configurações > Vitrine, últimos pedidos (por navegador), destaques horizontais e categorias Combos/Especiais/Individuais/Bebidas. Cadastre produtos nessas categorias no Admin. Teste local sem login, dados locais; não é sincronização real nem push remoto.

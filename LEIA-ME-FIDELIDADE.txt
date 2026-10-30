@@ -1,0 +1,6 @@
+BOLT LOYALTY v8 — DEMONSTRAÇÃO LOCAL
+No Admin, abra Cupons & Fidelidade para criar códigos promocionais e configurar o programa de compras recorrentes.
+No Shop, informe o WhatsApp, aplique um cupom e finalize o pedido.
+Após o Admin marcar um pedido online como entregue/concluído, a compra conta para o programa. Ao atingir a meta, é criado um cupom de recompensa vinculado ao telefone, exibido no carrinho do cliente.
+Descontos aplicados ficam gravados no pedido; o relatório usa orderTotal.
+IMPORTANTE: armazenamento local é manipulável. Cupons, limites, contagem, identificação por telefone e recompensas não são seguros contra fraude. Antes de publicar, validação de cupons e concessão de prêmios devem ocorrer exclusivamente no backend com transações atômicas, identidade autenticada ou verificação de telefone, isolamento por tenant, tratamento de reembolsos e privacidade/LGPD.
