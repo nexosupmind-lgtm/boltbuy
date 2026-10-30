@@ -1,0 +1,9 @@
+BOLT V11 — Correção de visibilidade do cadastro de acessos
+
+1. Atualize todos os arquivos no GitHub e confirme o deploy no Cloudflare Pages.
+2. Entre no Master > BOLT Deploy. Agora há um banner azul com botão CRIAR LOGIN DO CLIENTE no topo.
+3. Salve a empresa, selecione-a em Acessos Cloud, informe e-mail e senha provisória e clique CRIAR ACESSO CLOUD.
+4. A função /api/create-user requer SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY como variáveis de runtime no Cloudflare Pages.
+5. Se a criação falhar, copie apenas a mensagem de erro, nunca senhas/chaves.
+
+ATENÇÃO: Cadastro principal do Master ainda usa localStorage; operação multiempresa completa não está pronta para produção.
