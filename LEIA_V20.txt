@@ -1,0 +1,7 @@
+BOLT V20 - Persistência de empresas e catálogo.
+1. Fazer backup do site e do Supabase.
+2. Executar SUPABASE_V20_PERSISTENCIA.sql no Supabase SQL Editor.
+3. Publicar todos os arquivos do ZIP no GitHub/Cloudflare.
+4. Entrar no Master e verificar duas empresas; cadastrar produto no Admin e conferir bolt_products no Supabase e Shop no celular.
+ATENÇÃO: Pedidos, planos, pagamentos, banners e configurações secundárias ainda são locais. Não usar checkout para pedidos reais.
+Não exclua o armazenamento do navegador; pode conter dados recuperáveis.
