@@ -1,0 +1,12 @@
+BOLT V13 — BOLT STUDIO
+
+O que mudou:
+- Nova seção BOLT Studio no Master e botão Studio na lista de estabelecimentos.
+- Editor funcional de identidade visual, foto de perfil, logo, banner, texto, taxa de entrega e catálogo (produtos, fotos e preços).
+- Prévia visual do Shop no Master; identidade aplicada ao Shop quando aberto no mesmo navegador.
+- Entrada do Master atualizada com logo BOLT e fundo lilás.
+- Removidos avisos de demonstração e o catálogo fictício inicial.
+
+IMPORTANTE: o Studio desta versão salva as alterações em localStorage, não no Supabase. Os dados editados não aparecem automaticamente em outros computadores/celulares. O Shop e Admin também ainda têm dependências locais. NÃO comercialize como SaaS pronto antes de implementar persistência segura por tenant, Storage, RLS e testar fluxos completos.
+
+Como testar: extraia o ZIP, abra o Master pelo Cloudflare, entre com seu login, abra BOLT Studio, escolha uma empresa, edite, salve e abra o Shop na mesma origem/navegador. Para atualizar: envie os arquivos extraídos ao GitHub na branch main. Preserve as configurações secretas somente no Cloudflare.
