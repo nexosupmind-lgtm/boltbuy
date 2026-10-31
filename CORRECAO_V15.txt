@@ -1,0 +1,8 @@
+BOLT V15 - Correcao da pre-visualizacao do Studio
+
+Causa: _headers definia X-Frame-Options: DENY, impedindo o iframe de carregar o Shop/Admin no mesmo dominio.
+Correcao: X-Frame-Options: SAMEORIGIN. O iframe permanece permitido somente para paginas da mesma origem.
+
+Envie o conteudo desta pasta ao GitHub na raiz da branch main, incluindo o arquivo _headers. Aguarde a publicacao no Cloudflare e recarregue o Master com Ctrl+Shift+R.
+
+Atenção: o Studio continua salvando no localStorage. Esta atualizacao nao implementa sincronizacao com Supabase nem elimina restricoes de autenticacao do Admin.
