@@ -1,0 +1,9 @@
+BOLT V18 - CATALOGO ONLINE (Admin -> Shop)
+1) Faça backup do navegador usado pelo cliente (NÃO limpe localStorage).
+2) Supabase > SQL Editor: execute SUPABASE_CATALOGO_V18.sql.
+3) Publique TODOS os arquivos no GitHub / Cloudflare Pages.
+4) Entre no Admin com usuário vinculado em bolt_memberships à loja cujo slug está na URL.
+5) Abra Produtos e clique em "Importar produtos antigos deste navegador". A importação deve ser feita NO MESMO NAVEGADOR onde o cliente cadastrou os produtos. Evite importar duplicados.
+6) Abra Shop em aba anônima/outro celular; verifique os produtos. Novos produtos e edições agora são salvos no Supabase.
+ATENÇÃO: somente PRODUTOS estão sincronizados. Pedidos, frete, carrinhos, banners, perfis e demais dados continuam locais. Não use o checkout para pedidos reais até a integração de pedidos. O botão de checkout atual mostra sucesso apenas localmente.
+Fotos antigas em base64 devem ser substituídas por fotos Cloud; imagens antigas grandes podem falhar por limite de armazenamento.
