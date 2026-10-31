@@ -1,0 +1,10 @@
+BOLT V17 — FOTOS DE PRODUTOS NO SUPABASE STORAGE
+1. No Supabase > SQL Editor, execute SUPABASE_STORAGE_FOTOS.sql UMA VEZ.
+2. Publique todos os arquivos desta versão no Cloudflare Pages via GitHub.
+3. Saia e entre novamente no Admin do estabelecimento.
+4. Teste cadastrar um produto com foto e verifique o bucket bolt-product-images no Supabase.
+5. Se aparecer "Empresa não encontrada" ou "sem permissão", confira se bolt_tenants tem o slug da URL e bolt_memberships vincula o usuário ao tenant. Não desative RLS.
+6. Produtos, preços e pedidos AINDA são salvos localmente no navegador. Somente as novas FOTOS de produtos são enviadas ao Supabase Storage. NÃO é uma migração completa do BOLT Cloud.
+7. Fotos antigas em base64 continuam no armazenamento local. Não limpe os dados do navegador sem backup. Para recuperar espaço, após salvar backup, substitua gradualmente fotos antigas por fotos enviadas ao Storage.
+8. A tela do Master Studio e banners ainda usam armazenamento local; serão migrados separadamente.
+9. Bucket público: imagens ficam acessíveis por URL. Não envie imagens privadas.
