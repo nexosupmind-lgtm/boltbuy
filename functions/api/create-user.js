@@ -6,8 +6,9 @@ export async function onRequestPost({request,env}){
   if(!url||!secret)return fail(503,'Configure SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no Cloudflare Pages.');
   const auth=request.headers.get('Authorization')||'';if(!/^Bearer\s+\S+$/.test(auth))return fail(401,'Sessão ausente.');
   const jwt=auth.replace(/^Bearer\s+/,'');
-  const me=await fetch(url+'/auth/v1/user',{headers:{apikey:secret,Authorization:'Bearer '+jwt}});
-  if(!me.ok)return fail(401,'Sessão inválida.');
+  const publicKey=env.SUPABASE_PUBLISHABLE_KEY||env.SUPABASE_ANON_KEY||'';
+  const me=await fetch(url+'/auth/v1/user',{headers:{apikey:publicKey||secret,Authorization:'Bearer '+jwt}});
+  if(!me.ok){const detail=(await me.text()).slice(0,220);return fail(401,'Sessão não validada pelo Supabase ('+me.status+'). '+detail+' Confira se a chave do Cloudflare pertence ao mesmo projeto e entre novamente.');}
   const user=await me.json();if(!user.id)return fail(401,'Usuário inválido.');
   const check=await fetch(url+'/rest/v1/bolt_master_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id',{headers:{apikey:secret,Authorization:'Bearer '+secret}});
   if(!check.ok||!(await check.json()).length)return fail(403,'Somente administradores Master podem criar acessos.');

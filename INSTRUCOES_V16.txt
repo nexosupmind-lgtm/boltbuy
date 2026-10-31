@@ -1,0 +1,5 @@
+BOLT V16 — diagnóstico de sessão.
+No Cloudflare Pages > Settings > Variables and secrets > Production, adicione SUPABASE_PUBLISHABLE_KEY como Text com a chave sb_publishable_ do MESMO projeto do SUPABASE_URL. Mantenha SUPABASE_SERVICE_ROLE_KEY como Secret. Republique.
+A chave publishable é usada para validar a sessão em /auth/v1/user; a chave privilegiada permanece apenas no servidor para criar usuários.
+Se persistir, leia a mensagem detalhada no formulário e confira o status de /api/create-user na aba Network. Não compartilhe tokens, senhas ou secrets.
+O Master ainda usa cadastro de empresas no localStorage.
