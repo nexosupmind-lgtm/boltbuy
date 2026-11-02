@@ -1,4 +1,41 @@
-(()=>{const slug=new URLSearchParams(location.search).get('tenant')||'salgaditos';let list=[];try{list=JSON.parse(localStorage.getItem('bolt_tenants_v1')||'[]')}catch(e){}const t=list.find(x=>x.slug===slug)||{slug,name:slug,owner:'',primary:'#7759e8',background:'#101e37',logo:'',status:'Ativo'};window.BOLT_TENANT=t;document.documentElement.style.setProperty('--red',t.primary||'#E33443');document.documentElement.style.setProperty('--accent',t.primary||'#E33443');document.documentElement.style.setProperty('--brand-primary',t.primary||'#E33443');document.documentElement.style.setProperty('--navy',t.background||'#06172b');document.addEventListener('DOMContentLoaded',()=>{document.title=t.name+' • '+(location.pathname.includes('cliente')?'Peça agora':'Gestão');document.querySelectorAll('.brand-text strong,.brand strong').forEach(e=>e.textContent=t.name);document.querySelectorAll('.brand-avatar img,.brand img,.banner-mark img,.splash img,.shophero img,.hero img').forEach(e=>{if(t.logo)e.src=t.logo});const title=document.querySelector('#pageTitle');if(title)title.textContent='Bem-vindo ao '+t.name+'!';const link=document.querySelector('.top-actions a[href^="cliente.html"]');if(link)link.href='cliente.html?tenant='+encodeURIComponent(slug);});})();
+/* Tenant identity. Missing identity uses neutral UI; never another business's assets. */
+(()=>{'use strict';
+const slug=new URLSearchParams(location.search).get('tenant')||'salgaditos',legacy=slug==='salgaditos';
+let list=[];try{list=JSON.parse(localStorage.getItem('bolt_tenants_v1')||'[]')}catch{}
+const cached=list.find(x=>x.slug===slug)||{};
+const t=window.BOLT_TENANT={slug,name:cached.name||slug,owner:cached.owner||'',primary:cached.primary||'#475569',background:cached.background||'#0f172a',logo:cached.logo||'',tagline:cached.tagline||'',plan:cached.plan||''};
+const imageURL=s=>/^https:\/\//.test(s||'')||/^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(s||'');
+function apply(){
+ const color=/^#[0-9a-f]{6}$/i.test(t.primary)?t.primary:'#475569',bg=/^#[0-9a-f]{6}$/i.test(t.background)?t.background:'#0f172a';
+ for(const key of ['--red','--accent','--brand-primary'])document.documentElement.style.setProperty(key,color);document.documentElement.style.setProperty('--navy',bg);
+ document.title=t.name+' • '+(location.pathname.includes('cliente')?'Loja':'Gestão');
+ document.querySelectorAll('.brand-text strong,.brand strong').forEach(e=>e.textContent=t.name);
+ document.querySelectorAll('.brand-avatar img,.brand img,.banner-mark img,.splash img,.shophero img,.hero img').forEach(img=>{if(imageURL(t.logo)){img.src=t.logo;img.hidden=false}else if(!legacy){img.removeAttribute('src');img.hidden=true}});
+ if(!legacy){const style=document.getElementById('bolt-neutral-style')||document.head.appendChild(Object.assign(document.createElement('style'),{id:'bolt-neutral-style'}));style.textContent=':root{--red:'+color+';--accent:'+color+';--brand-primary:'+color+';--navy:'+bg+'}.splash,.sidebar,.shophead,.shophero{background:'+bg+'!important}.banner-zone,.hero{background:linear-gradient(120deg,'+bg+','+color+')!important}.splash-glow{display:none}.hero-cta,.btn.red{background:'+color+'!important}';
+  const text=(sel,value)=>document.querySelectorAll(sel).forEach(e=>e.textContent=value);
+  text('.topbar h1','Bem-vindo ao '+t.name);text('.topbar > div > p',t.tagline);text('.hero h2',t.name);text('.hero > div > p','Gestão do estabelecimento');text('.banner-kicker',t.name);text('.shophero .hero-copy h2',t.tagline||t.name);text('.splash span',t.name);
+ }
+ const a=document.querySelector('.top-actions a[href^="cliente.html"]');if(a)a.href='cliente.html?tenant='+encodeURIComponent(slug);
+ const icon=document.querySelector('link[rel="icon"]');if(icon&&!legacy){if(imageURL(t.logo))icon.href=t.logo;else icon.removeAttribute('href')}
+ document.querySelector('meta[name="theme-color"]')?.setAttribute('content',bg);
+}
+document.addEventListener('DOMContentLoaded',async()=>{apply();try{
+ const cfg=window.BOLT_CONFIG;if(!cfg||!window.supabase)return;
+ const sb=window.BOLT_SUPABASE||window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
+ const r=await sb.from('bolt_tenants').select('id,name,owner_name,primary_color,background_color,logo_url,tagline,plan').eq('slug',slug).single();if(r.error||!r.data)throw Error('Identidade da empresa indisponível.');
+ Object.assign(t,{name:r.data.name,owner:r.data.owner_name||'',primary:r.data.primary_color||'#475569',background:r.data.background_color||'#0f172a',logo:r.data.logo_url||'',tagline:r.data.tagline||'',plan:r.data.plan});apply();
+ const storefront=await sb.from('bolt_delivery_storefronts').select('settings').eq('tenant_id',r.data.id).maybeSingle();
+ if(!storefront.error&&storefront.data){const c=storefront.data.settings||{},d=load();for(const k of ['bannerTitle','bannerSubtitle','promotions'])if(k in c)d[k]=c[k];if('avatar' in c)d.storeAvatar=c.avatar;save(d);
+  if(imageURL(c.avatar))document.querySelectorAll('.brand-avatar img').forEach(e=>{e.src=c.avatar;e.hidden=false});
+  if(imageURL(c.banner)){const e=document.querySelector('.banner-zone');if(e){e.style.setProperty('background-image','linear-gradient(90deg,#0f172acc,#0f172a44),url("'+c.banner+'")','important');e.style.backgroundSize='cover';e.style.backgroundPosition='center'}}
+  if(c.cta)document.querySelectorAll('.hero-cta').forEach(e=>e.textContent=c.cta);
+  if(typeof renderPromos==='function')renderPromos();if(typeof renderShop==='function')renderShop();
+ }
+ window.dispatchEvent(new Event('bolt-tenant-ready'));
+ }catch(e){console.warn('BOLT: '+e.message)}
+});
+})();
+
 document.addEventListener('DOMContentLoaded',()=>{
 const p=JSON.parse(localStorage.getItem('bolt_plans_v2')||'null')||[];
 const current=p.find(x=>x.name===window.BOLT_TENANT.plan);
@@ -11,35 +48,3 @@ document.querySelectorAll('.menu button,.menu a').forEach(el=>{let handler=el.ge
 lock();
 
 });
-
-document.addEventListener('DOMContentLoaded',()=>{
- const t=window.BOLT_TENANT||{}, color=t.primary||'#E33443', bg=t.background||'#06172b', name=t.name||'Salgaditos';
- const tagline=t.tagline||'Seu delivery favorito';
- const css=document.createElement('style');
- css.textContent=`
- :root{--red:${color};--accent:${color};--brand-primary:${color};--navy:${bg}}
- .splash{background:${bg}!important}
- .splash-glow{background:radial-gradient(circle,${color}55,transparent 70%)!important}
- .splash img{max-width:min(55vw,260px);max-height:230px;object-fit:contain;filter:drop-shadow(0 0 24px ${color}66)}
- .splash span{color:white!important}
- .shophead,.shophero{background-color:${bg}}
- .banner-zone{background:linear-gradient(125deg,${bg},${color}77)!important}
- .hero-cta,.btn.red,.floating-cart{background:${color}!important}
- `;
- document.head.appendChild(css);
- document.querySelector('meta[name="theme-color"]')?.setAttribute('content',bg);
- document.querySelectorAll('#splash img,.brand-avatar img,.shophero img,.banner-mark img,.brand img,.hero img').forEach(img=>{if(t.logo){img.src=t.logo;img.alt='Logo '+name}});
- document.querySelectorAll('.brand-text strong,.brand strong').forEach(el=>el.textContent=name);
- const splashText=document.querySelector('#splash span');if(splashText)splashText.textContent=tagline.toUpperCase();
- const kicker=document.querySelector('.banner-kicker');if(kicker)kicker.textContent='✦ BEM-VINDO À '+name.toUpperCase();
- const heroTitle=document.querySelector('.hero-copy h2');if(heroTitle)heroTitle.textContent=tagline;
- const heroSmall=document.querySelector('.brand-text small');if(heroSmall)heroSmall.textContent='Delivery • Retirada';
- const icon=document.querySelector('link[rel="icon"]');if(icon&&t.logo)icon.href=t.logo;
- if(t.logo){const apple=document.createElement('link');apple.rel='apple-touch-icon';apple.href=t.logo;document.head.appendChild(apple)}
- // Manifest generated per tenant for browsers that support data manifests.
- const manifest={name:name,short_name:name.slice(0,12),start_url:location.pathname+'?tenant='+encodeURIComponent(t.slug||'salgaditos'),display:'standalone',background_color:bg,theme_color:color,icons:t.logo?[{src:t.logo,sizes:'any',type:t.logo.startsWith('data:image/png')?'image/png':'image/svg+xml',purpose:'any'}]:[]};
- const manifestLink=document.querySelector('link[rel="manifest"]');if(manifestLink)manifestLink.href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(manifest));
-});
-
-/* V20: nome e identidade da empresa vêm do banco, não do navegador. */
-document.addEventListener('DOMContentLoaded',async()=>{try{const c=window.BOLT_CONFIG;if(!c||!window.supabase)return;const sb=window.BOLT_SUPABASE||window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey);const slug=new URLSearchParams(location.search).get('tenant')||'salgaditos';const {data,error}=await sb.from('bolt_tenants').select('name,primary_color,background_color,logo_url').eq('slug',slug).single();if(error||!data)throw Error(error?.message||'Empresa não encontrada');document.documentElement.style.setProperty('--brand-primary',data.primary_color||'#ef652c');document.documentElement.style.setProperty('--accent',data.primary_color||'#ef652c');document.documentElement.style.setProperty('--navy',data.background_color||'#101e37');document.querySelectorAll('.brand-text strong,.brand strong').forEach(e=>e.textContent=data.name);if(data.logo_url)document.querySelectorAll('.brand-avatar img,.brand img').forEach(e=>e.src=data.logo_url);}catch(e){console.warn('BOLT tenant:',e.message)}});

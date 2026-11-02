@@ -15,9 +15,18 @@ export async function onRequestPost({request,env}){
   const body=await request.json(),tenant=body.tenant||{},email=String(body.email||'').trim().toLowerCase(),password=String(body.password||'');
   if(!/^[a-z0-9-]{3,40}$/.test(tenant.slug||'')||!tenant.name||!/^\S+@\S+\.\S+$/.test(email)||password.length<10)return fail(400,'Confira empresa, e-mail e senha (mínimo 10 caracteres).');
   const h={apikey:secret,Authorization:'Bearer '+secret,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=representation'};
-  const tRes=await fetch(url+'/rest/v1/bolt_tenants?on_conflict=slug',{method:'POST',headers:h,body:JSON.stringify({slug:tenant.slug,name:String(tenant.name).slice(0,120),primary_color:tenant.primary_color||'#7c3aed',background_color:tenant.background_color||'#0b1020',tagline:tenant.tagline||'',plan:tenant.plan||'Pro',status:'ativo'})});
-  if(!tRes.ok)return fail(400,'Empresa: '+(await tRes.text()).slice(0,350));
-  const saved=(await tRes.json())[0];
+  const lookup=await fetch(url+'/rest/v1/bolt_tenants?slug=eq.'+encodeURIComponent(tenant.slug)+'&select=id,slug,status',{headers:h});
+  if(!lookup.ok)return fail(503,'Não foi possível verificar o estabelecimento.');
+  const existing=await lookup.json();let saved=existing[0];
+  if(!saved){
+   const tRes=await fetch(url+'/rest/v1/bolt_tenants',{method:'POST',headers:h,body:JSON.stringify({slug:tenant.slug,name:String(tenant.name).slice(0,120),primary_color:tenant.primary_color||'#475569',background_color:tenant.background_color||'#0f172a',tagline:tenant.tagline||'',plan:tenant.plan||'Pro',status:'ativo'})});
+   if(!tRes.ok)return fail(400,'Não foi possível cadastrar a empresa.');saved=(await tRes.json())[0];
+  }
+  if(!saved?.id)return fail(503,'Estabelecimento não confirmado.');
+  if(['paused','pausado','inativo'].includes(saved.status))return fail(409,'Estabelecimento pausado.');
+  const owners=await fetch(url+'/rest/v1/bolt_memberships?tenant_id=eq.'+saved.id+'&role=eq.owner&select=user_id',{headers:h});
+  if(!owners.ok)return fail(503,'Não foi possível verificar os acessos existentes.');
+  if((await owners.json()).length)return fail(409,'Este estabelecimento já tem administrador. Nenhum acesso foi substituído.');
   const uRes=await fetch(url+'/auth/v1/admin/users',{method:'POST',headers:h,body:JSON.stringify({email,password,email_confirm:true})});
   if(!uRes.ok)return fail(400,'Usuário: '+(await uRes.text()).slice(0,350));
   const created=await uRes.json();const uid=created.id||created.user?.id;if(!uid)return fail(500,'Usuário criado sem ID retornado.');

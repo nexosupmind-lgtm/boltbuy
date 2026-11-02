@@ -25,3 +25,25 @@ function toggleDevice(){deviceMode=deviceMode==='mobile'?'desktop':'mobile';$('b
 function renderPreview(){refreshLive()}
 function renderChecklist(){let t=tenants().find(x=>x.slug===slug)||{},v=shop(),cfg=studio();$('bsChecklist').innerHTML=[['Identidade definida',!!t.name&&!!t.primary],['Logo selecionada',!!t.logo],['Banner configurado',!!cfg.banner],['Produtos cadastrados',v.products.length>0],['E-mail do responsável cadastrado',!!t.email],['Sincronização Supabase validada',false]].map(([name,ok])=>`<div class="studio-checkline">${ok?'✓':'○'} ${safe(name)}</div>`).join('')}
 })();
+
+/* V33: delivery identity is persisted remotely; operational data is never reset. */
+(()=>{'use strict';
+const get=id=>document.getElementById(id);
+async function image(file,previous){if(!file)return previous||'';if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>1200000)throw Error('Use PNG, JPG ou WebP de até 1,2 MB.');return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Falha ao ler a imagem'));r.readAsDataURL(file)})}
+document.addEventListener('click',async e=>{const b=e.target.closest('#bsSave');if(!b)return;e.preventDefault();e.stopImmediatePropagation();if(b.disabled)return;b.disabled=true;
+const selected=get('bsTenant'),slug=selected.value,inputs={name:get('bsName').value.trim(),tagline:get('bsTagline').value,primary:get('bsPrimary').value,background:get('bsBackground').value,title:get('bsBannerTitle').value,subtitle:get('bsBannerSubtitle').value,cta:get('bsCta').value,fee:Math.max(0,Number(get('bsFee').value)||0),logo:get('bsLogo').files[0],avatar:get('bsAvatar').files[0],banner:get('bsBanner').files[0]};selected.disabled=true;
+try{const sb=window.BOLT_SUPABASE;if(!sb)throw Error('Entre no Master.');const auth=await sb.auth.getUser();if(auth.error||!auth.data?.user)throw Error('Sessão expirada.');const admin=await sb.from('bolt_master_admins').select('user_id').eq('user_id',auth.data.user.id).maybeSingle();if(admin.error||!admin.data)throw Error('Acesso Master necessário.');
+ const tenant=await sb.from('bolt_tenants').select('id,logo_url').eq('slug',slug).single();if(tenant.error||!tenant.data)throw Error('Cliente não encontrado.');
+ const stored=await sb.from('bolt_delivery_storefronts').select('settings').eq('tenant_id',tenant.data.id).maybeSingle();if(stored.error)throw Error('Execute SUPABASE_V33_WORKSPACES.sql antes de salvar a vitrine.');
+ const previous=stored.data?.settings||{};
+ const row={name:inputs.name,tagline:inputs.tagline,primary_color:inputs.primary,background_color:inputs.background,logo_url:await image(inputs.logo,tenant.data.logo_url)};
+ if(!row.name)throw Error('Informe o nome da empresa.');
+ const settings={...previous,bannerTitle:inputs.title,bannerSubtitle:inputs.subtitle,cta:inputs.cta,avatar:await image(inputs.avatar,previous.avatar),banner:await image(inputs.banner,previous.banner)};
+ const saved=await sb.from('bolt_delivery_storefronts').upsert({tenant_id:tenant.data.id,settings,updated_at:new Date().toISOString()},{onConflict:'tenant_id'}).select('tenant_id');if(saved.error||!saved.data?.length)throw Error(saved.error?.message||'Vitrine não confirmada.');
+ const updated=await sb.from('bolt_tenants').update(row).eq('id',tenant.data.id).select('id');if(updated.error||!updated.data?.length)throw Error(updated.error?.message||'Identidade não confirmada.');
+ // Update only this client's identity cache. Preserve catalog, orders and customers.
+ const list=JSON.parse(localStorage.getItem('bolt_tenants_v1')||'[]'),t=list.find(x=>x.slug===slug);if(t)Object.assign(t,{name:row.name,tagline:row.tagline,primary:row.primary_color,background:row.background_color,logo:row.logo_url});localStorage.setItem('bolt_tenants_v1',JSON.stringify(list));localStorage.setItem('bolt_studio_'+slug,JSON.stringify(settings));const shop=JSON.parse(localStorage.getItem('bolt_shop_'+slug)||'null');if(shop){shop.fee=inputs.fee;shop.storeName=row.name;localStorage.setItem('bolt_shop_'+slug,JSON.stringify(shop))}
+ if(get('bsTenant')?.value===slug)get('bsRefresh')?.click();alert('Identidade visual confirmada no Supabase.');
+}catch(err){alert('Não foi possível confirmar a identidade: '+err.message)}finally{b.disabled=false;selected.disabled=false}
+},true);
+})();
