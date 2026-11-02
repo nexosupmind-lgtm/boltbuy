@@ -1,0 +1,14 @@
+BOLT V22 — ECOSSISTEMA COMERCIAL
+
+1. FAÇA BACKUP do site atual e dos dados no Supabase.
+2. No Supabase do BOLT, SQL Editor > New Query: execute SUPABASE_V22_EXECUTAR.sql UMA VEZ.
+3. No GitHub, envie o conteúdo da pasta SITE (não o ZIP), preservando as subpastas. Cloudflare Pages publica automaticamente se estiver vinculado à branch main.
+4. Entre no Master: Comercial > BOLTBUY, BOLTCHURCH ou BOLTCLASS.
+5. Church/Class: cadastros comerciais são gravados em bolt_commercial_clients e ficam restritos ao Master.
+
+ATENÇÃO: O sistema operacional BOLTCHURCH usa config.js próprio, propositalmente SEM CREDENCIAIS. Configure com o Supabase do sistema Church e seu esquema/permissões corretos antes de liberar acesso. NÃO use service_role no navegador.
+BOLTCLASS é o modelo OFFLINE V7: armazena dados em localStorage. NÃO USE com alunos reais nem anuncie sincronização multi-dispositivo. É necessário migrar autenticação, dados e regras de acesso antes de comercializar.
+BOLTBUY foi preservado como na V21; este pacote não corrige problemas anteriores de persistência de pedidos, pagamentos e outros módulos.
+O cadastro comercial de clientes Church/Class NÃO cria contas de usuário nem ambientes isolados automaticamente; essa etapa requer backend e RLS específicos de cada produto.
+
+ARQUIVOS PARA PUBLICAR: somente a pasta SITE; o SQL e estas instruções ficam fora do site.

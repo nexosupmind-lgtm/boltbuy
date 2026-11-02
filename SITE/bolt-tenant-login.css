@@ -1,0 +1,23 @@
+/* BOLT Tenant Gate — azul, distinto do Master */
+html.bolt-locked #bolt-auth-root{background:radial-gradient(ellipse at 50% 55%,#093d86 0%,#041c48 42%,#010817 100%);isolation:isolate}
+html.bolt-locked #bolt-auth-root:before{content:"";position:absolute;inset:-30%;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 67px,#35b9ff12 68px 69px),repeating-linear-gradient(0deg,transparent 0 67px,#35b9ff10 68px 69px);transform:perspective(500px) rotateX(50deg) scale(1.5);animation:boltGrid 13s linear infinite;opacity:.7}
+html.bolt-locked #bolt-auth-root:after{content:"";position:absolute;width:min(78vw,400px);aspect-ratio:1;border:1px solid #5cdcff44;border-radius:50%;box-shadow:0 0 0 36px #48aaff08,0 0 0 80px #48aaff06,0 0 95px #08a8ff55;animation:boltPulse 4s ease-in-out infinite;pointer-events:none}
+html.bolt-locked #bolt-auth-root .bolt-login{z-index:1;min-height:min(680px,96dvh);justify-content:center;gap:28px}
+html.bolt-locked #bolt-auth-root .bolt-brand{letter-spacing:4px;color:#8fdbff}
+html.bolt-locked #bolt-auth-root .bolt-brand strong{font-size:clamp(30px,8vw,45px);color:white;text-shadow:0 0 22px #16c4ff,0 0 70px #0084ff;animation:boltEmerge 1.8s cubic-bezier(.16,1,.3,1) both}
+html.bolt-locked #bolt-auth-root .bolt-stage{height:150px;width:160px;animation:boltEmerge 1.8s cubic-bezier(.16,1,.3,1) both}
+html.bolt-locked #bolt-auth-root .bolt-stage .bolt-robot{display:none!important}
+html.bolt-locked #bolt-auth-root .bolt-stage:after{content:"";position:absolute;inset:5px;background:url('/bolt-logo.png') center / contain no-repeat;filter:drop-shadow(0 0 20px #3fcaff);animation:boltHover 4s ease-in-out infinite}
+html.bolt-locked #bolt-auth-root .bolt-scan{display:none}
+html.bolt-locked #bolt-auth-root .bolt-status{color:#79dcff}
+html.bolt-locked #bolt-auth-root .bolt-tagline{color:#fff}
+html.bolt-locked #bolt-auth-root .bolt-enter,html.bolt-locked #bolt-auth-root .bolt-login-form button{background:linear-gradient(110deg,#0869d8,#00b6ff)!important;box-shadow:0 10px 35px #009dff55}
+html.bolt-locked #bolt-auth-root .bolt-login-form{background:#041b3ef0;border:1px solid #3daeff66}
+@keyframes boltGrid{to{background-position:140px 0,0 140px}}
+@keyframes boltPulse{50%{transform:scale(1.08);opacity:.6}}
+@keyframes boltEmerge{from{opacity:0;transform:translateY(50px) scale(.25);filter:blur(14px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes boltHover{50%{transform:translateY(-10px)}}
+@media(max-width:760px){html.bolt-locked #bolt-auth-root .bolt-login{padding:24px 15px;gap:16px}html.bolt-locked #bolt-auth-root .bolt-stage{height:115px;width:120px}}
+/* Previne zoom por toque duplo em botoes, preservando pinch zoom acessivel */
+button,a,[role="button"]{touch-action:manipulation}
+input,select,textarea{font-size:max(16px,1em)}
