@@ -17,7 +17,7 @@ export async function onRequestPost({request,env}) {
   if(clients[0].status==='paused')return json(409,{error:'Cliente pausado.'});
   const existing=await fetch(url+'/rest/v1/bolt_commercial_memberships?client_id=eq.'+clients[0].id+'&role=eq.owner&select=user_id',{headers});
   if(!existing.ok)return json(500,{error:'Execute o SQL de homologação V24.'});if((await existing.json()).length)return json(409,{error:'Já existe responsável para este cliente. Não foi criado usuário duplicado.'});
-  const created=await fetch(url+'/auth/v1/admin/users',{method:'POST',headers,body:JSON.stringify({email,password,email_confirm:true})});
+  const created=await fetch(url+'/auth/v1/admin/users',{method:'POST',headers,body:JSON.stringify({email,password,email_confirm:true,user_metadata:{full_name:String(body.name||'').trim().slice(0,120)}})});
   if(!created.ok)return json(409,{error:'Não foi possível criar usuário. Confira se o e-mail já existe no Auth do Supabase.'});
   const payload=await created.json(),uid=payload.id||payload.user?.id;if(!uid)return json(500,{error:'Usuário criado, mas sem ID de retorno. Verifique Auth.'});
   const linked=await fetch(url+'/rest/v1/bolt_commercial_memberships',{method:'POST',headers:{...headers,Prefer:'return=minimal'},body:JSON.stringify({client_id:clients[0].id,user_id:uid,role:'owner'})});

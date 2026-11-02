@@ -27,7 +27,7 @@ export async function onRequestPost({request,env}){
   const owners=await fetch(url+'/rest/v1/bolt_memberships?tenant_id=eq.'+saved.id+'&role=eq.owner&select=user_id',{headers:h});
   if(!owners.ok)return fail(503,'Não foi possível verificar os acessos existentes.');
   if((await owners.json()).length)return fail(409,'Este estabelecimento já tem administrador. Nenhum acesso foi substituído.');
-  const uRes=await fetch(url+'/auth/v1/admin/users',{method:'POST',headers:h,body:JSON.stringify({email,password,email_confirm:true})});
+  const uRes=await fetch(url+'/auth/v1/admin/users',{method:'POST',headers:h,body:JSON.stringify({email,password,email_confirm:true,user_metadata:{full_name:String(body.name||'').trim().slice(0,120)}})});
   if(!uRes.ok)return fail(400,'Usuário: '+(await uRes.text()).slice(0,350));
   const created=await uRes.json();const uid=created.id||created.user?.id;if(!uid)return fail(500,'Usuário criado sem ID retornado.');
   const mRes=await fetch(url+'/rest/v1/bolt_memberships?on_conflict=tenant_id,user_id',{method:'POST',headers:h,body:JSON.stringify({tenant_id:saved.id,user_id:uid,role:'owner'})});
