@@ -1,0 +1,12 @@
+BOLT V30 - MASTER MULTINICHO
+
+1. Faça backup do GitHub e Supabase antes de publicar.
+2. Envie o conteúdo deste pacote para a pasta SITE do GitHub, preservando os arquivos existentes e funções de servidor na raiz.
+3. Cloudflare: Build output SITE, Root directory vazio.
+4. Confira se /api/create-user e /api/provision-commercial estão realmente publicados; em Pages Functions a pasta functions geralmente deve estar na raiz do projeto GitHub, não dentro de SITE.
+5. Verifique as variáveis secretas SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no Cloudflare. Nunca coloque a service role no navegador.
+6. No Master, abra BOLT Deploy e selecione BUY, CHURCH ou CLASS. Crie acesso apenas depois de cadastrar a organização no Comercial.
+7. A publicação automática não foi implementada. O painel fornece links ao GitHub e Cloudflare.
+8. Teste login e isolamento com contas fictícias antes de uso comercial.
+
+ATENCAO: V30 melhora o Master, mas nao valida nem garante prontidao comercial de todos os sistemas.

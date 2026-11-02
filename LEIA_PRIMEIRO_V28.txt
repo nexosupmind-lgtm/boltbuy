@@ -1,0 +1,18 @@
+BOLT V28 — Correção de prévia e identidade dos logins
+
+PUBLICAÇÃO: envie os arquivos desta pasta para a pasta SITE do GitHub (sem criar SITE/SITE). Cloudflare Build output: SITE.
+
+CORRIGIDO:
+- BOLTCHURCH: botão Abrir modelo abre prévia sem exigir Supabase; o sistema operacional continua em Boltchurch/index.html.
+- Login BOLTBUY: logo enviada pelo usuário.
+- Portal de login Church e Class: logos enviadas pelo usuário.
+- Logos usam object-fit: contain para não deformar.
+
+PENDÊNCIAS CRÍTICAS: NÃO ESTÁ PRONTO PARA VENDER.
+- Boltchurch/config.js não possui credenciais do projeto Supabase da igreja. O schema operacional do PIB não foi validado no Supabase do BOLT.
+- Boltclass é versão offline e não persiste registros no Supabase.
+- Portal de Church/Class autentica, mas não abre ambiente operacional multiempresa.
+- Validar RLS, isolamento de dados, criação de acessos, persistência, testes mobile e fluxo de pedidos do BOLTBUY.
+- NÃO usar dados reais de alunos/membros até a validação.
+
+Nenhum SQL novo necessário para as alterações visuais desta versão.

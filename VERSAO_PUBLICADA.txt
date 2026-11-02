@@ -1,1 +1,1 @@
-BOLT V27 CORRIGIDO - envie estes arquivos DENTRO da pasta SITE no GitHub. Nao envie a pasta SITE como subpasta. Cloudflare Build output: SITE.
+BOLT V30 — Master Deploy Multinicho — 2026-11-02
