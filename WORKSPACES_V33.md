@@ -5,7 +5,7 @@ Branch: `feat/isolated-online-clients`.
 ## Ativação
 
 1. Execute `SUPABASE_V33_WORKSPACES.sql` no SQL Editor do mesmo Supabase do BOLT. A migração é aditiva e reexecutável. Ela cria duas tabelas e suas permissões; não apaga nem migra dados existentes.
-2. Integre a PR e aguarde o deploy do Cloudflare Pages. O diretório publicado continua sendo `SITE`, com suas Functions. Não publique a pasta duplicada `SITE/SITE`.
+2. Integre a PR e aguarde o deploy do Cloudflare Pages. O diretório de arquivos estáticos publicado continua sendo `SITE`. O Cloudflare compila as Functions da raiz do repositório (`functions/api`); as cópias em `SITE/functions/api` são mantidas idênticas por teste. Não publique a pasta duplicada `SITE/SITE`.
 3. Não é necessário alterar as variáveis `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` já usadas por `/api/provision-commercial`. A chave secreta continua exclusivamente no servidor.
 4. Crie ou reutilize um cliente de teste no Master, crie seu administrador e abra o link do portal no Studio.
 5. Confirme que o primeiro acesso está vazio. Cadastre um item, aguarde **Salvo no Supabase**, e confira em outro navegador. Repita com outra organização e confirme a separação dos dados. Confirme também os clientes delivery existentes antes de encerrar a homologação.
