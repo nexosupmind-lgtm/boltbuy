@@ -57,7 +57,7 @@ test('Portal opens the correct operational app only after server authorization',
 test('Cloudflare repository-root Functions match the SITE deployment functions',()=>{for(const name of ['commercial-workspace.js','create-user.js'])assert.equal(readFileSync('functions/api/'+name,'utf8'),readFileSync('SITE/functions/api/'+name,'utf8'))});
 test('Class groups start closed, toggle closed again, and Bolt has branded controls',async()=>{
  const h=dom(fresh());vm.runInContext(inline('SITE/Boltclass/index.html'),h.context);await new Promise(setImmediate);assert.deepEqual(h.errors,[]);const nav=()=>h.get('.navitems').innerHTML;
- assert(!nav().includes('aria-expanded="true"'));assert(!nav().includes('nav nav-child'));assert.match(h.get('root').innerHTML,/assets\/bolt-class-brand.png/);assert.match(nav(),/Sair da conta/);
+ assert(!nav().includes('aria-expanded="true"'));assert(!nav().includes('nav nav-child'));assert.match(h.get('root').innerHTML,/assets\/bolt-class-brand.png/);assert(!h.get('root').innerHTML.includes('Supabase'));assert.match(nav(),/Sair da conta/);
  async function click(value){const b={dataset:{v5:value}};const e={target:{closest:selector=>selector==='[data-v5]'?b:null},preventDefault(){},stopImmediatePropagation(){}};for(const fn of h.events.click)await fn(e)}
  await click('group:academico');assert.match(nav(),/group:academico" aria-expanded="true"/);assert.match(nav(),/Alunos/);
  await click('group:academico');assert(!nav().includes('aria-expanded="true"'));assert(!nav().includes('nav nav-child'));
