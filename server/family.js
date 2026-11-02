@@ -41,8 +41,8 @@ export async function onRequest({request,env}){
    const username=String(body.username||'').trim().toLowerCase(),password=String(body.password||'');
    if(!/^fam-[a-z0-9_-]{8,30}$/.test(username)||password.length<1||password.length>200)fail(401,'Login ou senha inválidos.');
    const rows=await db(accountPath+'&username=eq.'+encodeURIComponent(username)+'&select=*'),a=rows[0];if(!a)fail(401,'Login ou senha inválidos.');
-   const s=await school(),student=s.students.find(x=>x.id===a.student_id);if(!student||await guardianFingerprint(student)!==a.guardian_fingerprint)fail(403,'O acesso do responsável precisa ser atualizado pela escola.');
    const r=await fetch(url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:secret,'content-type':'application/json'},body:JSON.stringify({email:a.auth_email,password})});if(!r.ok)fail(401,'Login ou senha inválidos.');const session=await r.json();if(session.user?.id!==a.user_id)fail(401,'Login inválido.');
+   const s=await school(),student=s.students.find(x=>x.id===a.student_id);if(!student||await guardianFingerprint(student)!==a.guardian_fingerprint)fail(403,'O acesso do responsável precisa ser atualizado pela escola.');
    // Erase recoverable onboarding credentials as soon as they have been used.
    const activated=await db(accountPath+'&id=eq.'+a.id+'&version=eq.'+a.version,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({activated_at:a.activated_at||new Date().toISOString(),onboarding_secret:null})});if(activated.length!==1)fail(409,'O acesso foi alterado. Entre novamente.');
    return json(200,{ok:true,access_token:session.access_token,refresh_token:session.refresh_token,expires_in:session.expires_in});
