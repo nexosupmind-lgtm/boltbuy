@@ -162,6 +162,6 @@ await pullOnline();
 
 save=persistAll;
 async function inviteAccount(obj,ministries){if(!online)return alert('Configure o Supabase para convidar usuários.');if(role!=='admin')return;const {data,error}=await client.functions.invoke('invite-user',{body:{email:obj.email,role:obj.accessRole,member_id:obj.memberId||null,ministry_ids:ministries}});if(error||data?.error)return alert('Erro no convite: '+(data?.error||error.message));alert('Convite enviado por e-mail.');closeModal()}
-if(!online||!client){document.querySelector('#app').innerHTML='<div class="authwall"><div class="authcard"><h2>Conexão indisponível</h2><p>Não foi possível iniciar o Supabase. Confira sua conexão e atualize a página.</p></div></div>'}else authScreen();
+if(!online||!client){document.querySelector('#app').innerHTML='<div class="authwall"><div class="authcard"><h2>Conexão indisponível</h2><p>O modelo da igreja ainda não tem as credenciais públicas do projeto Supabase da igreja configuradas. Configure Boltchurch/config.js para habilitar o login. Não insira uma chave service_role.</p></div></div>'}else authScreen();
 
 </script></body></html>
