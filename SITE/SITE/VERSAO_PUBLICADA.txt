@@ -1,0 +1,3 @@
+BOLT MASTER V32 - 2026-11-02
+Studio BOLTCLASS/CHURCH: formulario de criacao de acesso.
+Cache bust v32 no index.
