@@ -6,10 +6,10 @@ const moduleCode=readFileSync(new URL('../SITE/functions/api/commercial-workspac
 const {onRequest}=await import('data:text/javascript;base64,'+Buffer.from(moduleCode).toString('base64'));
 const clientId='00000000-0000-4000-8000-000000000001';
 const school=()=>({schools:[{id:clientId,slug:'escola-a',name:'Escola A',students:[],staff:[],classes:[],attendance:[],grades:[],finance:[]}],logs:[],plans:[]});
-function harness({member=true,status='active',missing=false,auth=true}={}){
+function harness({member=true,status='active',missing=false,auth=true,metadata={}}={}){
  const calls=[],states=new Map();
  const fetch=async(input,options={})=>{const url=new URL(input);calls.push({url,options});const json=(data,status=200)=>new Response(JSON.stringify(data),{status});
- if(url.pathname==='/auth/v1/user')return auth?json({id:'user-a',email:'admin@a.test'}):json({},401);
+ if(url.pathname==='/auth/v1/user')return auth?json({id:'user-a',email:'admin@a.test',user_metadata:metadata}):json({},401);
  const table=url.pathname.split('/').at(-1);
  if(table==='bolt_commercial_clients')return json([{id:url.searchParams.get('slug')==='eq.escola-b'?'00000000-0000-4000-8000-000000000002':clientId,name:'Escola A',slug:'escola-a',product:'class',status}]);
  if(table==='bolt_commercial_memberships')return json(member&&url.searchParams.get('client_id')==='eq.'+clientId?[{role:'owner'}]:[]);
@@ -57,7 +57,7 @@ test('Portal opens the correct operational app only after server authorization',
 test('Cloudflare repository-root Functions match the SITE deployment functions',()=>{for(const name of ['commercial-workspace.js','create-user.js'])assert.equal(readFileSync('functions/api/'+name,'utf8'),readFileSync('SITE/functions/api/'+name,'utf8'))});
 test('Class groups start closed, toggle closed again, and Bolt has branded controls',async()=>{
  const h=dom(fresh());vm.runInContext(inline('SITE/Boltclass/index.html'),h.context);await new Promise(setImmediate);assert.deepEqual(h.errors,[]);const nav=()=>h.get('.navitems').innerHTML;
- assert(!nav().includes('aria-expanded="true"'));assert(!nav().includes('nav nav-child'));assert.match(h.get('root').innerHTML,/assets\/bolt-class-brand.png/);assert(!h.get('root').innerHTML.includes('Supabase'));assert.match(nav(),/Sair da conta/);
+ assert(!nav().includes('aria-expanded="true"'));assert(!nav().includes('nav nav-child'));assert(!h.get('root').innerHTML.includes('assets/bolt-class-brand.png'));assert.match(h.get('root').innerHTML,/school-brand-initial/);assert(!h.get('root').innerHTML.includes('Supabase'));assert.match(nav(),/Sair da conta/);
  async function click(value){const b={dataset:{v5:value}};const e={target:{closest:selector=>selector==='[data-v5]'?b:null},preventDefault(){},stopImmediatePropagation(){}};for(const fn of h.events.click)await fn(e)}
  await click('group:academico');assert.match(nav(),/group:academico" aria-expanded="true"/);assert.match(nav(),/Alunos/);
  await click('group:academico');assert(!nav().includes('aria-expanded="true"'));assert(!nav().includes('nav nav-child'));
@@ -65,3 +65,15 @@ test('Class groups start closed, toggle closed again, and Bolt has branded contr
  h.get('.main').innerHTML='';await click('assistant');assert.match(h.get('.main').innerHTML,/Olá! Sou o Bolt/);assert.match(h.get('.main').innerHTML,/assets\/bolt-avatar.png/);assert.match(h.get('.main').innerHTML,/Fechar Bolt/);
  h.get('.main').innerHTML='';await click('assistant');assert(!h.get('.main').innerHTML.includes('Olá! Sou o Bolt'));
 });
+test('School identity and authenticated user replace product branding inside Class',async()=>{
+ const b=fresh();b.client.name='Escola Identidade';b.branding={logo_url:'https://images.test/school.png',primary_color:'#cc2244',secondary_color:'#ffffff'};b.user.name='João Vitor';const h=dom(b);
+ vm.runInContext(inline('SITE/Boltclass/index.html'),h.context);await new Promise(setImmediate);assert.deepEqual(h.errors,[]);
+ assert.match(h.get('root').innerHTML,/src="https:\/\/images.test\/school.png"/);assert.match(h.get('root').innerHTML,/João Vitor!/);assert(!h.get('root').innerHTML.includes('assets/bolt-class-brand.png'));
+ assert.match(h.get('.main').innerHTML,/Conectado como/);assert.match(h.get('.main').innerHTML,/João Vitor/);assert.match(h.get('.main').innerHTML,/bolt-eye/);
+ const source=readFileSync('SITE/Boltclass/index.html','utf8');assert.match(source,/bolt-double-blink 15s/);assert.match(source,/96\.3%,96\.6%,98%,98\.3%/);assert.match(source,/prefers-reduced-motion:reduce/);
+});
+test('Class login alone shows the monochrome logo; Church login stays unchanged',async()=>{
+ for(const product of ['class','church']){const h=dom(fresh());let applied=false;h.context.document.body.classList.add=name=>{if(name==='class-login')applied=true};h.context.location.search='?product='+product+'&slug=cliente-teste';h.get('login').querySelector=()=>h.get('button');vm.runInContext(inline('SITE/portal.html'),h.context);assert.equal(applied,product==='class');if(product==='class'){assert.equal(h.get('class-login-logo').src,'/Boltclass/assets/bolt-class-brand.png');assert.equal(h.get('class-login-logo').hidden,false)}}
+ const portal=readFileSync('SITE/portal.html','utf8');assert.match(portal,/filter:url\(#bolt-login-white\)/);assert.match(portal,/operator="in"/);
+});
+test('Visible user name comes from the authenticated identity',async()=>{const h=harness({metadata:{full_name:'João Vitor'}});const r=await h.request();assert.equal((await r.json()).user.name,'João Vitor')});
