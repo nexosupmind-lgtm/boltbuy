@@ -170,7 +170,7 @@ layout=function(title,body,tools=''){
  if(nav){nav.innerHTML=GROUPS.map(g=>{let entries=g[2].filter(x=>['overview','settings'].includes(x[0])||x[0]==='support'||mod(s,x[0]));if(!entries.length)return '';return `<div class="nav-group"><button class="nav-parent" data-v5="group:${g[0]}" aria-expanded="${menuGroup===g[0]}" aria-controls="class-menu-${g[0]}"><span>${esc(g[1])}</span><span>${menuGroup===g[0]?'−':'+'}</span></button><div id="class-menu-${g[0]}" ${menuGroup===g[0]?'':'hidden'}>${menuGroup===g[0]?entries.map(x=>`<button class="nav nav-child ${page===x[0]?'active':''}" data-nav="${x[0]}">${esc(x[1])}</button>`).join(''):''}</div></div>`}).join('')+`<button class="nav class-logout" data-v5="logout">Sair da conta</button>`}
  const editingScreen=/<form\b/i.test(body)||page==='settings';
  if(editingScreen)assistantOpen=false;
- const assistant=editingScreen?'':`<button class="assistant-fab" type="button" data-v5="assistant" aria-label="Conversar com Bolt" aria-expanded="${assistantOpen}"><span class="bolt-avatar">${boltFace('fab')}</span><span class="bolt-assistant-name">Bolt</span></button>${assistantOpen?assistantHtml():''}`;
+ const assistant=editingScreen?'':`<button class="assistant-fab" type="button" data-v5="assistant" aria-label="Conversar com Bolt" aria-expanded="${assistantOpen}"><span class="bolt-avatar">${boltFace('fab')}</span></button>${assistantOpen?assistantHtml():''}`;
  document.querySelector('.main')?.insertAdjacentHTML('beforeend',`${assistant}${classMobileNav(s)}`);
 };
 function assistantHtml(){let s=school();return `<div class="assistant-panel" id="bolt-assistant-panel" role="region" aria-label="Assistente Bolt"><div class="assistant-head"><div class="bolt-assistant-title"><span class="bolt-avatar">${boltFace('panel')}</span><strong>Bolt</strong></div><button data-v5="assistant" aria-label="Fechar Bolt">✕</button></div><p>Olá! Sou o Bolt, assistente da ${esc(s.name)}. Posso resumir informações cadastradas.</p><div class="assistant-chips">${['Quantos alunos?','Turmas cadastradas','Faltas registradas','Mensalidades pendentes','Aniversariantes'].map(x=>`<button data-v5="ask:${x}">${x}</button>`).join('')}</div><div id="assistant-answer">Escolha uma pergunta.</div></div>`}
@@ -393,5 +393,10 @@ document.addEventListener('click', function(e){
  .class-appbar .class-breadcrumb span{font-size:13px;font-weight:650}
 }
 body:has(dialog[open]) .assistant-fab,body:has(dialog[open]) .assistant-panel{display:none!important}
+.assistant-fab,.assistant-fab .bolt-avatar{background:transparent!important;border:0!important;box-shadow:none!important}
+.assistant-fab{padding:4px!important}
+.assistant-fab:focus-visible{outline-color:var(--blue)}
+.assistant-fab .bolt-avatar{width:58px;height:58px;flex-basis:58px}
+.assistant-fab .bolt-face{filter:drop-shadow(0 1px 2px #17213a)}
 </style>
 <script src="/bolt-shell.js" defer></script></body></html>
