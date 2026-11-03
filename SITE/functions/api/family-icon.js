@@ -13,6 +13,18 @@ export async function onRequest({request,env}){
   const [client]=await read('bolt_commercial_clients?product=eq.class&slug=eq.'+slug+'&select=id,status');
   if(!client||client.status==='paused')return fallback();
   const [brand]=await read('bolt_client_branding?client_id=eq.'+encodeURIComponent(client.id)+'&select=logo_url,primary_color');
+  const [settings]=await read('bolt_client_studio_settings?client_id=eq.'+encodeURIComponent(client.id)+'&select=features');
+  const custom=settings?.features?.family_icon_url;
+  if(custom){
+   const source=new URL(custom);
+   const prefix='/storage/v1/object/public/bolt-branding/'+encodeURIComponent(client.id)+'/family-icon-';
+   if(source.origin===base.origin&&source.pathname.startsWith(prefix)&&/^[-a-f0-9]+\.png$/.test(source.pathname.slice(prefix.length))){
+    const image=await fetch(source,{redirect:'error'});
+    if(image.ok&&image.headers.get('content-type')==='image/png'){
+     return new Response(image.body,{headers:{'content-type':'image/png','cache-control':'public, max-age=60','x-content-type-options':'nosniff'}});
+    }
+   }
+  }
   const color=/^#[0-9a-f]{6}$/i.test(brand?.primary_color)?brand.primary_color:'#475569';
   let logo=brand?.logo_url||'';
   if(!logo.startsWith('data:')){
