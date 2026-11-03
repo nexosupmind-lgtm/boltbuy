@@ -1,7 +1,7 @@
 /* BOLT v17: upload autenticado; URL pública, escrita protegida por RLS */
 window.boltUploadProductPhoto=async function(file){
  if(!file||!/^image\/(jpeg|png|webp)$/.test(file.type))throw Error('Escolha JPG, PNG ou WebP.');
- if(file.size>5*1024*1024)throw Error('A foto deve ter até 5 MB.');
+ file=await window.BOLT_UPLOAD.image(file,{maxEdge:1280,maxBytes:450000});
  const cfg=window.BOLT_CONFIG;
  if(!cfg?.supabaseUrl||!cfg?.supabaseAnonKey)throw Error('Supabase não configurado.');
  if(!window.supabase?.createClient)throw Error('Conexão Supabase não carregada. Atualize a página.');
