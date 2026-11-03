@@ -37,7 +37,16 @@ export async function onRequest({request,env}){
    candidates=(await rows(membership+id+'&select=user_id')).map(x=>x.user_id);
    if(product==='class')candidates.push(...(await rows('bolt_family_accounts?client_id=eq.'+id+'&select=user_id',true)).map(x=>x.user_id));
    const deleted=await fetch(base+'/rest/v1/'+table+'?'+filter+'&slug=eq.'+encodeURIComponent(plan.slug),{method:'DELETE',headers:{...h,Prefer:'return=representation'}});
-   if(!deleted.ok){if(deleted.status>=500)fail(503,'Não foi possível confirmar a exclusão. Atualize a lista antes de tentar novamente. Nenhum arquivo foi apagado.');fail(409,'O banco não permitiu excluir este cliente. Nenhum arquivo foi apagado. Revise os vínculos antes de tentar novamente.');}
+   if(!deleted.ok){
+    const error=await deleted.json().catch(()=>({}));
+    if(error.code==='23503'){
+     const constraint=String(error.message||'').match(/constraint "([a-zA-Z0-9_]+)"/)?.[1];
+     const detail=constraint?' Vínculo: '+constraint+'.':'';
+     fail(409,'Existe um vínculo no banco que impede a exclusão.'+detail+' Nenhum arquivo foi apagado.');
+    }
+    if(error.code==='42501')fail(503,'O servidor não tem permissão de exclusão no banco. Execute SUPABASE_V37_DELETE.sql. Nenhum arquivo foi apagado.');
+    fail(503,'Não foi possível confirmar a exclusão. Atualize a lista antes de tentar novamente. Nenhum arquivo foi apagado.');
+   }
    if((await deleted.json()).length!==1)fail(409,'O cliente foi alterado por outra sessão. Atualize a lista.');
   }
   const usersDeleted=0,usersRetained=new Set(candidates).size;
