@@ -32,10 +32,12 @@ export async function onRequest({request,env}) {
   if(contracts[0]?.plan_id){const plans=await read('bolt_platform_plans?id=eq.'+contracts[0].plan_id+'&product=eq.'+product+'&select=features');if(plans.length!==1||!Array.isArray(plans[0].features))return response(503,{error:'Plano indisponível. Contate o suporte.'});entitlements=plans[0].features;}
   const statePath='bolt_commercial_workspaces?client_id=eq.'+encodeURIComponent(client.id);
   if(request.method==='GET'){
-   const r=await fetch(url+'/rest/v1/'+statePath+'&select=payload,revision',{headers:h});
+   const [r,branding,settings]=await Promise.all([
+    fetch(url+'/rest/v1/'+statePath+'&select=payload,revision',{headers:h}),
+    read('bolt_client_branding?client_id=eq.'+encodeURIComponent(client.id)+'&select=primary_color,secondary_color,logo_url,banner_url'),read('bolt_client_studio_settings?client_id=eq.'+encodeURIComponent(client.id)+'&select=display_title,subtitle,features')
+   ]);
    if(!r.ok)return response(503,{error:'A estrutura online ainda não está instalada. Execute SUPABASE_V33_WORKSPACES.sql.'});
    const rows=await r.json();
-   const [branding,settings]=await Promise.all([read('bolt_client_branding?client_id=eq.'+encodeURIComponent(client.id)+'&select=primary_color,secondary_color,logo_url,banner_url'),read('bolt_client_studio_settings?client_id=eq.'+encodeURIComponent(client.id)+'&select=display_title,subtitle,features')]);
    return response(200,{ok:true,client,user:{id:user.id,email:user.email,name:String(user.user_metadata?.full_name||user.user_metadata?.name||user.user_metadata?.display_name||'').trim().slice(0,120)},role:'owner',entitlements,branding:branding[0]||{},settings:settings[0]||{},data:rows[0]?.payload||null,revision:rows[0]?.revision||0});
   }
   if(Number(request.headers.get('content-length'))>MAX_BYTES)return response(413,{error:'Limite de 4 MB atingido. Reduza as imagens dos cadastros.'});

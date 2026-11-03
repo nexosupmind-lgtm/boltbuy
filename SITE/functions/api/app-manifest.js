@@ -8,5 +8,6 @@ export function onRequest({request}){
  if(p==='church')start=(s==='member'?'/member.html?slug=':'/Boltchurch/index.html?slug=')+encodeURIComponent(slug);
  const labels={admin:'Administração',family:'Portal da família',member:'Portal do membro',consumer:'Loja',master:'Administração'};
  const body={id:'/bolt-app/'+p+'/'+s+'/'+(slug||'master'),name:names[p]+' · '+labels[s],short_name:names[p],lang:'pt-BR',start_url:start,scope:'/',display:'standalone',display_override:['standalone','minimal-ui'],background_color:'#0b1020',theme_color:'#0b1020',description:labels[s]+' · '+names[p],icons:[192,512].map(size=>({src:'/assets/apps/'+p+'-'+size+'.png',sizes:size+'x'+size,type:'image/png',purpose:'any'}))};
+ if(s==='family')body.icons.unshift({src:'/api/family-icon?slug='+encodeURIComponent(slug),sizes:'512x512',type:'image/svg+xml',purpose:'any'});
  return new Response(JSON.stringify(body),{headers:{'content-type':'application/manifest+json','cache-control':'no-store'}});
 }
