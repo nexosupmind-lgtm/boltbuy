@@ -40,7 +40,7 @@ function setup(){
   const text=login?'Precisa de ajuda? Fale com o suporte':'Suporte';if(help.textContent!==text)help.textContent=text;
   const parent=host||document.body;if(help.parentElement!==parent)parent.append(help);
   const waiting=family&&!document.querySelector('.shell')&&!host||member&&!document.querySelector('.member-shell')&&!host;
-  help.hidden=locked&&!host||waiting;
+  help.hidden=locked&&!host||waiting||(product==='class'&&(family||surface==='admin')&&!login);
   const universal=document.querySelector('.bolt-universal-assistant');if(universal)universal.hidden=login||waiting;
   if(login)return;
   const anchor=document.querySelector('.assistant-fab, #mascotWidget, .bolt-universal-assistant');
