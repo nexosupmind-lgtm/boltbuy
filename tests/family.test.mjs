@@ -14,6 +14,7 @@ function harness(){let actor='owner',uidCounter=0,paused=false,race=false;const 
  if(table==='bolt_master_admins')return reply(actor==='master'?[{user_id:'master'}]:[]);
  if(table==='bolt_commercial_memberships')return reply(actor==='owner'&&url.searchParams.get('client_id')==='eq.'+clientA?[{user_id:'owner'}]:[]);
  if(table==='bolt_commercial_workspaces')return reply([{payload:{schools:[state]}}]);
+ if(table==='bolt_client_studio_settings')return reply([{features:{support_avatar_url:'https://images.test/avatar.png'}}]);
  if(table==='bolt_client_branding')return reply([{logo_url:'https://images.test/school.png',primary_color:'#334455'}]);
  assert.equal(table,'bolt_family_accounts');
  if(method==='GET')return reply(accounts.filter(x=>matches(x,url.searchParams)).map(x=>({...x})));

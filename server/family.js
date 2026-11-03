@@ -12,7 +12,7 @@ function random(size){return b64(crypto.getRandomValues(new Uint8Array(size))).r
 function visibleToStudent(row,student){return (!row.studentId||row.studentId===student.id)&&(!row.classId||row.classId===student.classId)}
 export function projectFamily(s,student,client,branding={}){
  const classroom=(s.classes||[]).find(c=>c.id===student.classId);
- return {school:{name:client.name,logo:branding.logo_url||'',color:branding.primary_color||'#475569'},guardian:student.guardian||'Responsável',student:{id:student.id,name:student.name,photo:student.photo||'',className:classroom?.name||'Turma não informada'},
+ return {school:{name:client.name,logo:branding.logo_url||'',color:branding.primary_color||'#475569',secondaryColor:branding.secondary_color||'',supportAvatar:branding.support_avatar_url||''},guardian:student.guardian||'Responsável',student:{id:student.id,name:student.name,photo:student.photo||'',className:classroom?.name||'Turma não informada'},
  grades:(s.grades||[]).filter(x=>x.studentId===student.id&&x.publishStatus!=='draft'&&(!x.teacherExamId||x.publishStatus==='published')).map(x=>({subject:x.subject,score:x.score,period:x.period,assessment:x.assessment,date:x.date})),
  attendance:(s.attendance||[]).filter(x=>x.studentId===student.id).map(x=>({date:x.date,status:x.status})),
  messages:(s.messages||[]).filter(x=>visibleToStudent(x,student)).map(x=>({title:x.title,content:x.content,date:x.date})),
@@ -53,9 +53,10 @@ export async function onRequest({request,env}){
    const user=await identity();let student,previewStudents,s;
    if(query.get('preview')==='1'){await admin(user);s=await school();previewStudents=s.students.map(x=>({id:x.id,name:x.name}));student=s.students.find(x=>x.id===query.get('student_id'))||s.students[0];}
    else{const accounts=await db(accountPath+'&user_id=eq.'+encodeURIComponent(user.id)+'&select=student_id,guardian_fingerprint');const a=accounts[0];if(!a)fail(403,'Este usuário não tem vínculo com um aluno desta escola.');s=await school();student=s.students.find(x=>x.id===a.student_id);if(!student||await guardianFingerprint(student)!==a.guardian_fingerprint)fail(403,'O acesso do responsável precisa ser atualizado pela escola.');}
-   const br=await db('bolt_client_branding?client_id=eq.'+client.id+'&select=logo_url,primary_color');
+   const br=await db('bolt_client_branding?client_id=eq.'+client.id+'&select=logo_url,primary_color,secondary_color');
    if(!student)return json(200,{ok:true,preview:true,preview_students:[],school:{name:client.name,logo:br[0]?.logo_url||'',color:br[0]?.primary_color||'#475569'},student:null});
-   return json(200,{ok:true,...projectFamily(s,student,client,br[0]||{}),...(previewStudents?{preview:true,preview_students:previewStudents}:{})});
+   const settings=await db('bolt_client_studio_settings?client_id=eq.'+client.id+'&select=features');
+   return json(200,{ok:true,...projectFamily(s,student,client,{...br[0],support_avatar_url:settings[0]?.features?.support_avatar_url}),...(previewStudents?{preview:true,preview_students:previewStudents}:{})});
   }
   const user=await identity();await admin(user);const s=await school();
   if(request.method==='GET'&&query.get('view')==='access'){
