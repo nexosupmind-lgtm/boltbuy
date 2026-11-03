@@ -1,9 +1,9 @@
 /* Shared install experience and support. No private state is cached by the service worker. */
 (()=>{'use strict';
-const q=new URLSearchParams(location.search),path=location.pathname,master=document.documentElement.dataset.boltApp==='master'||['/','/index.html'].includes(path),family=path==='/family.html',member=path==='/member.html';
+const q=new URLSearchParams(location.search),cleanPath=location.pathname.replace(/\/+$/,'').replace(/\.html$/,'')||'/',path=({'/admin':'/Salgaditos/admin','/shop':'/Salgaditos/cliente'}[cleanPath]||cleanPath),master=document.documentElement.dataset.boltApp==='master'||['/','/index'].includes(path),family=path==='/family',member=path==='/member';
 const product=master?'master':family||path.startsWith('/Boltclass')?'class':member||path.startsWith('/Boltchurch')?'church':path.includes('/Salgaditos/')?'buy':q.get('product');
 if(!['master','buy','class','church'].includes(product))return;
-const surface=master?'master':family?'family':member?'member':product==='buy'&&path.endsWith('/cliente.html')?'consumer':'admin',slug=product==='buy'?(q.get('tenant')||'salgaditos'):q.get('slug');
+const surface=master?'master':family?'family':member?'member':product==='buy'&&path.endsWith('/cliente')?'consumer':'admin',slug=product==='buy'?(q.get('tenant')||'salgaditos'):q.get('slug');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const face=()=>'<svg class="bolt-shared-face" viewBox="0 0 1584 1068" aria-hidden="true"><defs><clipPath id="bolt-shared-cut"><path clip-rule="evenodd" d="M0 0H1584V1068H0Z M450 350H680V725H450Z M905 350H1135V725H905Z"/></clipPath></defs><image href="/Boltclass/assets/bolt-avatar.png" width="1584" height="1068" clip-path="url(#bolt-shared-cut)"/><g class="bolt-shared-eyes" fill="white"><rect x="472" y="376" width="185" height="327" rx="92"/><rect x="926" y="376" width="186" height="327" rx="93"/></g></svg>';
 async function session(){
@@ -22,7 +22,7 @@ function support(){
 window.BOLT_OPEN_SUPPORT=support;
 function setup(){
  document.documentElement.dataset.boltProduct=product;
- const css=document.createElement('link');css.rel='stylesheet';css.href='/bolt-shell.css';document.head.append(css);
+ if(!document.querySelector('link[href="/bolt-shell.css"]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/bolt-shell.css';document.head.append(css);}
  if(master||slug){document.querySelectorAll('link[rel="manifest"]').forEach(e=>e.remove());const manifest=document.createElement('link');manifest.rel='manifest';manifest.href='/api/app-manifest?product='+product+'&surface='+surface+(slug?'&slug='+encodeURIComponent(slug):'');document.head.append(manifest);const icon=document.createElement('link');icon.rel='apple-touch-icon';icon.href='/assets/apps/'+product+'-192.png';document.head.append(icon);}
  for(const [name,content]of [['theme-color','#0b1020'],['apple-mobile-web-app-capable','yes'],['apple-mobile-web-app-status-bar-style','black-translucent']]){if(!document.querySelector('meta[name="'+name+'"]')){const m=document.createElement('meta');m.name=name;m.content=content;document.head.append(m)}}
  if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(()=>{});
@@ -34,7 +34,7 @@ function setup(){
  function placeSupport(){
   if(!help)return;
   const locked=document.documentElement.classList.contains('bolt-locked');
-  const host=document.querySelector('#bolt-auth-root:not([hidden]) .bolt-login-bottom, #bolt-auth-root:not([hidden]) .bolt-master-card, .member-login, .card.login')||(path==='/portal.html'?document.querySelector('main'):null);
+  const host=document.querySelector('#bolt-auth-root:not([hidden]) .bolt-login-bottom, #bolt-auth-root:not([hidden]) .bolt-master-card, .member-login, .card.login, [data-bolt-login-card]')||(path==='/portal'?document.querySelector('main'):null);
   const login=!!host;
   const cls=login?'bolt-login-help':'bolt-help-trigger';if(help.className!==cls)help.className=cls;
   const text=login?'Precisa de ajuda? Fale com o suporte':'Suporte';if(help.textContent!==text)help.textContent=text;
@@ -56,7 +56,7 @@ function setup(){
  const delivery=document.getElementById('mascotToggle');if(delivery&&!delivery.dataset.shared){delivery.dataset.shared='1';delivery.innerHTML=face()+'<span>Bolt</span>';delivery.classList.add('bolt-face-button');document.querySelector('#assistantPanel strong')?.replaceChildren(document.createTextNode('Bolt'));const actions=document.querySelector('#assistantPanel .assistant-quick');if(actions){const b=document.createElement('button');b.textContent='Solicitar suporte';b.onclick=support;actions.append(b)}document.getElementById('developerContact')?.remove()}};
  applyFace();new MutationObserver(()=>{applyFace();placeSupport()}).observe(document.body,{childList:true,subtree:true});
  new MutationObserver(placeSupport).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
- if(!master&&product!=='class'&&!document.getElementById('mascotToggle')&&path!=='/portal.html'){const b=document.createElement('button');b.className='bolt-universal-assistant bolt-face-button';b.type='button';b.innerHTML=face()+'<span>Bolt</span>';b.setAttribute('aria-label','Bolt · ajuda e suporte');b.onclick=support;document.body.append(b)}
+ if(!master&&product!=='class'&&!document.getElementById('mascotToggle')&&path!=='/portal'){const b=document.createElement('button');b.className='bolt-universal-assistant bolt-face-button';b.type='button';b.innerHTML=face()+'<span>Bolt</span>';b.setAttribute('aria-label','Bolt · ajuda e suporte');b.onclick=support;document.body.append(b)}
  placeSupport();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
