@@ -34,3 +34,9 @@ body.bolt-master-v35:before{content:'';position:fixed;inset:0;z-index:-1;pointer
 @keyframes bolt-grid-reveal{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes bolt-metric-scan{0%,100%{transform:translateX(-110%);opacity:0}20%,70%{opacity:.7}80%{transform:translateX(330%);opacity:0}}
 @media(prefers-reduced-motion:reduce){body.bolt-master-v35:before,.bolt-master-v35 .v35-metric:after{animation:none!important}.bolt-master-v35 *{scroll-behavior:auto!important;transition:none!important}}
+
+.v37-graph svg{display:block;width:100%;overflow:visible;max-height:210px}
+.v37-graph polyline{filter:drop-shadow(0 0 6px #a78bfa88)}
+.v37-chart-labels{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;text-align:center;font-size:11px;color:#9fb3d6}
+.v37-chart-labels strong{display:block;color:#e6ddff;font-size:clamp(9px,1vw,12px);overflow-wrap:anywhere}
+.v37-platform-graph .v35-distribution i{clip-path:polygon(0 0,calc(100% - 7px) 0,100% 100%,0 100%);background:repeating-linear-gradient(120deg,#a78bfa 0 11px,#74cefc 12px 15px)}
