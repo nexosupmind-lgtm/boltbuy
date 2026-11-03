@@ -9,12 +9,11 @@
   const {data,error}=await sb.from('bolt_tenants').select('id,slug,name,owner_name,logo_url,primary_color,background_color,tagline,plan,status').order('created_at',{ascending:true});
   if(error){message('Erro ao carregar empresas: '+error.message,true);return}
   tenants=(data||[]).map(t=>({cloudId:t.id,slug:t.slug,name:t.name,owner:t.owner_name||'',logo:t.logo_url||'',primary:t.primary_color||'#ef652c',background:t.background_color||'#101e37',tagline:t.tagline||'',plan:t.plan||'Pro',status:({ativo:'Ativo',teste:'Teste',suspenso:'Suspenso'}[String(t.status||'').toLowerCase()]||'Teste'),price:0,due:''}));
-  render();message(tenants.length+' empresa(s) confirmada(s) no Supabase.');
+  render();document.getElementById('bolt-cloud-status')?.remove();window.dispatchEvent(new Event('bolt:clients-refreshed'));
  }
  window.BOLT_MASTER_REFRESH=refresh;
  document.addEventListener('DOMContentLoaded',()=>{
   const previous=window.boltCloudInit;
   window.boltCloudInit=function(...args){const ret=previous?.apply(this,args);refresh().catch(e=>message(e.message,true));return ret};
-  refresh().catch(e=>message(e.message,true));
  });
 })();
