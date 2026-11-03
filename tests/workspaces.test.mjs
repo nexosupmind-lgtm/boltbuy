@@ -92,3 +92,30 @@ test('Studio import requires Master and retains the revision guard',async()=>{
  assert.equal((await h.request('PUT',{data:school(),revision:0},query)).status,200);
  assert.equal((await h.request('PUT',{data:school(),revision:0},query)).status,409);
 });
+
+test('Owner can edit an imported student with missing legacy fields',async()=>{
+ const bundle=fresh();
+ bundle.data=school();
+ bundle.data.schools[0].modules=['students'];
+ bundle.data.schools[0].students=[{id:'legacy:student:1',name:'Aluno importado',guardianEmail:'Contato fictício',sourceId:'A1'}];
+ const h=dom(bundle);
+ h.context.FormData=class{constructor(form){this.values=form.values}*[Symbol.iterator](){yield* Object.entries(this.values)}};
+ const code=inline('SITE/Boltclass/index.html').replace('render();\n})().catch',"page='students';render();\n})().catch");
+ vm.runInContext(code,h.context);
+ await new Promise(setImmediate);
+ assert.deepEqual(h.errors,[]);
+ assert.match(h.get('root').innerHTML,/data-action="rowedit:students:legacy:student:1"[^>]*>Editar aluno/);
+ const button={dataset:{action:'profile:students:legacy:student:1'},getAttribute(){return this.dataset.action}};
+ for(const handler of h.events.click)await handler({target:{closest:selector=>selector.includes('[data-action]')?button:null},preventDefault(){},stopImmediatePropagation(){}});
+ assert.match(h.get('root').innerHTML,/data-action="rowedit:students:legacy:student:1"[^>]*>Editar ficha/);
+ button.dataset.action='rowedit:students:legacy:student:1';
+ for(const handler of h.events.click)await handler({target:{closest:selector=>selector.includes('[data-action]')?button:null},preventDefault(){},stopImmediatePropagation(){}});
+ assert.match(h.get('root').innerHTML,/id="studentform" data-id="legacy:student:1"/);
+ const form={id:'studentform',dataset:{id:'legacy:student:1'},values:{name:'Aluno atualizado',guardianEmail:'Contato fictício',guardian:'',phone:'',birth:'',classId:''}};
+ for(const handler of h.events.submit)await handler({target:form,preventDefault(){},stopImmediatePropagation(){}});
+ assert.deepEqual(h.errors,[]);
+ assert.equal(h.saves.length,1);
+ assert.equal(h.saves[0].schools[0].students[0].name,'Aluno atualizado');
+ assert.equal(h.saves[0].schools[0].students[0].sourceId,'A1');
+ assert.match(h.get('root').innerHTML,/Aluno atualizado/);
+});
