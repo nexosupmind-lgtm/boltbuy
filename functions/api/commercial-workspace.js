@@ -20,7 +20,12 @@ export async function onRequest({request,env}) {
   const client=clients[0];
   const memberships=await read('bolt_commercial_memberships?client_id=eq.'+encodeURIComponent(client.id)+'&user_id=eq.'+encodeURIComponent(user.id)+'&select=role');
   // This edition exposes administrator modules only. Do not elevate other membership roles.
-  if(memberships.length!==1||memberships[0].role!=='owner')return response(403,{error:'Conta sem acesso administrativo a esta organização.'});
+  const isOwner=memberships.length===1&&memberships[0].role==='owner';
+  const studioImport=product==='class'&&q.get('studio')==='import';
+  if(studioImport){
+   const admins=await read('bolt_master_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');
+   if(admins.length!==1)return response(403,{error:'Importação no Studio é exclusiva do Master.'});
+  }else if(!isOwner)return response(403,{error:'Conta sem acesso administrativo a esta organização.'});
   if(client.status==='paused')return response(403,{error:'Organização pausada.'});
   const contracts=await read('bolt_client_subscriptions?client_id=eq.'+client.id+'&select=plan_id');
   let entitlements=null;
