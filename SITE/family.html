@@ -3,18 +3,21 @@
 @media(max-width:600px){.main{padding:14px}.header{padding:16px}.brand{font-size:14px}.metrics{gap:8px}.metric{padding:13px 9px}.metric strong{font-size:23px}.welcome h1{font-size:23px}.nav button{font-size:10px}.login{margin:6vh 16px;padding:24px}.student{padding:17px}.photo{flex-basis:62px;width:62px;height:62px}}
 
 .shell{background:#f6f7fc}
-.header,.welcome{background:linear-gradient(135deg,color-mix(in srgb,var(--family-secondary,#11152b) 55%,#101329),color-mix(in srgb,var(--accent) 54%,#151326));color:#fff}
-.header{border:0}.header .brand small{color:#e0e4f5}
-.welcome{position:relative;overflow:hidden;padding:26px;border-radius:0 0 26px 26px}
-.welcome:after{content:"";position:absolute;right:-42px;top:-70px;width:180px;height:180px;border:28px solid #ffffff12;border-radius:50%;pointer-events:none}
+.header{background:var(--accent);color:var(--on-accent,#fff)}
+.welcome{background:var(--family-secondary,var(--accent));color:#fff}
+.welcome small{color:inherit}
 .family-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
 .family-shortcuts button{display:grid;justify-items:center;gap:4px;border:1px solid #e1e5ef;border-radius:14px;padding:10px 2px;background:color-mix(in srgb,var(--accent) 8%,white);color:#152039;font-size:clamp(10px,2.8vw,14px)}
 .family-shortcuts span{font-size:23px;font-weight:800}
-.family-menu{position:relative;z-index:15}
-.family-menu summary{cursor:pointer;padding:8px 12px;border-radius:12px;background:#ffffff20}
-.family-menu>div{position:absolute;right:0;top:100%;display:grid;gap:6px;min-width:145px;padding:8px;border-radius:14px;background:#fff;box-shadow:0 8px 28px #13213d33}
-.family-menu button{display:flex;align-items:center;gap:6px}
+.metrics .metric{background:color-mix(in srgb,var(--accent) 10%,white);min-width:0;overflow-wrap:anywhere}
+.shell{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+.nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));inset:auto 0 0;margin-inline:auto;transform:none;z-index:10;padding:5px 4px calc(5px + env(safe-area-inset-bottom))}
+.nav>button,.family-menu summary{display:grid;align-content:center;justify-items:center;min-height:50px;padding:4px 0;font-size:clamp(10px,2.8vw,12px);color:var(--ink);line-height:1.2}
+.nav>button span,.family-menu summary span{font-size:22px;margin:0 0 3px}
+.nav>button.active{background:color-mix(in srgb,var(--accent) 12%,white);color:var(--ink);border-radius:10px}
+.family-menu summary{cursor:pointer;list-style:none}
+.family-menu summary::-webkit-details-marker{display:none}
+.family-menu>div{position:absolute;right:8px;bottom:100%;display:grid;min-width:160px;padding:6px;background:#fff;border:1px solid #e0eaf3;border-radius:14px;box-shadow:0 8px 28px #13213d33}
+.family-menu button{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;color:var(--ink);font-size:14px}
 .family-menu img{width:25px;height:25px;object-fit:contain}
-.metrics .metric{background:color-mix(in srgb,var(--accent) 10%,white)}
-@media(max-width:720px){.shell .main{padding-bottom:calc(94px + env(safe-area-inset-bottom))}.shell .nav{position:fixed;inset:auto 0 0;background:#fff;z-index:10;padding-bottom:calc(7px + env(safe-area-inset-bottom));border-top:1px solid #e2e6ef}.shell .nav button{min-width:0;font-size:10px}}
 </style></head><body><div id="family-root"><p class="status">Carregando portal…</p></div><script src="/bolt-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="/family.js"></script><script src="/bolt-shell.js" defer></script></body></html>
