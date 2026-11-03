@@ -50,20 +50,22 @@ export async function onRequest({request,env}){
   if(action==='support'){
    const product=request.method==='GET'?q.get('product'):body.product,slug=request.method==='GET'?q.get('slug'):body.slug,source=request.method==='GET'?q.get('source'):body.source;
    if(!['admin','family','member','consumer'].includes(source))fail(400,'Origem inválida.');
+   if(source==='consumer'&&product!=='buy')fail(401,'Origem de suporte não autorizada.');
    const publicConsumer=source==='consumer'&&product==='buy';
+   const publicSubmission=publicConsumer||!user;
    if(request.method==='GET'){
     const c=await scope(product,slug,source);const column=product==='buy'?'tenant_id':'client_id';
     const rows=await all('bolt_support_tickets?'+column+'=eq.'+c.id+(isMaster?'':'&requester_id=eq.'+encodeURIComponent(user.id))+'&select=id,subject,message,status,response,created_at,updated_at&order=created_at.desc');return json(200,{tickets:rows});
    }
-   const c=publicConsumer?await clientFor(product,slug):await scope(product,slug,source);
+   const c=publicSubmission?await clientFor(product,slug):await scope(product,slug,source);
    if(['paused','suspenso'].includes(c.status))fail(403,'Cliente pausado.');
    const subject=String(body.subject||'').trim(),message=String(body.message||'').trim(),name=String(body.name||user?.user_metadata?.full_name||'').trim(),contact=String(body.contact||'').trim();
-   if(subject.length<3||subject.length>120||message.length<10||message.length>3000||!name||name.length>120||contact.length>180||(publicConsumer&&contact.length<5))fail(400,'Preencha nome, assunto, mensagem e contato válidos.');
-   const ip=request.headers.get('cf-connecting-ip');if(publicConsumer&&!ip)fail(503,'Proteção de envio indisponível.');
-   const material='bolt-support-v35:'+ (publicConsumer?ip:user.id),k=await crypto.subtle.importKey('raw',new TextEncoder().encode(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+   if(subject.length<3||subject.length>120||message.length<10||message.length>3000||!name||name.length>120||contact.length>180||(publicSubmission&&contact.length<5))fail(400,'Preencha nome, assunto, mensagem e contato válidos.');
+   const ip=request.headers.get('cf-connecting-ip');if(publicSubmission&&!ip)fail(503,'Proteção de envio indisponível.');
+   const material='bolt-support-v35:'+ (publicSubmission?ip:user.id),k=await crypto.subtle.importKey('raw',new TextEncoder().encode(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);
    const digest=await crypto.subtle.sign('HMAC',k,new TextEncoder().encode(material)),rate=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join('');
    if(!await rest('rpc/bolt_support_allow',{method:'POST',body:JSON.stringify({p_key:rate})}))fail(429,'Limite diário de chamados atingido. Tente novamente amanhã.');
-   const rows=await rest('bolt_support_tickets',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({[product==='buy'?'tenant_id':'client_id']:c.id,requester_id:publicConsumer?null:user.id,requester_name:name,contact,source,verified:!publicConsumer,subject,message})});return json(201,{ok:true,id:rows[0].id});
+   const rows=await rest('bolt_support_tickets',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({[product==='buy'?'tenant_id':'client_id']:c.id,requester_id:publicSubmission?null:user.id,requester_name:name,contact,source,verified:!publicSubmission,subject,message})});return json(201,{ok:true,id:rows[0].id});
   }
   if(!isMaster)fail(user?403:401,'Acesso exclusivo do Master.');
   if(request.method==='GET'){

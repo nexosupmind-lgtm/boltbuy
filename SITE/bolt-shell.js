@@ -16,11 +16,12 @@ function support(){
  const dialog=document.createElement('dialog');dialog.id='bolt-support-dialog';dialog.className='bolt-shell-dialog';dialog.innerHTML=`<header><div><small>ATENDIMENTO BOLT</small><h2>Como podemos ajudar?</h2></div><button type="button" data-close aria-label="Fechar suporte">×</button></header><p>Seu chamado será encaminhado à equipe BOLT com a identificação deste cliente.</p><form id="bolt-support-form"><label>Seu nome<input name="name" required maxlength="120" autocomplete="name"></label><label>E-mail ou WhatsApp<input name="contact" required maxlength="180" autocomplete="email"></label><label>Assunto<input name="subject" required minlength="3" maxlength="120"></label><label>Mensagem<textarea name="message" required minlength="10" maxlength="3000" rows="4"></textarea></label><button type="submit">Enviar chamado</button></form><p id="bolt-support-status" role="status"></p><div id="bolt-support-history"></div>`;document.body.append(dialog);dialog.querySelector('[data-close]').onclick=()=>dialog.close();dialog.addEventListener('close',()=>dialog.remove());dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});dialog.showModal();
  const status=dialog.querySelector('#bolt-support-status'),form=dialog.querySelector('form'),history=dialog.querySelector('#bolt-support-history');
  const states={open:'Aberto',in_progress:'Em atendimento',resolved:'Resolvido',closed:'Encerrado'};
- async function load(){if(surface==='consumer')return;try{const s=await session();if(s?.user){form.elements.name.value=s.user.user_metadata?.full_name||'';form.elements.contact.value=s.user.email||''}const d=await api('GET');history.innerHTML='<h3>Meus chamados</h3>'+d.tickets.map(t=>`<article><strong>${esc(t.subject)}</strong><small>${esc(states[t.status])} · ${new Date(t.created_at).toLocaleDateString('pt-BR')}</small><p>${esc(t.response||'Aguardando atendimento.')}</p></article>`).join('')}catch(e){status.textContent=e.message}}
- form.onsubmit=async e=>{e.preventDefault();const b=form.querySelector('button');b.disabled=true;status.textContent='Enviando…';try{const d=await api('POST',Object.fromEntries(new FormData(form)));form.reset();status.textContent='Chamado enviado. Protocolo: '+d.id;if(surface!=='consumer')await load()}catch(err){status.textContent=err.message}finally{b.disabled=false}};void load();
+ async function load(){if(surface==='consumer')return;try{const s=await session();if(!s?.user)return;if(s?.user){form.elements.name.value=s.user.user_metadata?.full_name||'';form.elements.contact.value=s.user.email||''}const d=await api('GET');history.innerHTML='<h3>Meus chamados</h3>'+d.tickets.map(t=>`<article><strong>${esc(t.subject)}</strong><small>${esc(states[t.status])} · ${new Date(t.created_at).toLocaleDateString('pt-BR')}</small><p>${esc(t.response||'Aguardando atendimento.')}</p></article>`).join('')}catch(e){status.textContent=e.message}}
+ form.onsubmit=async e=>{e.preventDefault();const b=form.querySelector('button');b.disabled=true;status.textContent='Enviando…';try{const d=await api('POST',Object.fromEntries(new FormData(form)));form.reset();status.textContent='Chamado enviado. Protocolo: '+d.id;if(surface!=='consumer'&&(await session())?.user)await load()}catch(err){status.textContent=err.message}finally{b.disabled=false}};void load();
 }
 window.BOLT_OPEN_SUPPORT=support;
 function setup(){
+ document.documentElement.dataset.boltProduct=product;
  const css=document.createElement('link');css.rel='stylesheet';css.href='/bolt-shell.css';document.head.append(css);
  if(master||slug){document.querySelectorAll('link[rel="manifest"]').forEach(e=>e.remove());const manifest=document.createElement('link');manifest.rel='manifest';manifest.href='/api/app-manifest?product='+product+'&surface='+surface+(slug?'&slug='+encodeURIComponent(slug):'');document.head.append(manifest);const icon=document.createElement('link');icon.rel='apple-touch-icon';icon.href='/assets/apps/'+product+'-192.png';document.head.append(icon);}
  for(const [name,content]of [['theme-color','#0b1020'],['apple-mobile-web-app-capable','yes'],['apple-mobile-web-app-status-bar-style','black-translucent']]){if(!document.querySelector('meta[name="'+name+'"]')){const m=document.createElement('meta');m.name=name;m.content=content;document.head.append(m)}}
@@ -28,11 +29,35 @@ function setup(){
  let deferred=null;const install=document.createElement('button');install.type='button';install.className='bolt-install';install.textContent='Instalar aplicativo';install.hidden=true;document.body.append(install);
  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;install.hidden=false});window.addEventListener('appinstalled',()=>{install.hidden=true;deferred=null});install.onclick=async()=>{if(deferred){await deferred.prompt();await deferred.userChoice;install.hidden=true;deferred=null}};
  const online=document.createElement('div');online.className='bolt-connection';online.setAttribute('role','status');online.textContent='Sem conexão · Aguarde para salvar alterações.';document.body.append(online);const update=()=>online.hidden=navigator.onLine;window.addEventListener('online',update);window.addEventListener('offline',update);update();
- if(!master&&slug&&!q.has('preview')){const b=document.createElement('button');b.type='button';b.className='bolt-help-trigger';b.textContent='Solicitar suporte';b.onclick=support;document.body.append(b);}
+ let help=null;
+ if(!master&&slug&&!q.has('preview')){help=document.createElement('button');help.type='button';help.className='bolt-help-trigger';help.textContent='Suporte';help.onclick=support;document.body.append(help);}
+ function placeSupport(){
+  if(!help)return;
+  const locked=document.documentElement.classList.contains('bolt-locked');
+  const host=document.querySelector('#bolt-auth-root:not([hidden]) .bolt-login-bottom, #bolt-auth-root:not([hidden]) .bolt-master-card, .member-login, .card.login')||(path==='/portal.html'?document.querySelector('main'):null);
+  const login=!!host;
+  const cls=login?'bolt-login-help':'bolt-help-trigger';if(help.className!==cls)help.className=cls;
+  const text=login?'Precisa de ajuda? Fale com o suporte':'Suporte';if(help.textContent!==text)help.textContent=text;
+  const parent=host||document.body;if(help.parentElement!==parent)parent.append(help);
+  const waiting=family&&!document.querySelector('.shell')&&!host||member&&!document.querySelector('.member-shell')&&!host;
+  help.hidden=locked&&!host||waiting;
+  const universal=document.querySelector('.bolt-universal-assistant');if(universal)universal.hidden=login||waiting;
+  if(login)return;
+  const anchor=document.querySelector('.assistant-fab, #mascotWidget, .bolt-universal-assistant');
+  const rect=anchor?.getBoundingClientRect();
+  const right=rect&&rect.width&&rect.left>150?Math.max(12,window.innerWidth-rect.left+12):20;
+  const dock=document.querySelector('.mobile-dock, .mobile-bottomnav');const dockRect=dock?.getBoundingClientRect();
+  const floor=dockRect?.height&&dockRect.top<window.innerHeight?window.innerHeight-dockRect.top+12:20;
+  const bottom=Math.max(floor,rect?.height?window.innerHeight-rect.bottom:100);
+  help.style.setProperty('--bolt-help-right',right+'px');help.style.setProperty('--bolt-help-bottom',bottom+'px');
+ }
+ window.addEventListener('resize',placeSupport);window.addEventListener('scroll',placeSupport,{passive:true});
  const applyFace=()=>{const m=document.getElementById('boltFace');if(m&&!m.dataset.shared){m.dataset.shared='1';m.innerHTML=face();m.classList.add('bolt-face-button');m.setAttribute('aria-label','Conversar com Bolt')}
  const delivery=document.getElementById('mascotToggle');if(delivery&&!delivery.dataset.shared){delivery.dataset.shared='1';delivery.innerHTML=face()+'<span>Bolt</span>';delivery.classList.add('bolt-face-button');document.querySelector('#assistantPanel strong')?.replaceChildren(document.createTextNode('Bolt'));const actions=document.querySelector('#assistantPanel .assistant-quick');if(actions){const b=document.createElement('button');b.textContent='Solicitar suporte';b.onclick=support;actions.append(b)}document.getElementById('developerContact')?.remove()}};
- applyFace();new MutationObserver(applyFace).observe(document.body,{childList:true,subtree:true});
+ applyFace();new MutationObserver(()=>{applyFace();placeSupport()}).observe(document.body,{childList:true,subtree:true});
+ new MutationObserver(placeSupport).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
  if(!master&&product!=='class'&&!document.getElementById('mascotToggle')&&path!=='/portal.html'){const b=document.createElement('button');b.className='bolt-universal-assistant bolt-face-button';b.type='button';b.innerHTML=face()+'<span>Bolt</span>';b.setAttribute('aria-label','Bolt · ajuda e suporte');b.onclick=support;document.body.append(b)}
+ placeSupport();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();

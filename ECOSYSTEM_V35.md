@@ -13,7 +13,7 @@ A branch agrega o Portal da Família que estava no draft #10. Não mesclar os do
 
 ## Mudanças
 
-- Master com navegação mais sóbria, painéis claros, menu mobile, assistente Bolt com duas piscadas a cada 15 segundos e respeito a movimento reduzido.
+- Master com navegação dark, painéis tecnológicos, transições animadas, menu mobile, assistente Bolt com duas piscadas a cada 15 segundos e respeito a movimento reduzido.
 - Login Master com sessão lembrada permanece na tela inicial com **Entrar no Master** e **Usar outra conta**. A permissão é consultada novamente ao entrar.
 - Catálogos de planos independentes por plataforma, com seus módulos específicos. Vínculos feitos em **Assinatura** do cliente; não há migração silenciosa de planos/preços locais. Sem vínculo novo, o acesso anterior é mantido.
 - Restrição de módulos Class/Church verificada na API antes de alterar os dados correspondentes. O estado continua privado, preservando dados de módulos que deixarem de ser contratados. Class Family tem verificação própria do plano. Church filtra publicações conforme os módulos contratados.
@@ -22,7 +22,7 @@ A branch agrega o Portal da Família que estava no draft #10. Não mesclar os do
 - Dashboard soma os três produtos e separa **receita recorrente prevista**, **recebimentos registrados no mês**, **clientes com cobrança vencida**, valor vencido, cadastros ativos, clientes sem assinatura e chamados pendentes. Sem cobrança cadastrada não há inferência de inadimplência. Referência temporal financeira: UTC, identificada na tela.
 - Financeiro manual persistido: assinaturas, cobranças por vencimento, registro de recebimento. Uma cobrança por assinatura/vencimento; recebimento condicionado a ainda estar em aberto. Não gera cobranças recorrentes automaticamente, não emite boleto nem executa pagamentos.
 - Os pagamentos/planos antigos locais continuam no backup legado, sem importação automática que pudesse duplicar recebimentos. Os valores do cadastro comercial não são confundidos com dinheiro recebido.
-- Suporte em Buy, Class, Church, família e membro, com origem, cliente resolvido no servidor, nome, contato, assunto, texto, resposta e status. Master gerencia a Central de suporte. Solicitantes autenticados consultam apenas seus próprios chamados. Consumidores públicos enviam com contato não verificado, sem acesso à listagem; a resposta deve ser dada ao contato informado. Até dez envios por dia por conta/IP, com contador atômico e IP somente em HMAC. Não envia mensagens externas automaticamente.
+- Suporte em Buy, Class, Church, família e membro, com origem, cliente resolvido no servidor, nome, contato, assunto, texto, resposta e status. Master gerencia a Central de suporte. Solicitantes autenticados consultam apenas seus próprios chamados. Consumidores públicos e solicitantes sem sessão na tela de login enviam com contato não verificado, sem acesso à listagem; a resposta deve ser dada ao contato informado. Até dez envios por dia por conta/IP, com contador atômico e IP somente em HMAC. Não envia mensagens externas automaticamente.
 - Logo branca em login Buy/Church e ícones originais enviados para os aplicativos. Tamanhos de ícone derivados em 192/512; identidades dos clientes dentro dos sistemas são preservadas.
 
 ## Família e membro
@@ -53,8 +53,16 @@ O service worker guarda **somente a tela de falta de conexão**. Não armazena p
 
 ## Verificação e limites
 
-`node --test tests/*.test.mjs`: 75 testes automatizados, com mocks de Auth, REST, Storage e DOM. Incluem login lembrado, dados de diferentes nichos, métricas financeiras, plano incompatível, gravação em módulo não contratado, privacidade família/membro, atendimento público/autenticado e manifestos separados. `node --check` nos scripts alterados e scripts inline; `git diff --check`.
+`node --test tests/*.test.mjs`: 78 testes automatizados, com mocks de Auth, REST, Storage e DOM. Incluem login lembrado, dados de diferentes nichos, métricas financeiras, plano incompatível, gravação em módulo não contratado, privacidade família/membro, atendimento público/autenticado e manifestos separados. `node --check` nos scripts alterados e scripts inline; `git diff --check`.
 
 A prévia do navegador não pôde ser aberta: revisão automática bloqueou o acesso por limite de uso da ferramenta. Não houve validação visual real desta branch, nem teste SQL/RLS no projeto de produção. A migração permanece pendente da execução pelo proprietário; o PR fica em draft até instalar e validar. Esses testes não equivalem a uma auditoria de segurança nem demonstram funcionamento real das APIs ainda não publicadas.
 
 Rollback: reverter o commit de código no GitHub. Manter as novas tabelas para preservar os registros já criados. Revisar políticas restritivas apenas se necessário e nunca apagar dados como procedimento de rollback.
+
+## Ajuste visual e suporte V36
+
+Master dark com detalhes violeta/ciano, transições de navegação e feedback nos cliques, respeitando `prefers-reduced-motion`. Menu desktop fixo ao viewport com rolagem própria; barras mobile preservadas. Mesmo comportamento fixo aplicado aos menus administrativos Class/Church/Buy, mantendo as larguras por breakpoint.
+
+Suporte discreto dentro do cartão de login, inclusive quando o formulário é renderizado assincronamente. No ambiente autenticado, o atalho fica ao lado do Bolt, reposicionado ao rolar/redimensionar. Chamados sem sessão são contatos públicos não verificados: exigem contato e proteção de IP, usam o mesmo limite diário e não liberam histórico nem acesso ao sistema. Nenhuma nova migração SQL.
+
+Validação: 78 testes automatizados, incluindo movimentação dinâmica do suporte, separação do Bolt, chamado de acesso não autenticado e bloqueio de histórico/rate limit. Conferência visual permanece não realizada por bloqueio da ferramenta de navegador.
