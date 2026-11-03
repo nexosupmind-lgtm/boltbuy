@@ -22,13 +22,16 @@ export async function onRequest({request,env}) {
   // This edition exposes administrator modules only. Do not elevate other membership roles.
   if(memberships.length!==1||memberships[0].role!=='owner')return response(403,{error:'Conta sem acesso administrativo a esta organização.'});
   if(client.status==='paused')return response(403,{error:'Organização pausada.'});
+  const contracts=await read('bolt_client_subscriptions?client_id=eq.'+client.id+'&select=plan_id');
+  let entitlements=null;
+  if(contracts[0]?.plan_id){const plans=await read('bolt_platform_plans?id=eq.'+contracts[0].plan_id+'&product=eq.'+product+'&select=features');if(plans.length!==1||!Array.isArray(plans[0].features))return response(503,{error:'Plano indisponível. Contate o suporte.'});entitlements=plans[0].features;}
   const statePath='bolt_commercial_workspaces?client_id=eq.'+encodeURIComponent(client.id);
   if(request.method==='GET'){
    const r=await fetch(url+'/rest/v1/'+statePath+'&select=payload,revision',{headers:h});
    if(!r.ok)return response(503,{error:'A estrutura online ainda não está instalada. Execute SUPABASE_V33_WORKSPACES.sql.'});
    const rows=await r.json();
    const [branding,settings]=await Promise.all([read('bolt_client_branding?client_id=eq.'+encodeURIComponent(client.id)+'&select=primary_color,secondary_color,logo_url,banner_url'),read('bolt_client_studio_settings?client_id=eq.'+encodeURIComponent(client.id)+'&select=display_title,subtitle,features')]);
-   return response(200,{ok:true,client,user:{id:user.id,email:user.email,name:String(user.user_metadata?.full_name||user.user_metadata?.name||user.user_metadata?.display_name||'').trim().slice(0,120)},role:'owner',branding:branding[0]||{},settings:settings[0]||{},data:rows[0]?.payload||null,revision:rows[0]?.revision||0});
+   return response(200,{ok:true,client,user:{id:user.id,email:user.email,name:String(user.user_metadata?.full_name||user.user_metadata?.name||user.user_metadata?.display_name||'').trim().slice(0,120)},role:'owner',entitlements,branding:branding[0]||{},settings:settings[0]||{},data:rows[0]?.payload||null,revision:rows[0]?.revision||0});
   }
   if(Number(request.headers.get('content-length'))>MAX_BYTES)return response(413,{error:'Limite de 4 MB atingido. Reduza as imagens dos cadastros.'});
   const raw=await request.text();if(new TextEncoder().encode(raw).length>MAX_BYTES)return response(413,{error:'Limite de 4 MB atingido. Reduza as imagens dos cadastros.'});
@@ -38,6 +41,16 @@ export async function onRequest({request,env}) {
   const arrays=product==='church'?['members','ministries','events','notices','courses','enrollments','attendance','devotionals']:[];
   if(arrays.some(k=>!Array.isArray(data[k])))return response(400,{error:'Estrutura da igreja inválida.'});
   if(product==='class'&&(!Array.isArray(data.schools)||data.schools.length!==1||data.schools[0]?.id!==client.id||data.schools[0]?.slug!==slug||!['students','staff','classes','attendance','grades','finance'].every(k=>Array.isArray(data.schools[0][k]))))return response(400,{error:'A escola não corresponde à organização autenticada.'});
+  if(entitlements){
+   const before=await read(statePath+'&select=payload');
+   const old=product==='class'?before[0]?.payload?.schools?.[0]:before[0]?.payload;
+   const next=product==='class'?data.schools[0]:data;
+   const modules=product==='class'?['students','staff','classes','attendance','grades','finance','enrollments','subjects','schedule','assessments','documents','contracts','expenses','inventory','library','transport','messages','calendar','tasks','incidents','meetings']:['members','ministries','events','notices','courses','enrollments','attendance','devotionals','devotional'];
+   const normalized=value=>Array.isArray(value)?value.map(normalized):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,normalized(value[k])])):value;
+   const empty=value=>value==null||value===''||Array.isArray(value)&&!value.length||value&&typeof value==='object'&&!Array.isArray(value)&&Object.values(value).every(empty);
+   const same=(a,b)=>empty(a)&&empty(b)||JSON.stringify(normalized(a))===JSON.stringify(normalized(b));
+   for(const module of modules){const feature=module==='devotional'?'devotionals':module;if(!entitlements.includes(feature)&&!same(old?.[module],next[module]))return response(403,{error:'O módulo '+feature+' não está incluído no plano deste cliente.'});}
+  }
   const row={payload:data,revision:revision+1,updated_at:new Date().toISOString()};
   const target=url+'/rest/v1/'+(revision===0?'bolt_commercial_workspaces':statePath+'&revision=eq.'+revision);
   const saved=await fetch(target,{method:revision===0?'POST':'PATCH',headers:{...h,Prefer:'return=representation'},body:JSON.stringify(revision===0?{client_id:client.id,...row}:row)});

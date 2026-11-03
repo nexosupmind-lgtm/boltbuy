@@ -6,14 +6,16 @@ const moduleCode=readFileSync(new URL('../SITE/functions/api/commercial-workspac
 const {onRequest}=await import('data:text/javascript;base64,'+Buffer.from(moduleCode).toString('base64'));
 const clientId='00000000-0000-4000-8000-000000000001';
 const school=()=>({schools:[{id:clientId,slug:'escola-a',name:'Escola A',students:[],staff:[],classes:[],attendance:[],grades:[],finance:[]}],logs:[],plans:[]});
-function harness({member=true,status='active',missing=false,auth=true,metadata={}}={}){
+function harness({member=true,status='active',missing=false,auth=true,metadata={},features=null}={}){
  const calls=[],states=new Map();
  const fetch=async(input,options={})=>{const url=new URL(input);calls.push({url,options});const json=(data,status=200)=>new Response(JSON.stringify(data),{status});
  if(url.pathname==='/auth/v1/user')return auth?json({id:'user-a',email:'admin@a.test',user_metadata:metadata}):json({},401);
  const table=url.pathname.split('/').at(-1);
  if(table==='bolt_commercial_clients')return json([{id:url.searchParams.get('slug')==='eq.escola-b'?'00000000-0000-4000-8000-000000000002':clientId,name:'Escola A',slug:'escola-a',product:'class',status}]);
  if(table==='bolt_commercial_memberships')return json(member&&url.searchParams.get('client_id')==='eq.'+clientId?[{role:'owner'}]:[]);
- if(['bolt_client_branding','bolt_client_studio_settings'].includes(table))return json([]);
+ if(table==='bolt_client_subscriptions')return json(features?[{plan_id:'plan-a'}]:[]);
+ if(table==='bolt_platform_plans')return json(features?[{features}]:[]);
+ if(['bolt_client_branding','bolt_client_studio_settings','bolt_client_subscriptions','bolt_platform_plans'].includes(table))return json([]);
  assert.equal(table,'bolt_commercial_workspaces');if(missing)return json({},404);
  if(!options.method)return json(states.has(clientId)?[states.get(clientId)]:[]);
  const row=JSON.parse(options.body);if(options.method==='POST'){if(states.has(clientId))return json({},409);states.set(clientId,row);return json([row],201)}
@@ -72,8 +74,10 @@ test('School identity and authenticated user replace product branding inside Cla
  assert.match(h.get('.main').innerHTML,/Conectado como/);assert.match(h.get('.main').innerHTML,/João Vitor/);assert.match(h.get('.main').innerHTML,/bolt-eye/);
  const source=readFileSync('SITE/Boltclass/index.html','utf8');assert.match(source,/bolt-double-blink 15s/);assert.match(source,/96\.3%,96\.6%,98%,98\.3%/);assert.match(source,/prefers-reduced-motion:reduce/);
 });
-test('Class login alone shows the monochrome logo; Church login stays unchanged',async()=>{
- for(const product of ['class','church']){const h=dom(fresh());let applied=false;h.context.document.body.classList.add=name=>{if(name==='class-login')applied=true};h.context.location.search='?product='+product+'&slug=cliente-teste';h.get('login').querySelector=()=>h.get('button');vm.runInContext(inline('SITE/portal.html'),h.context);assert.equal(applied,product==='class');if(product==='class'){assert.equal(h.get('class-login-logo').src,'/Boltclass/assets/bolt-class-brand.png');assert.equal(h.get('class-login-logo').hidden,false)}}
+test('Class and Church login use their monochrome product logos',async()=>{
+ for(const product of ['class','church']){const h=dom(fresh());let applied=false;h.context.document.body.classList.add=name=>{if(name==='class-login')applied=true};h.context.location.search='?product='+product+'&slug=cliente-teste';h.get('login').querySelector=()=>h.get('button');vm.runInContext(inline('SITE/portal.html'),h.context);assert.equal(applied,true);if(product==='class'){assert.equal(h.get('class-login-logo').src,'/Boltclass/assets/bolt-class-brand.png');assert.equal(h.get('class-login-logo').hidden,false)}}
  const portal=readFileSync('SITE/portal.html','utf8');assert.match(portal,/filter:url\(#bolt-login-white\)/);assert.match(portal,/operator="in"/);
 });
 test('Visible user name comes from the authenticated identity',async()=>{const h=harness({metadata:{full_name:'João Vitor'}});const r=await h.request();assert.equal((await r.json()).user.name,'João Vitor')});
+
+test('Commercial plan module restrictions are enforced before persisted state changes',async()=>{const h=harness({features:['students']});const data=school();h.states.set(clientId,{payload:structuredClone(data),revision:1});data.schools[0].finance.push({id:'unauthorized',value:1});assert.equal((await h.request('PUT',{data,revision:1})).status,403);assert.equal(h.states.get(clientId).revision,1);data.schools[0].finance=[];data.schools[0].students.push({id:'allowed',name:'Aluno'});assert.equal((await h.request('PUT',{data,revision:1})).status,200);assert.equal(h.states.get(clientId).revision,2)});
