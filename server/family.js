@@ -64,9 +64,11 @@ export async function onRequest({request,env}){
    const user=await identity();let student,previewStudents,s;
    if(query.get('preview')==='1'){await admin(user);s=await school();previewStudents=s.students.map(x=>({id:x.id,name:x.name}));student=s.students.find(x=>x.id===query.get('student_id'))||s.students[0];}
    else{const accounts=await db(accountPath+'&user_id=eq.'+encodeURIComponent(user.id)+'&select=student_id,guardian_fingerprint');const a=accounts[0];if(!a)fail(403,'Este usuário não tem vínculo com um aluno desta escola.');s=await school();student=s.students.find(x=>x.id===a.student_id);if(!student||await guardianFingerprint(student)!==a.guardian_fingerprint)fail(403,'O acesso do responsável precisa ser atualizado pela escola.');}
-   const br=await db('bolt_client_branding?client_id=eq.'+client.id+'&select=logo_url,primary_color,secondary_color');
+   const [br,settings]=await Promise.all([
+    db('bolt_client_branding?client_id=eq.'+client.id+'&select=logo_url,primary_color,secondary_color'),
+    student?db('bolt_client_studio_settings?client_id=eq.'+client.id+'&select=features'):[]
+   ]);
    if(!student)return json(200,{ok:true,preview:true,preview_students:[],school:{name:client.name,logo:br[0]?.logo_url||'',color:br[0]?.primary_color||'#475569'},student:null});
-   const settings=await db('bolt_client_studio_settings?client_id=eq.'+client.id+'&select=features');
    return json(200,{ok:true,...projectFamily(s,student,client,{...br[0],support_avatar_url:settings[0]?.features?.support_avatar_url}),...(previewStudents?{preview:true,preview_students:previewStudents}:{})});
   }
   const user=await identity();await admin(user);const s=await school();
