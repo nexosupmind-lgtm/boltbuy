@@ -3,13 +3,23 @@
 @media(max-width:600px){.main{padding:14px}.header{padding:16px}.brand{font-size:14px}.metrics{gap:8px}.metric{padding:13px 9px}.metric strong{font-size:23px}.welcome h1{font-size:23px}.nav button{font-size:10px}.login{margin:6vh 16px;padding:24px}.student{padding:17px}.photo{flex-basis:62px;width:62px;height:62px}}
 
 .shell{background:#f6f7fc}
-.header{background:var(--accent);color:var(--on-accent,#fff)}
-.welcome{background:var(--family-secondary,var(--accent));color:#fff}
-.welcome small{color:inherit}
-.family-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
-.family-shortcuts button{display:grid;justify-items:center;gap:4px;border:1px solid #e1e5ef;border-radius:14px;padding:10px 2px;background:color-mix(in srgb,var(--accent) 8%,white);color:#152039;font-size:clamp(10px,2.8vw,14px)}
-.family-shortcuts span{font-size:23px;font-weight:800}
-.metrics .metric{background:color-mix(in srgb,var(--accent) 10%,white);min-width:0;overflow-wrap:anywhere}
+.header{justify-content:center;min-height:96px;padding:12px 20px;background:var(--accent);color:var(--on-accent,#fff)}
+.school-logo{display:block;width:min(74vw,280px);height:72px;object-fit:contain}
+.school-name{text-align:center;font-size:20px;font-weight:800}
+.main{max-width:760px;margin-inline:auto}
+.welcome{padding:18px 16px;margin-bottom:8px;background:transparent;color:#17263a}
+.welcome small,.student small{font-size:11px;letter-spacing:.08em;font-weight:750;color:#4b596c}
+.welcome h1{font-size:clamp(24px,6vw,34px);line-height:1.15;margin:6px 0}
+.welcome p{margin:0;color:#435269;line-height:1.45}
+.student{border-radius:18px;box-shadow:0 3px 12px #17263a08}
+.student h2{font-size:clamp(17px,4.8vw,23px);line-height:1.2;overflow-wrap:anywhere}
+.student p{margin:4px 0 0}
+.student .photo{border-radius:50%}
+.muted,.metric small,.entry small{color:#4b596c}
+.overview h2,.main .card h2{font-size:18px;margin:0 0 10px}
+.metrics{margin:0 0 16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.metrics .metric{display:grid;grid-template-rows:minmax(2.4em,auto) auto 1fr;gap:4px;background:color-mix(in srgb,var(--accent) 7%,white);border:1px solid color-mix(in srgb,var(--accent) 14%,white);min-width:0;overflow-wrap:anywhere}
+.metric strong{margin:0;line-height:1.1}
 .shell{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
 .nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));inset:auto 0 0;margin-inline:auto;transform:none;z-index:10;padding:5px 4px calc(5px + env(safe-area-inset-bottom))}
 .nav>button,.family-menu summary{display:grid;align-content:center;justify-items:center;min-height:50px;padding:4px 0;font-size:clamp(10px,2.8vw,12px);color:var(--ink);line-height:1.2}
