@@ -8,7 +8,18 @@ export async function guardianFingerprint(student){const name=String(student.gua
 async function encryptionKey(secret){const key=await crypto.subtle.importKey('raw',enc.encode(secret),'HKDF',false,['deriveKey']);return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:enc.encode('bolt-family-v1'),info:enc.encode('onboarding-password')},key,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
 export async function seal(password,secret,aad){const iv=crypto.getRandomValues(new Uint8Array(12));const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:enc.encode(aad)},await encryptionKey(secret),enc.encode(password));return 'v1.'+b64(iv)+'.'+b64(cipher)}
 export async function unseal(value,secret,aad){const [v,iv,body]=value.split('.');if(v!=='v1')throw Error('Invalid secret version');return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(iv),additionalData:enc.encode(aad)},await encryptionKey(secret),unb64(body)))}
-function random(size){return b64(crypto.getRandomValues(new Uint8Array(size))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')}
+function randomIndex(length){
+ const bytes=new Uint8Array(1),limit=256-256%length;
+ do{crypto.getRandomValues(bytes)}while(bytes[0]>=limit);
+ return bytes[0]%length;
+}
+function randomFrom(alphabet,length){return Array.from({length},()=>alphabet[randomIndex(alphabet.length)]).join('')}
+function familyPassword(){
+ const groups=['ABCDEFGHJKLMNPQRSTUVWXYZ','abcdefghijkmnopqrstuvwxyz','23456789','!@#$%&*'];
+ const chars=[...groups.map(group=>randomFrom(group,1)),...randomFrom(groups.join(''),6)];
+ for(let i=chars.length-1;i>0;i--){const j=randomIndex(i+1);[chars[i],chars[j]]=[chars[j],chars[i]]}
+ return chars.join('');
+}
 function visibleToStudent(row,student){return (!row.studentId||row.studentId===student.id)&&(!row.classId||row.classId===student.classId)}
 export function projectFamily(s,student,client,branding={}){
  const classroom=(s.classes||[]).find(c=>c.id===student.classId);
@@ -41,7 +52,7 @@ export async function onRequest({request,env}){
   const aad=a=>client.id+':'+a.student_id+':'+a.username;
   if(request.method==='POST'&&body.action==='login'){
    const username=String(body.username||'').trim().toLowerCase(),password=String(body.password||'');
-   if(!/^fam-[a-z0-9_-]{8,30}$/.test(username)||password.length<1||password.length>200)fail(401,'Login ou senha inválidos.');
+   if(!/^(?:[0-9]{8}|fam-[a-z0-9_-]{8,30})$/.test(username)||password.length<1||password.length>200)fail(401,'Login ou senha inválidos.');
    const rows=await db(accountPath+'&username=eq.'+encodeURIComponent(username)+'&select=*'),a=rows[0];if(!a)fail(401,'Login ou senha inválidos.');
    const r=await fetch(url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:secret,'content-type':'application/json'},body:JSON.stringify({email:a.auth_email,password})});if(!r.ok)fail(401,'Login ou senha inválidos.');const session=await r.json();if(session.user?.id!==a.user_id)fail(401,'Login inválido.');
    const s=await school(),student=s.students.find(x=>x.id===a.student_id);if(!student||await guardianFingerprint(student)!==a.guardian_fingerprint)fail(403,'O acesso do responsável precisa ser atualizado pela escola.');
@@ -75,7 +86,14 @@ export async function onRequest({request,env}){
   }
   if(body.action==='create'&&existing)fail(409,'Este aluno já possui acesso. Use Enviar acesso.');
   if(body.action==='reset'&&(!existing||body.confirm!==true))fail(400,'Confirme a recriação do acesso existente.');
-  const username='fam-'+random(9).toLowerCase(),password=random(18),email=username+'@bolt-family.invalid';
+  let username;
+  for(let attempt=0;attempt<8;attempt++){
+   const candidate=randomFrom('0123456789',8);
+   const taken=await db('bolt_family_accounts?username=eq.'+candidate+'&select=id&limit=1');
+   if(!taken.length){username=candidate;break}
+  }
+  if(!username)fail(503,'Não foi possível reservar um código. Tente novamente.');
+  const password=familyPassword(),email=crypto.randomUUID()+'@bolt-family.invalid';
   const created=await fetch(url+'/auth/v1/admin/users',{method:'POST',headers,body:JSON.stringify({email,password,email_confirm:true,user_metadata:{full_name:String(student.guardian).slice(0,120)}})});if(!created.ok)fail(503,'Não foi possível criar o acesso. Tente novamente.');const auth=await created.json(),uid=auth.id||auth.user?.id;if(!uid)fail(503,'Não foi possível confirmar a criação do acesso.');
   const row={client_id:client.id,student_id:student.id,user_id:uid,username,auth_email:email,guardian_fingerprint:await guardianFingerprint(student),activated_at:null,created_at:new Date().toISOString(),version:existing?existing.version+1:1};row.onboarding_secret=await seal(password,passwordKey,aad(row));
   // Compare-and-set on replacement. A stale tab cannot replace a newer guardian account.
