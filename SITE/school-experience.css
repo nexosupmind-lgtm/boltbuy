@@ -1,0 +1,367 @@
+body[data-school-surface="teacher"] {
+  --experience-primary: var(--school-primary);
+}
+body[data-school-surface="family"] {
+  --experience-primary: var(--accent);
+}
+body[data-school-surface="admin"] {
+  --experience-primary: var(--blue);
+}
+body[data-school-surface] {
+  --experience-on: #fff;
+}
+/* Solid branding plates preserve each school's logo and main color. */
+body[data-school-surface="teacher"] .teacher-topbar {
+  background: var(--experience-primary);
+  color: var(--experience-on);
+  margin: 0 -32px;
+  padding: 12px 32px;
+  border: 0;
+  border-radius: 0 0 25px 25px;
+}
+body[data-school-surface="teacher"] .teacher-school-brand,
+body[data-school-surface="teacher"] .teacher-account small {
+  color: inherit;
+}
+body[data-school-surface="teacher"] .teacher-account > span,
+body[data-school-surface="teacher"] .teacher-account .btn {
+  background: #ffffff20;
+  color: inherit;
+}
+body[data-school-surface="teacher"] .teacher-school-brand > span {
+  background: #ffffff18;
+  color: inherit;
+}
+body[data-school-surface="teacher"] .teacher-welcome {
+  background: color-mix(in srgb, var(--experience-primary) 65%, #17182b);
+}
+body[data-school-surface="teacher"] .teacher-welcome-art > span {
+  background: color-mix(in srgb, var(--experience-primary) 22%, white);
+  border-color: #ffffff70;
+}
+body[data-school-surface="admin"] .class-brand-plate {
+  background: var(--experience-primary);
+  border: 1px solid #ffffff22;
+}
+body[data-school-surface="admin"] .class-mobile-brand {
+  background: var(--experience-primary);
+  color: var(--experience-on);
+  border-color: #ffffff30;
+}
+.school-shortcuts .school-tile-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  border-radius: 12px;
+  background: #ffffffb0;
+  color: var(--experience-primary);
+}
+.school-tile-icon svg {
+  width: 24px;
+  height: 24px;
+}
+body[data-school-surface="admin"] .school-mobile-hero {
+  background: var(--experience-primary);
+  color: var(--experience-on);
+}
+/* A quieter base makes color, illustrations and activity cards stand out. */
+body[data-school-surface="family"] {
+  background: #f3f5fa;
+}
+body[data-school-surface="family"] .shell {
+  background: #f3f5fa;
+}
+body[data-school-surface="family"] .main {
+  padding-top: 22px;
+}
+body[data-school-surface="family"] .header {
+  border-radius: 0 0 26px 26px;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+body[data-school-surface="family"] .welcome {
+  border: 1px solid color-mix(in srgb, var(--accent) 13%, white);
+  background: color-mix(in srgb, var(--accent) 5%, white);
+  padding: 26px 22px;
+  border-radius: 24px;
+  margin-bottom: 18px;
+}
+body[data-school-surface="family"] .welcome-art {
+  top: 1px;
+  right: 6px;
+  font-size: 118px;
+}
+body[data-school-surface="family"] .welcome h1 {
+  letter-spacing: -0.8px;
+}
+body[data-school-surface="family"] .welcome p {
+  max-width: 85%;
+  font-size: 14px;
+  line-height: 1.7;
+}
+body[data-school-surface="family"] .student {
+  border: 1px solid #e2e7f0;
+  padding: 23px;
+  border-radius: 23px;
+  box-shadow: 0 6px 25px #1f2b4b05;
+  margin-bottom: 25px;
+}
+body[data-school-surface="family"] .student .photo {
+  border-radius: 23px;
+  border: 3px solid white;
+  outline: 1px solid #e4e9f2;
+  box-shadow: 0 5px 15px #1f2b4b0c;
+}
+body[data-school-surface="family"] .metrics {
+  gap: 10px;
+  margin-top: 15px;
+  margin-bottom: 24px;
+}
+body[data-school-surface="family"] .metrics .metric {
+  padding: 17px 12px;
+  border-radius: 20px;
+  border: 1px solid #e3e9ef;
+  background: white;
+  box-shadow: 0 5px 18px #1f2b4b04;
+}
+body[data-school-surface="family"] .metric:nth-child(1) .metric-icon {
+  color: #28724e;
+  background: #e9f5ee;
+}
+body[data-school-surface="family"] .metric:nth-child(2) .metric-icon {
+  color: #7550a5;
+  background: #f1eafb;
+}
+body[data-school-surface="family"] .metric:nth-child(3) .metric-icon {
+  color: #a4631b;
+  background: #fff1d9;
+}
+body[data-school-surface="family"] .metric-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  font-size: 21px;
+  margin-bottom: 5px;
+}
+.school-frequency-ring {
+  width: 36px;
+  height: 36px;
+}
+body[data-school-surface="family"] .metric strong {
+  font-size: 28px;
+  letter-spacing: -1px;
+  color: #18334c;
+}
+body[data-school-surface="family"] .metric small {
+  color: #596a80;
+}
+body[data-school-surface="family"] .family-feed {
+  border-radius: 23px;
+  border-color: #e2e7f0;
+  box-shadow: 0 5px 20px #1f2b4b04;
+  padding: 22px;
+}
+body[data-school-surface="family"] .entry {
+  border: 1px solid #e6ebf2;
+  border-left: 3px solid var(--accent);
+  border-radius: 15px;
+  padding: 16px;
+  margin: 12px 0;
+  background: white;
+}
+body[data-school-surface="family"] .entry h3 {
+  font-size: 16px;
+  color: #18334c;
+}
+body[data-school-surface="family"] .entry p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #52637a;
+}
+body[data-school-surface="family"] .nav {
+  background: #fffffff5;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 -6px 25px #1f2b4b08;
+}
+body[data-school-surface="family"] .nav button span svg {
+  display: block;
+  width: 23px;
+  height: 23px;
+}
+body[data-school-surface="family"] .nav > button.active {
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 9%, white);
+}
+body[data-school-surface="family"] .feed-heading button {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  padding: 8px 10px;
+}
+/* Photo feedback sits next to the upload, never beyond the entire form. */
+.teacher-card .review-photo-feedback {
+  border: 1px solid #d8e1f0;
+  background: #eef3fb;
+  color: #304361;
+  padding: 16px;
+  border-radius: 14px;
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.teacher-card .review-photo-feedback[data-state="error"] {
+  background: #fff0f3;
+  border-color: #f0c8d1;
+  color: #962c47;
+}
+.teacher-card .review-photo-feedback[data-state="done"] {
+  background: #eaf6ef;
+  border-color: #c6e2d2;
+  color: #265d41;
+}
+.teacher-card .review-photo-feedback[data-state="reading"]::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 10px;
+  vertical-align: middle;
+  border: 2px solid #c2cde2;
+  border-top-color: #435b89;
+  border-radius: 50%;
+  animation: school-spin 0.8s linear infinite;
+}
+.teacher-card[aria-busy="true"] {
+  opacity: 1;
+}
+.teacher-card [data-read-photo] {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.teacher-card .review-photo-preview {
+  max-height: 320px;
+}
+@keyframes school-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .school-enter {
+    animation: school-arrive 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--school-delay, 0ms);
+  }
+  @keyframes school-arrive {
+    from {
+      opacity: 0.88;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  body[data-school-surface] button,
+  body[data-school-surface] summary {
+    transition:
+      background 0.18s ease,
+      box-shadow 0.18s ease,
+      translate 0.18s ease;
+  }
+  body[data-school-surface] button:active {
+    translate: 0 1px;
+  }
+  body[data-school-surface="family"] .welcome-art {
+    animation: school-spark 7s ease-in-out infinite;
+  }
+  .class-welcome-art > span:first-child,
+  .school-mobile-art > span:first-child {
+    animation: school-float 6s ease-in-out infinite;
+  }
+  .school-shortcuts button:hover,
+  .teacher-class-card:hover,
+  .class-room-card:hover {
+    translate: 0 -3px;
+    transition: translate 0.22s ease;
+    box-shadow: 0 9px 24px #1f2b4b12;
+  }
+  .teacher-class-card progress,
+  .chart-track > div {
+    transform-origin: bottom;
+    animation: school-grow 0.65s ease-out both;
+  }
+  @keyframes school-float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-4deg);
+    }
+    50% {
+      transform: translateY(-7px) rotate(4deg);
+    }
+  }
+  @keyframes school-spark {
+    0%,
+    100% {
+      transform: rotate(-10deg) scale(0.94);
+    }
+    50% {
+      transform: rotate(10deg) scale(1.04);
+    }
+  }
+  @keyframes school-grow {
+    from {
+      clip-path: inset(100% 0 0);
+    }
+    to {
+      clip-path: inset(0);
+    }
+  }
+}
+.school-motion-paused *,
+.school-motion-paused *::before {
+  animation-play-state: paused !important;
+}
+@media (max-width: 680px) {
+  body[data-school-surface="teacher"] .teacher-topbar {
+    margin: 0 -16px;
+    padding: 10px 16px;
+    border-radius: 0 0 22px 22px;
+  }
+  body[data-school-surface="family"] .student {
+    padding: 19px;
+  }
+  body[data-school-surface="family"] .student .photo {
+    flex-basis: 66px;
+    width: 66px;
+    height: 66px;
+    border-radius: 19px;
+  }
+  body[data-school-surface="family"] .welcome {
+    padding: 22px 18px;
+  }
+  body[data-school-surface="family"] .welcome p {
+    font-size: 13px;
+  }
+  body[data-school-surface="family"] .metrics .metric {
+    padding: 14px 10px;
+  }
+  body[data-school-surface="family"] .metric strong {
+    font-size: 25px;
+  }
+  body[data-school-surface="family"] .family-feed {
+    padding: 18px;
+  }
+  body[data-school-surface="family"] .metrics small {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-school-surface] *,
+  body[data-school-surface] *::before {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

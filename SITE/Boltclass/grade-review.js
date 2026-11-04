@@ -12,6 +12,15 @@
           "'": "&#39;",
         })[c],
     );
+  const within = (promise, ms, message) => {
+    let timer;
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(Error(message)), ms);
+      }),
+    ]).finally(() => clearTimeout(timer));
+  };
   let engine;
   function loadOCR() {
     if (engine) return engine;
@@ -22,8 +31,21 @@
       script.integrity =
         "sha384-r1ru3tcf6FhnCFR4B7pIFG+BhFF9LlFtz/P1y4pblWn3AGs9y3lBx5SKLNf4+rED";
       script.crossOrigin = "anonymous";
-      script.onload = () => resolve(window.Tesseract);
+      const timer = setTimeout(() => {
+        script.remove();
+        engine = null;
+        reject(
+          Error(
+            "O leitor demorou a carregar. Verifique a conexão e tente novamente.",
+          ),
+        );
+      }, 20000);
+      script.onload = () => {
+        clearTimeout(timer);
+        resolve(window.Tesseract);
+      };
       script.onerror = () => {
+        clearTimeout(timer);
         script.remove();
         engine = null;
         reject(
@@ -42,7 +64,17 @@
       file.size > 8 * 1024 * 1024
     )
       throw Error("Use uma foto JPG, PNG ou WebP de até 8 MB.");
-    if (typeof createImageBitmap === "function") return createImageBitmap(file);
+    if (typeof createImageBitmap === "function") {
+      try {
+        return await within(
+          createImageBitmap(file),
+          15000,
+          "Não foi possível abrir a foto. Tente uma imagem JPG menor.",
+        );
+      } catch {
+        /* Older phone decoders can still load the image element. */
+      }
+    }
     return new Promise((resolve, reject) => {
       const image = new Image(),
         url = URL.createObjectURL(file);
@@ -67,30 +99,46 @@
     image.close?.();
     return canvas;
   }
-  async function recognize(file) {
-    if (
-      !["image/png", "image/jpeg", "image/webp"].includes(file.type) ||
-      file.size > 8 * 1024 * 1024
-    )
-      throw Error("Use uma foto JPG, PNG ou WebP de até 8 MB.");
-    const image = await createImageBitmap(file);
-    const canvas = document.createElement("canvas");
+  async function recognize(file, progress) {
+    const canvas = await within(
+      photoCanvas(file),
+      20000,
+      "A foto demorou para abrir. Tente uma imagem JPG menor.",
+    );
+    let worker,
+      expired = false;
     try {
-      const scale = Math.min(1, 2200 / Math.max(image.width, image.height));
-      canvas.width = Math.max(1, Math.round(image.width * scale));
-      canvas.height = Math.max(1, Math.round(image.height * scale));
-      canvas
-        .getContext("2d")
-        .drawImage(image, 0, 0, canvas.width, canvas.height);
+      const ocr = await loadOCR();
+      const creating = ocr.createWorker("eng", 1, {
+        logger: (event) => {
+          if (event.status)
+            progress?.(
+              "Lendo texto da foto… " +
+                Math.round((event.progress || 0) * 100) +
+                "%",
+            );
+        },
+      });
+      creating
+        .then((value) => {
+          if (expired) void value.terminate();
+        })
+        .catch(() => {});
+      worker = await within(
+        creating,
+        45000,
+        "O leitor não iniciou. Confira a conexão e tente novamente.",
+      );
+      return (
+        await within(
+          worker.recognize(canvas, { rotateAuto: true }),
+          45000,
+          "A leitura demorou demais. Tente uma foto mais nítida ou digite as respostas.",
+        )
+      ).data.text;
     } finally {
-      image.close();
-    }
-    const ocr = await loadOCR();
-    const worker = await ocr.createWorker("eng", 1);
-    try {
-      return (await worker.recognize(canvas, { rotateAuto: true })).data.text;
-    } finally {
-      await worker.terminate();
+      expired = true;
+      if (worker) void worker.terminate();
       canvas.width = canvas.height = 1;
     }
   }
@@ -161,6 +209,8 @@
    <p class="review-format-help">Para ler bolhas, use a folha BOLT impressa abaixo. Fotos de outros modelos e respostas discursivas precisam de lançamento manual. Na lista numerada, confira o texto reconhecido.</p>
    <button class="btn alt" type="button" data-print-sheet>Imprimir folha de respostas</button>
    <label class="review-upload">Enviar foto das respostas<input type="file" aria-label="Foto das respostas do aluno" data-ocr="answers" accept="image/png,image/jpeg,image/webp"><small>JPG, PNG ou WebP · até 8 MB · foto processada neste aparelho</small></label>
+   <div class="review-photo-feedback" data-photo-feedback role="status" aria-live="polite" tabindex="-1" hidden></div>
+   <button class="btn alt" type="button" data-read-photo>Ler foto selecionada novamente</button>
    <img class="review-photo-preview" data-photo-preview alt="Foto enviada para conferência" hidden>
    <label class="field">Respostas lidas · confira e ajuste se necessário<textarea name="answers" required maxlength="4000" rows="5" placeholder="01 A&#10;02 B&#10;03 -"></textarea></label>
    <output class="review-score" data-score-preview aria-live="polite">A nota aparecerá depois da leitura das respostas.</output>
@@ -271,70 +321,125 @@
         status.textContent = error.message;
       }
     };
-    for (const input of form.querySelectorAll("[data-ocr]"))
-      input.onchange = async () => {
-        const file = input.files[0];
-        if (!file) return;
+    const photoStatus = section.querySelector("[data-photo-feedback]");
+    let reading = false;
+    const report = (message, error = false, running = false) => {
+      photoStatus.hidden = false;
+      photoStatus.textContent = message;
+      photoStatus.setAttribute("role", error ? "alert" : "status");
+      photoStatus.dataset.state = running
+        ? "reading"
+        : error
+          ? "error"
+          : "done";
+    };
+    async function readPhoto(input) {
+      if (reading) return;
+      const file = input?.files?.[0];
+      if (!file) {
+        report("Selecione uma foto primeiro.", true);
+        return;
+      }
+      reading = true;
+      busy(true);
+      report(
+        "Foto selecionada: " + file.name + ". Preparando a leitura…",
+        false,
+        true,
+      );
+      status.textContent = "";
+      const previousImage = section.querySelector("[data-photo-preview]");
+      previousImage.hidden = true;
+      previousImage.removeAttribute("src");
+      let canvas;
+      try {
         if (input.dataset.ocr === "answers") {
           form.elements.answers.value = "";
           form.elements.checked.checked = false;
-          section.querySelector("[data-photo-preview]").hidden = true;
           preview();
         }
-        busy(true);
-        status.textContent = "Lendo a foto neste aparelho…";
-        try {
-          let text,
-            uncertain = [];
-          if (
-            input.dataset.ocr === "answers" &&
-            form.elements.photoMode.value === "sheet"
-          ) {
-            const count = parse(form.elements.key.value).size;
-            if (!window.BOLT_ANSWER_SHEET)
-              throw Error("Atualize a página para carregar o leitor.");
-            const canvas = await photoCanvas(file);
-            try {
-              const result = window.BOLT_ANSWER_SHEET.read(
-                canvas
-                  .getContext("2d")
-                  .getImageData(0, 0, canvas.width, canvas.height),
-                count,
-              );
-              text = result.text;
-              uncertain = result.uncertain;
-              section.querySelector("[data-photo-preview]").src =
-                canvas.toDataURL("image/jpeg", 0.65);
-            } finally {
-              canvas.width = canvas.height = 1;
-            }
-          } else text = await recognize(file);
-          form.elements[input.dataset.ocr].value = text.slice(0, 4000);
-          form.elements.checked.checked = false;
-          const image = section.querySelector("[data-photo-preview]");
-          if (
-            input.dataset.ocr === "answers" &&
-            form.elements.photoMode.value === "sheet"
-          )
-            image.hidden = false;
-          else {
-            image.hidden = true;
-            image.removeAttribute("src");
-          }
-          preview();
-          status.textContent = uncertain.length
-            ? "Confira as questões " +
-              uncertain.join(", ") +
-              ": ficaram em branco, pouco nítidas ou com mais de uma marcação. Ajuste as respostas antes de confirmar."
-            : "Leitura concluída e nota calculada. Confira as respostas e marque a confirmação antes de enviar para análise.";
-        } catch (error) {
-          status.textContent = error.message;
-          status.focus();
-        } finally {
-          input.value = "";
-          busy(false);
-        }
-      };
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        canvas = await within(
+          photoCanvas(file),
+          20000,
+          "A foto demorou para abrir. Tente uma imagem JPG menor.",
+        );
+        const image = section.querySelector("[data-photo-preview]");
+        image.src = canvas.toDataURL("image/jpeg", 0.65);
+        image.hidden = false;
+        let text,
+          uncertain = [];
+        if (
+          input.dataset.ocr === "answers" &&
+          form.elements.photoMode.value === "sheet"
+        ) {
+          if (!form.elements.key.value.trim())
+            throw Error(
+              "A foto foi recebida. Salve primeiro o gabarito oficial desta prova e clique em Ler foto selecionada novamente.",
+            );
+          if (!window.BOLT_ANSWER_SHEET)
+            throw Error(
+              "O leitor da folha ainda não carregou. Atualize a página e tente novamente.",
+            );
+          report(
+            "Foto recebida. Localizando as marcações da folha BOLT…",
+            false,
+            true,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 30));
+          const result = window.BOLT_ANSWER_SHEET.read(
+            canvas
+              .getContext("2d")
+              .getImageData(0, 0, canvas.width, canvas.height),
+            parse(form.elements.key.value).size,
+          );
+          text = result.text;
+          uncertain = result.uncertain;
+        } else
+          text = await recognize(file, (message) =>
+            report(message, false, true),
+          );
+        form.elements[input.dataset.ocr].value = text.slice(0, 4000);
+        form.elements.checked.checked = false;
+        preview();
+        // Do not call a successful decode a successful correction if OCR produced invalid answers.
+        if (input.dataset.ocr === "answers")
+          calculate(form.elements.key.value, form.elements.answers.value);
+        report(
+          uncertain.length
+            ? "Foto lida. Confira as questões " +
+                uncertain.join(", ") +
+                ": em branco, pouco nítidas ou com mais de uma marcação. Ajuste antes de confirmar."
+            : "Leitura concluída e nota calculada. Confira as respostas abaixo antes de enviar para análise.",
+        );
+      } catch (error) {
+        const message = String(error.message || "Não foi possível ler a foto.");
+        report(
+          message +
+            (/quadrados|girada/.test(message)
+              ? " Esta opção usa a folha BOLT impressa. Para uma lista como 01 A, mude o formato da foto para Lista numerada."
+              : ""),
+          true,
+        );
+        photoStatus.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+      } finally {
+        if (canvas) canvas.width = canvas.height = 1;
+        reading = false;
+        busy(false);
+      }
+    }
+    for (const input of form.querySelectorAll("[data-ocr]")) {
+      input.addEventListener("change", () => void readPhoto(input));
+      input.addEventListener("input", () => {
+        if (input.files?.length) void readPhoto(input);
+      });
+    }
+    section
+      .querySelector("[data-read-photo]")
+      .addEventListener(
+        "click",
+        () => void readPhoto(form.querySelector('[data-ocr="answers"]')),
+      );
     form.onsubmit = async (event) => {
       event.preventDefault();
       busy(true);
