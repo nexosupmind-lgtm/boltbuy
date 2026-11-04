@@ -5,7 +5,7 @@ import {onRequest as manifest} from '../SITE/functions/api/app-manifest.js';
 import {onRequest as icon} from '../SITE/functions/api/family-icon.js';
 
 test('Family install exposes only the school icon, with no BOLT Class candidate',async()=>{
- const response=manifest({request:new Request('https://bolt.test/api/app-manifest?product=class&surface=family&slug=escola-a')});
+ const response=await manifest({request:new Request('https://bolt.test/api/app-manifest?product=class&surface=family&slug=escola-a')});
  const body=await response.json();
  assert.equal(body.icons.length,1);
  assert.equal(body.icons[0].src,'/api/family-icon?slug=escola-a&v=2');
