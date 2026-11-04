@@ -2,8 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-const moduleCode=readFileSync(new URL('../SITE/functions/api/commercial-workspace.js',import.meta.url),'utf8');
-const {onRequest}=await import('data:text/javascript;base64,'+Buffer.from(moduleCode).toString('base64'));
+import {onRequest} from '../server/commercial-workspace.js';
 const clientId='00000000-0000-4000-8000-000000000001';
 const school=()=>({schools:[{id:clientId,slug:'escola-a',name:'Escola A',students:[],staff:[],classes:[],attendance:[],grades:[],finance:[]}],logs:[],plans:[]});
 function harness({master=false,member=true,status='active',missing=false,auth=true,metadata={},features=null}={}){
@@ -57,7 +56,10 @@ test('Church API validates its own empty structure and persists privately',async
 test('Portal opens the correct operational app only after server authorization',async()=>{
  for(const [product,path] of [['class','Boltclass'],['church','Boltchurch']]){const h=dom(fresh());const redirects=[],requests=[];h.context.location={search:'?product='+product+'&slug=cliente-teste',assign:url=>redirects.push(url)};h.get('login').querySelector=()=>h.get('button');h.get('email').value='admin@example.test';h.get('password').value='temp-password';h.context.BOLT_WORKSPACE.client=()=>({auth:{signInWithPassword:async()=>({data:{session:{access_token:'commercial-session'}}})}});let authorized=true;h.context.fetch=async(url,options)=>{requests.push({url,options});return {ok:authorized,json:async()=>authorized?{ok:true}:{error:'Conta não autorizada'}}};vm.runInContext(inline('SITE/portal.html'),h.context);await h.get('login').onsubmit({preventDefault(){}});assert.equal(redirects[0],'/'+path+'/index.html?slug=cliente-teste');assert.equal(requests[0].options.headers.authorization,'Bearer commercial-session');assert.equal(h.get('password').value,'');authorized=false;await h.get('login').onsubmit({preventDefault(){}});assert.equal(redirects.length,1);assert.equal(h.get('msg').textContent,'Conta não autorizada')}
 });
-test('Cloudflare repository-root Functions match the SITE deployment functions',()=>{for(const name of ['commercial-workspace.js','create-user.js'])assert.equal(readFileSync('functions/api/'+name,'utf8'),readFileSync('SITE/functions/api/'+name,'utf8'))});
+test('Cloudflare repository-root Functions match the SITE deployment functions',()=>{
+ assert.match(readFileSync('functions/api/commercial-workspace.js','utf8'),/\.\.\/\.\.\/server\/commercial-workspace.js/);
+ assert.match(readFileSync('SITE/functions/api/commercial-workspace.js','utf8'),/\.\.\/\.\.\/\.\.\/server\/commercial-workspace.js/);
+for(const name of ['create-user.js'])assert.equal(readFileSync('functions/api/'+name,'utf8'),readFileSync('SITE/functions/api/'+name,'utf8'))});
 test('Class groups start closed, toggle closed again, and Bolt has branded controls',async()=>{
  const h=dom(fresh());vm.runInContext(inline('SITE/Boltclass/index.html'),h.context);await new Promise(setImmediate);assert.deepEqual(h.errors,[]);const nav=()=>h.get('.navitems').innerHTML;
  assert(!nav().includes('aria-expanded="true"'));assert(!nav().includes('nav nav-child'));assert(!h.get('root').innerHTML.includes('assets/bolt-class-brand.png'));assert.match(h.get('root').innerHTML,/school-brand-initial/);assert(!h.get('root').innerHTML.includes('Supabase'));assert.match(nav(),/Sair da conta/);
@@ -118,4 +120,11 @@ test('Owner can edit an imported student with missing legacy fields',async()=>{
  assert.equal(h.saves[0].schools[0].students[0].name,'Aluno atualizado');
  assert.equal(h.saves[0].schools[0].students[0].sourceId,'A1');
  assert.match(h.get('root').innerHTML,/Aluno atualizado/);
+});
+test('Workspace writes cannot bypass plan gates through nested school-life data',async()=>{
+ const h=harness({features:['students']});
+ const initial=school();await h.request('PUT',{data:initial,revision:0});
+ const next=structuredClone(initial);next.schools[0].schoolLife={pix:{key:'blocked@example.test'}};
+ assert.equal((await h.request('PUT',{data:next,revision:1})).status,403);
+ assert.equal(h.states.get(clientId).payload.schools[0].schoolLife,undefined);
 });

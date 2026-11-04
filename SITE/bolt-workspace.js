@@ -18,7 +18,7 @@ async function open(product){
  window.addEventListener('beforeunload',e=>{if(pending||saving){e.preventDefault();e.returnValue=''}});
  window.addEventListener('online',()=>{if(pending&&!blocked)void flush()});
  status('Conectado ao Supabase • '+bundle.client.name);
- return {bundle,save,flush,async logout(){if(!await flush())return false;await client().auth.signOut();location.assign(portal(product,slug));return true},async persist(data){save(data);if(!await flush())throw lastError||Error('Alterações ainda não salvas.');},client:client(),portal:portal(product,slug)};
+ return {bundle,save,flush,async refresh(){if(!await flush())throw lastError||Error('Há alterações pendentes.');const latest=await request('GET');revision=latest.revision;lastData=latest.data;Object.assign(bundle,latest);return latest;},async logout(){if(!await flush())return false;await client().auth.signOut();location.assign(portal(product,slug));return true},async persist(data){save(data);if(!await flush())throw lastError||Error('Alterações ainda não salvas.');},client:client(),portal:portal(product,slug)};
 }
 function fail(error,root=document.body){root.replaceChildren();const box=document.createElement('main');box.style.cssText='margin:10vh auto;padding:24px;max-width:560px;font:16px system-ui';const h=document.createElement('h2');h.textContent='Não foi possível abrir o ambiente';const p=document.createElement('p');p.textContent=error.message;const b=document.createElement('button');b.textContent='Tentar novamente';b.onclick=()=>location.reload();box.append(h,p,b);root.append(box)}
 window.BOLT_WORKSPACE={open,fail,client};

@@ -1,5 +1,7 @@
+import {familyStudents,familyLife,published} from './school-life-model.js';
 const json=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json','cache-control':'no-store'}});
 const fail=(status,message)=>{const e=Error(message);e.status=status;throw e};
+const cleanGuardian=value=>String(value||'').trim().slice(0,120);
 const enc=new TextEncoder();
 const b64=bytes=>btoa(String.fromCharCode(...new Uint8Array(bytes)));
 const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
@@ -24,10 +26,10 @@ function visibleToStudent(row,student){return (!row.studentId||row.studentId===s
 export function projectFamily(s,student,client,branding={}){
  const classroom=(s.classes||[]).find(c=>c.id===student.classId);
  return {school:{name:client.name,appName:String(s.familyAppName||client.name).trim().slice(0,40),logo:branding.logo_url||'',color:branding.primary_color||'#475569',secondaryColor:branding.secondary_color||'',supportAvatar:branding.support_avatar_url||''},guardian:student.guardian||'Responsável',student:{id:student.id,name:student.name,photo:student.photo||'',className:classroom?.name||'Turma não informada'},
- grades:(s.grades||[]).filter(x=>x.studentId===student.id&&x.publishStatus!=='draft'&&(!x.teacherExamId||x.publishStatus==='published')).map(x=>({subject:x.subject,score:x.score,period:x.period,assessment:x.assessment,date:x.date})),
+ grades:(s.grades||[]).filter(x=>x.studentId===student.id&&published(x)&&(!x.teacherExamId||x.publishStatus==='published')).map(x=>({subject:x.subject,score:x.score,period:x.period,assessment:x.assessment,date:x.date})),
  attendance:(s.attendance||[]).filter(x=>x.studentId===student.id).map(x=>({date:x.date,status:x.status})),
- messages:(s.messages||[]).filter(x=>visibleToStudent(x,student)).map(x=>({title:x.title,content:x.content,date:x.date})),
- calendar:(s.calendar||[]).filter(x=>visibleToStudent(x,student)).map(x=>({title:x.title,date:x.date,description:x.description})),
+ messages:(s.messages||[]).filter(x=>visibleToStudent(x,student)&&published(x)).map(x=>({id:x.id,title:x.title,content:x.content,date:x.date,requiresConsent:x.requiresConsent===true,kind:x.kind})),
+ calendar:(s.calendar||[]).filter(x=>visibleToStudent(x,student)&&published(x)).map(x=>({title:x.title,date:x.date,description:x.description})),
  activities:(s.teacherItems||[]).filter(x=>x.classId===student.classId&&x.status==='published'&&visibleToStudent(x,student)).map(x=>({title:x.title,description:x.description||x.content||'',due:x.due||x.date,kind:x.kind}))};
 }
 export async function onRequest({request,env}){
@@ -45,8 +47,9 @@ export async function onRequest({request,env}){
   async function admin(user){const masters=await db('bolt_master_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id');if(masters.length)return;const memberships=await db('bolt_commercial_memberships?client_id=eq.'+client.id+'&user_id=eq.'+encodeURIComponent(user.id)+'&role=eq.owner&select=user_id');if(!memberships.length)fail(403,'Acesso administrativo não autorizado para esta escola.')}
   async function school(){const rows=await db('bolt_commercial_workspaces?client_id=eq.'+client.id+'&select=payload');const s=rows[0]?.payload?.schools?.[0];if(s&&s.id!==client.id)fail(503,'Os dados da escola não puderam ser confirmados.');return s||{students:[],classes:[]}}
   if(request.method==='GET'&&query.get('view')==='identity'){const [br,app]=await Promise.all([db('bolt_client_branding?client_id=eq.'+client.id+'&select=logo_url,primary_color'),db('bolt_commercial_workspaces?client_id=eq.'+client.id+'&select=app_name:payload->schools->0->>familyAppName')]);return json(200,{ok:true,school:{name:client.name,appName:String(app[0]?.app_name||client.name).trim().slice(0,40),logo:br[0]?.logo_url||'',color:br[0]?.primary_color||'#475569'}})}
+  let familyFeatures=null;
   const contracts=await db('bolt_client_subscriptions?client_id=eq.'+client.id+'&select=plan_id');
-  if(contracts[0]?.plan_id){const plans=await db('bolt_platform_plans?id=eq.'+contracts[0].plan_id+'&product=eq.class&select=features');if(plans.length!==1||!Array.isArray(plans[0].features))fail(503,'Plano indisponível.');if(!plans[0].features.includes('family')&&!(request.method==='GET'&&query.get('view')==='portal'&&query.get('preview')==='1'))fail(403,'O Portal da Família não está incluído no plano desta escola.');}
+  if(contracts[0]?.plan_id){const plans=await db('bolt_platform_plans?id=eq.'+contracts[0].plan_id+'&product=eq.class&select=features');if(plans.length!==1||!Array.isArray(plans[0].features))fail(503,'Plano indisponível.');familyFeatures=plans[0].features;if(!plans[0].features.includes('family')&&!(request.method==='GET'&&query.get('view')==='portal'&&query.get('preview')==='1'))fail(403,'O Portal da Família não está incluído no plano desta escola.');}
   const accountPath='bolt_family_accounts?client_id=eq.'+client.id;
   const passwordKey=env.BOLT_FAMILY_CREDENTIAL_KEY||secret;
   const aad=a=>client.id+':'+a.student_id+':'+a.username;
@@ -55,21 +58,23 @@ export async function onRequest({request,env}){
    if(!/^(?:[0-9]{8}|fam-[a-z0-9_-]{8,30})$/.test(username)||password.length<1||password.length>200)fail(401,'Login ou senha inválidos.');
    const rows=await db(accountPath+'&username=eq.'+encodeURIComponent(username)+'&select=*'),a=rows[0];if(!a)fail(401,'Login ou senha inválidos.');
    const r=await fetch(url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:secret,'content-type':'application/json'},body:JSON.stringify({email:a.auth_email,password})});if(!r.ok)fail(401,'Login ou senha inválidos.');const session=await r.json();if(session.user?.id!==a.user_id)fail(401,'Login inválido.');
-   const s=await school(),student=s.students.find(x=>x.id===a.student_id);if(!student||await guardianFingerprint(student)!==a.guardian_fingerprint)fail(403,'O acesso do responsável precisa ser atualizado pela escola.');
+   const s=await school(),allowed=await familyStudents(s,a,guardianFingerprint);if(!allowed.length)fail(403,'O acesso do responsável precisa ser atualizado pela escola.');
    // Erase recoverable onboarding credentials as soon as they have been used.
    const activated=await db(accountPath+'&id=eq.'+a.id+'&version=eq.'+a.version,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({activated_at:a.activated_at||new Date().toISOString(),onboarding_secret:null})});if(activated.length!==1)fail(409,'O acesso foi alterado. Entre novamente.');
    return json(200,{ok:true,access_token:session.access_token,refresh_token:session.refresh_token,expires_in:session.expires_in});
   }
   if(request.method==='GET'&&query.get('view')==='portal'){
-   const user=await identity();let student,previewStudents,s;
+   const user=await identity();let student,previewStudents,s,familyChildren=[];
    if(query.get('preview')==='1'){await admin(user);s=await school();previewStudents=s.students.map(x=>({id:x.id,name:x.name}));student=s.students.find(x=>x.id===query.get('student_id'))||s.students[0];}
-   else{const accounts=await db(accountPath+'&user_id=eq.'+encodeURIComponent(user.id)+'&select=student_id,guardian_fingerprint');const a=accounts[0];if(!a)fail(403,'Este usuário não tem vínculo com um aluno desta escola.');s=await school();student=s.students.find(x=>x.id===a.student_id);if(!student||await guardianFingerprint(student)!==a.guardian_fingerprint)fail(403,'O acesso do responsável precisa ser atualizado pela escola.');}
+   else{const accounts=await db(accountPath+'&user_id=eq.'+encodeURIComponent(user.id)+'&select=student_id,user_id,guardian_fingerprint');const a=accounts[0];if(!a)fail(403,'Este usuário não tem vínculo com um aluno desta escola.');s=await school();familyChildren=await familyStudents(s,a,guardianFingerprint);student=familyChildren.find(x=>x.id===query.get('student_id'))||familyChildren[0];if(query.get('student_id')&&!familyChildren.some(x=>x.id===query.get('student_id')))fail(403,'Aluno fora do seu acesso.');if(!student)fail(403,'O acesso do responsável precisa ser atualizado pela escola.');}
    const [br,settings]=await Promise.all([
     db('bolt_client_branding?client_id=eq.'+client.id+'&select=logo_url,primary_color,secondary_color'),
     student?db('bolt_client_studio_settings?client_id=eq.'+client.id+'&select=features'):[]
    ]);
    if(!student)return json(200,{ok:true,preview:true,preview_students:[],school:{name:client.name,logo:br[0]?.logo_url||'',color:br[0]?.primary_color||'#475569'},student:null});
-   return json(200,{ok:true,...projectFamily(s,student,client,{...br[0],support_avatar_url:settings[0]?.features?.support_avatar_url}),...(previewStudents?{preview:true,preview_students:previewStudents}:{})});
+   const included=key=>!familyFeatures||familyFeatures.includes(key);
+   const portalSchool={...s,finance:included('finance')?s.finance:[],grades:included('grades')?s.grades:[],attendance:included('attendance')?s.attendance:[],messages:included('messages')?s.messages:[],calendar:included('calendar')?s.calendar:[],teacherItems:included('classes')?s.teacherItems:[]};
+   return json(200,{ok:true,children:familyChildren.map(({id,name})=>({id,name})),...projectFamily(portalSchool,student,client,{...br[0],support_avatar_url:settings[0]?.features?.support_avatar_url}),...familyLife(portalSchool,student,user.id),guardian:cleanGuardian(user.user_metadata?.full_name)||student.guardian||'Responsável',...(previewStudents?{preview:true,preview_students:previewStudents}:{})});
   }
   const user=await identity();await admin(user);const s=await school();
   if(request.method==='GET'&&query.get('view')==='access'){

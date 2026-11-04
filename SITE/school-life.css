@@ -1,0 +1,219 @@
+.life-shell {
+  max-width: 1080px;
+  margin: auto;
+  padding: 20px 16px 90px;
+  color: #17213a;
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
+}
+.teacher-online {
+  margin: 0;
+  background: #f3f6fb;
+}
+.life-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.life-header h1 {
+  font-size: 24px;
+}
+.life-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0 14px;
+  scrollbar-width: thin;
+}
+.life-tabs .btn {
+  white-space: nowrap;
+  flex: none;
+}
+.life-shell .card,
+.life-item {
+  background: #fff;
+  border: 1px solid #dfe5ed;
+  border-radius: 16px;
+  padding: 18px;
+  margin: 12px 0;
+}
+.life-shell .btn {
+  border: 0;
+  border-radius: 10px;
+  background: var(--school-primary, #334155);
+  color: var(--school-on-primary, #fff);
+  padding: 11px 15px;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.life-shell .btn.alt {
+  background: #e8edf5;
+  color: #17213a;
+}
+.life-shell button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.life-shell .field,
+.life-shell label.field {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0;
+}
+.life-shell input,
+.life-shell select,
+.life-shell textarea {
+  box-sizing: border-box;
+  font: inherit;
+  padding: 11px;
+  border: 1px solid #cdd7e4;
+  border-radius: 10px;
+  max-width: 100%;
+  background: white;
+  color: #17213a;
+}
+.life-shell .field input,
+.life-shell .field select,
+.life-shell .field textarea {
+  width: 100%;
+}
+.life-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 13px 0;
+  border-bottom: 1px solid #e3e8ef;
+}
+.life-row p {
+  margin: 3px 0;
+}
+.life-row input[type="number"] {
+  width: 90px;
+}
+.life-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 10px 0;
+}
+.life-check input {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.life-item summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.life-item p,
+.life-message p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.life-message {
+  background: #f0f4fa;
+  padding: 12px;
+  border-radius: 12px;
+  margin: 10px 0;
+}
+.life-message small {
+  display: block;
+  color: #526176;
+}
+.life-photo {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.life-login {
+  max-width: 420px;
+  margin: 8vh auto !important;
+}
+.life-shell fieldset {
+  border: 1px solid #dfe5ed;
+  border-radius: 10px;
+}
+.life-shell h2 {
+  font-size: 19px;
+}
+.life-shell .muted {
+  color: #526176;
+}
+.life-shell textarea {
+  min-height: 90px;
+}
+.main .life-tabs {
+  max-width: 100%;
+}
+.main .life-check input {
+  width: 18px;
+  height: 18px;
+}
+.main [data-life-form] .field {
+  margin: 12px 0;
+}
+.main [data-life-form] textarea {
+  width: 100%;
+  border: 1px solid #cdd7e4;
+  border-radius: 10px;
+  padding: 12px;
+  font: inherit;
+  color: #17213a;
+  background: #fff;
+}
+.main [data-life-form] fieldset {
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid #dfe5ed;
+  border-radius: 10px;
+}
+.main #life-credential {
+  border: 2px solid var(--blue, #334155);
+  overflow-wrap: anywhere;
+}
+.life-shell [role="status"],
+#life-result {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .life-shell {
+    padding: 16px 12px 36px;
+  }
+  .life-row {
+    gap: 8px;
+  }
+  .life-shell .card {
+    padding: 15px;
+  }
+  .life-tabs .btn {
+    font-size: 13px;
+  }
+  .life-shell .life-header h1 {
+    font-size: 21px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .life-tabs button {
+    transition: transform 120ms ease;
+  }
+  .life-tabs button:active {
+    transform: scale(0.96);
+  }
+}
+
+.main [hidden],
+.life-shell [hidden] {
+  display: none !important;
+}
+.family-menu > div {
+  max-height: min(70dvh, 540px);
+  overflow: auto;
+}
