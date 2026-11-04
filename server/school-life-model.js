@@ -150,10 +150,27 @@ function emv(id, value) {
     id + String(new TextEncoder().encode(value).length).padStart(2, "0") + value
   );
 }
+export function isChargeOpen(charge) {
+  const amount = Number(charge?.amount);
+  return (
+    Number.isFinite(amount) &&
+    amount > 0 &&
+    ![
+      "paid",
+      "pago",
+      "quitado",
+      "cancelled",
+      "canceled",
+      "cancelado",
+      "cancelada",
+      "quitada",
+    ].includes(clean(charge.status).toLowerCase())
+  );
+}
 export function pixPayload(config, charge) {
   const key = clean(config?.key, 77),
     amount = Number(charge.amount);
-  if (!key || !Number.isFinite(amount) || amount <= 0) return "";
+  if (!key || !isChargeOpen(charge)) return "";
   const ascii = (v, max) =>
     clean(v)
       .normalize("NFD")
@@ -250,30 +267,31 @@ export function familyLife(s, student, userId) {
     finance: list(s.finance)
       .filter((x) => x.studentId === student.id)
       .map((x) => {
-        const proof = list(life.payments).find(
+        const payments = list(life.payments).filter(
           (p) => p.chargeId === x.id && p.studentId === student.id,
         );
+        const proof = payments.at(-1);
+        const projectProof = (p) => ({
+          id: p.id,
+          hasProof: !!p.proofPath && p.userId === userId,
+          status: p.status,
+          submittedAt: p.submittedAt,
+          confirmedAt: p.confirmedAt,
+          reference: p.userId === userId ? p.reference : undefined,
+        });
         return {
           id: x.id,
           description: x.description,
           amount: Number(x.amount) || 0,
           due: x.due,
           status: x.status,
-          pix: ["paid", "pago", "quitado"].includes(
-            String(x.status).toLowerCase(),
-          )
-            ? ""
-            : pixPayload(life.pix, x),
-          confirmation: proof
-            ? {
-                id: proof.id,
-                hasProof: !!proof.proofPath && proof.userId === userId,
-                status: proof.status,
-                submittedAt: proof.submittedAt,
-                confirmedAt: proof.confirmedAt,
-                reference: proof.reference,
-              }
-            : null,
+          pix: pixPayload(life.pix, x),
+          confirmation: proof ? projectProof(proof) : null,
+          proofHistory: payments
+            .filter((p) => p.userId === userId)
+            .slice(-20)
+            .reverse()
+            .map(projectProof),
         };
       }),
     gradeSummary: gradeSummary(
@@ -330,9 +348,7 @@ export function schoolAlerts(s) {
     (x) =>
       x.due &&
       x.due < today &&
-      !["paid", "pago", "quitado", "cancelled", "cancelado"].includes(
-        String(x.status).toLowerCase(),
-      ),
+      isChargeOpen(x),
   ))
     alerts.push({
       type: "finance",

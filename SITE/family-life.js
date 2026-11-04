@@ -60,6 +60,21 @@
       return `<div class="life-actions"><button class="btn" data-parent-consent="yes" data-message="${esc(m.id)}" data-student="${esc(studentId)}">Autorizo</button><button class="btn alt" data-parent-consent="no" data-message="${esc(m.id)}" data-student="${esc(studentId)}">Não autorizo</button></div>`;
     return `<button class="btn" data-parent-read="${esc(m.id)}" data-student="${esc(studentId)}">Li e estou ciente</button>`;
   }
+  function proofButton(proof, preview) {
+    return !preview && proof?.hasProof
+      ? `<button class="btn alt" data-parent-proof="${esc(proof.id)}">Abrir meu comprovante</button>`
+      : "";
+  }
+  function paymentHistory(charge, preview) {
+    const history = list(charge.proofHistory);
+    if (history.length < 2) return "";
+    const labels = {
+      pending: "Aguardando conferência",
+      confirmed: "Confirmado",
+      rejected: "Não confirmado",
+    };
+    return `<details class="life-item"><summary>Histórico dos seus envios</summary>${history.map((proof) => `<article class="entry"><small>${esc(proof.submittedAt)}</small><p>${esc(proof.reference || "")} · ${esc(labels[proof.status] || proof.status)}</p>${proofButton(proof, preview)}</article>`).join("")}</details>`;
+  }
   function panel(tab, data, preview) {
     const student = data.student,
       empty = '<p class="muted">Nenhum registro publicado neste momento.</p>';
@@ -137,7 +152,7 @@
         list(data.finance)
           .map(
             (c) =>
-              `<article class="entry"><h3>${esc(c.description || "Mensalidade")}</h3><strong>${Number(c.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong><p>Vencimento: ${esc(c.due || "Não informado")} · ${esc(c.status || "Pendente")}</p>${c.confirmation ? `<p>${esc({ pending: "Pagamento informado. Aguardando conferência da escola.", confirmed: "Pagamento confirmado pela escola.", rejected: "A escola não confirmou. Entre em contato para conferir." }[c.confirmation.status])}</p>` : ""}${c.pix ? `<details><summary>Pix e pagamento</summary><textarea readonly class="life-pix" aria-label="Pix copia e cola">${esc(c.pix)}</textarea><button class="btn" data-parent-copy="${esc(c.id)}">Copiar Pix</button>${preview || c.confirmation?.status === "pending" ? "" : `<form data-parent-form="payment-submit"><input name="chargeId" type="hidden" value="${esc(c.id)}"><label class="field">Identificador da transação no banco<input name="reference" required maxlength="200"></label><label class="field">Comprovante (opcional, imagem ou PDF até 2 MB)<input name="proof" type="file" accept="image/png,image/jpeg,image/webp,application/pdf"></label><p class="muted">Informe depois de pagar. A escola fará a conferência no extrato.</p><button class="btn">Informar pagamento</button></form>`}</details>` : ""}</article>`,
+              `<article class="entry"><h3>${esc(c.description || "Mensalidade")}</h3><strong>${Number(c.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong><p>Vencimento: ${esc(c.due || "Não informado")} · ${esc(c.status || "Pendente")}</p>${c.confirmation ? `<p>${esc({ pending: "Pagamento informado. Aguardando conferência da escola.", confirmed: "Pagamento confirmado pela escola.", rejected: "A escola não confirmou. Entre em contato para conferir." }[c.confirmation.status])}</p>` : ""}${proofButton(c.confirmation, preview)}${paymentHistory(c, preview)}${c.pix ? `<details><summary>Pix e pagamento</summary><textarea readonly class="life-pix" aria-label="Pix copia e cola">${esc(c.pix)}</textarea><button class="btn" data-parent-copy="${esc(c.id)}">Copiar Pix</button>${preview || c.confirmation?.status === "pending" ? "" : `<form data-parent-form="payment-submit"><input name="chargeId" type="hidden" value="${esc(c.id)}"><label class="field">Identificador da transação no banco<input name="reference" required maxlength="200"></label><label class="field">Comprovante (opcional, imagem ou PDF até 2 MB)<input name="proof" type="file" accept="image/png,image/jpeg,image/webp,application/pdf"></label><p class="muted">Informe depois de pagar. A escola fará a conferência no extrato.</p><button class="btn">Informar pagamento</button></form>`}</details>` : ""}</article>`,
           )
           .join("") || empty
       }</section>`;
@@ -242,11 +257,36 @@
   });
   document.addEventListener("click", async (e) => {
     const b = e.target.closest(
-      "[data-parent-read],[data-parent-consent],[data-parent-copy],[data-parent-push],[data-parent-push-off]",
+      "[data-parent-read],[data-parent-consent],[data-parent-copy],[data-parent-push],[data-parent-push-off],[data-parent-proof]",
     );
     if (!b || !current || current.preview) return;
     b.disabled = true;
     try {
+      if (b.dataset.parentProof) {
+        const popup = window.open("about:blank", "_blank");
+        if (popup) popup.opener = null;
+        try {
+          const data = await api({
+            action: "payment-proof-url",
+            paymentId: b.dataset.parentProof,
+          });
+          if (popup) popup.location.href = data.url;
+          else {
+            const status = document.getElementById("family-status");
+            status.replaceChildren();
+            const link = document.createElement("a");
+            link.href = data.url;
+            link.target = "_blank";
+            link.rel = "noopener";
+            link.textContent = "Abrir comprovante. Link válido por 5 minutos.";
+            status.append(link);
+          }
+        } catch (error) {
+          if (popup) popup.close();
+          throw error;
+        }
+        return;
+      }
       if (b.hasAttribute("data-parent-copy")) {
         const charge = current.data.finance.find(
           (x) => x.id === b.dataset.parentCopy,
