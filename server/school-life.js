@@ -74,6 +74,52 @@ function checkDate(value) {
     fail(400, "Data inválida.");
   return date;
 }
+function teacherSelection(s, body) {
+  const explicit = body.classIds !== undefined || body.subjectIds !== undefined;
+  if (!explicit) {
+    const subjects = [...new Set(list(body.subjects).map((x) => text(x, 100)))];
+    if (!subjects.length) fail(400, "Selecione as disciplinas do professor.");
+    return { classIds: null, subjects };
+  }
+  const classIds = [...new Set(list(body.classIds))],
+    subjectIds = [...new Set(list(body.subjectIds))];
+  if (!classIds.length) fail(400, "Marque pelo menos uma turma.");
+  if (!subjectIds.length) fail(400, "Marque pelo menos uma disciplina.");
+  if (classIds.some((id) => !list(s.classes).some((c) => c.id === id)))
+    fail(
+      400,
+      "Uma turma foi alterada. Atualize a lista e selecione novamente.",
+    );
+  const subjects = subjectIds.map((id) => {
+    const subject = list(s.subjects).find((x) => x.id === id);
+    if (!subject || !clean(subject.name))
+      fail(
+        400,
+        "Uma disciplina foi alterada. Atualize a lista e selecione novamente.",
+      );
+    return clean(subject.name, 100);
+  });
+  return { classIds, subjects: [...new Set(subjects)] };
+}
+function assignTeacher(s, staffId, selection) {
+  if (selection.classIds === null) return;
+  s.teacherAssignments = list(s.teacherAssignments).filter(
+    (x) => x.teacherId !== staffId,
+  );
+  for (const classroom of list(s.classes)) {
+    if (
+      classroom.teacherId === staffId &&
+      !selection.classIds.includes(classroom.id)
+    )
+      delete classroom.teacherId;
+  }
+  for (const classId of selection.classIds)
+    s.teacherAssignments.push({
+      teacherId: staffId,
+      classId,
+      subjects: selection.subjects,
+    });
+}
 export async function onRequest(context) {
   const { request, env } = context;
   let createdUser = null,
@@ -504,6 +550,9 @@ export async function onRequest(context) {
           409,
           "Este professor já possui acesso. Revogue antes de criar outro.",
         );
+      if (body.classIds !== undefined || body.subjectIds !== undefined)
+        feature("classes");
+      teacherSelection(s, body);
       const email = text(body.email, 254).toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
         fail(400, "Informe um e-mail válido.");
@@ -533,6 +582,7 @@ export async function onRequest(context) {
       response = {
         password: generated,
         email,
+        phone: normalizePhone(staff.phone),
         login_url: "/teacher.html?slug=" + slug,
       };
     }
@@ -648,8 +698,9 @@ export async function onRequest(context) {
             )
           )
             fail(409, "Acesso do professor foi alterado.");
-          const subjects = list(body.subjects).map((x) => text(x, 100));
-          if (!subjects.length) fail(400, "Informe as disciplinas permitidas.");
+          const selection = teacherSelection(s, body);
+          assignTeacher(s, staff.id, selection);
+          const subjects = selection.subjects;
           life.teachers = list(life.teachers);
           life.teachers.push({
             staffId: staff.id,
@@ -658,6 +709,22 @@ export async function onRequest(context) {
             subjects,
             email: response.email,
           });
+          break;
+        }
+        case "teacher-permissions": {
+          requireOwner();
+          feature("staff");
+          feature("classes");
+          const account = list(life.teachers).find(
+            (x) => x.userId === body.userId,
+          );
+          if (!account || !list(s.staff).some((x) => x.id === account.staffId))
+            fail(404, "Acesso de professor não encontrado.");
+          const selection = teacherSelection(s, body);
+          if (selection.classIds === null)
+            fail(400, "Selecione as turmas e disciplinas.");
+          account.subjects = selection.subjects;
+          assignTeacher(s, account.staffId, selection);
           break;
         }
         case "teacher-activate":

@@ -1110,3 +1110,108 @@ test("A second guardian sees billing status without another guardian's bank refe
   assert.equal(other.proofHistory.length, 0);
   assert(!JSON.stringify(other).includes("private-bank-reference"));
 });
+test("Teacher account creation binds checked classes and catalog subjects in one save", async () => {
+  const h = await harness();
+  h.school.subjects = [{ id: "portugues", name: "Português" }];
+  const response = await h.request("teacher-create", {
+    staffId: "p2",
+    email: "new-prof@example.test",
+    classIds: ["c2"],
+    subjectIds: ["portugues"],
+    subjects: ["Untrusted free text"],
+  });
+  assert.equal(response.status, 200);
+  const access = await response.json();
+  assert.equal(access.password.length, 10);
+  assert.equal(access.login_url, "/teacher.html?slug=escola-a");
+  const account = h.school.schoolLife.teachers.find((x) => x.staffId === "p2");
+  assert.deepEqual(account.subjects, ["Português"]);
+  assert.deepEqual(
+    h.school.teacherAssignments.find((x) => x.teacherId === "p2"),
+    {
+      teacherId: "p2",
+      classId: "c2",
+      subjects: ["Português"],
+    },
+  );
+  h.setActor(account.userId);
+  const teacher = await (await h.request()).json();
+  assert.deepEqual(
+    teacher.classes.map((x) => x.id),
+    ["c2"],
+  );
+  assert.deepEqual(teacher.subjects[0].subjects, ["Português"]);
+});
+
+test("Invalid checked classes and subjects are rejected before an Auth account is created", async () => {
+  for (const selection of [
+    { classIds: [], subjectIds: ["portugues"] },
+    { classIds: ["c2"], subjectIds: [] },
+    { classIds: ["other-school-class"], subjectIds: ["portugues"] },
+    { classIds: ["c2"], subjectIds: ["other-school-subject"] },
+  ]) {
+    const h = await harness();
+    h.school.subjects = [{ id: "portugues", name: "Português" }];
+    assert.equal(
+      (
+        await h.request("teacher-create", {
+          staffId: "p2",
+          email: "new-prof@example.test",
+          ...selection,
+        })
+      ).status,
+      400,
+    );
+    assert.equal(h.users.size, 0);
+    assert(
+      !h.calls.some(
+        (c) =>
+          c.url.pathname === "/auth/v1/admin/users" &&
+          c.options.method === "POST",
+      ),
+    );
+  }
+});
+
+test("Updating checked permissions removes old class access without changing the teacher login", async () => {
+  const h = await harness();
+  h.school.subjects = [{ id: "math", name: "Matemática" }];
+  const before = structuredClone(h.school.schoolLife.teachers[0]);
+  h.setActor("teacher");
+  assert.equal(
+    (
+      await h.request("teacher-permissions", {
+        userId: "teacher",
+        classIds: ["c2"],
+        subjectIds: ["math"],
+      })
+    ).status,
+    403,
+  );
+  h.setActor("owner");
+  assert.equal(
+    (
+      await h.request("teacher-permissions", {
+        userId: "teacher",
+        classIds: ["c2"],
+        subjectIds: ["math"],
+      })
+    ).status,
+    200,
+  );
+  assert.equal(h.school.schoolLife.teachers[0].userId, before.userId);
+  assert.equal(
+    h.school.classes.find((x) => x.id === "c1").teacherId,
+    undefined,
+  );
+  h.setActor("teacher");
+  const teacher = await (await h.request()).json();
+  assert.deepEqual(
+    teacher.classes.map((x) => x.id),
+    ["c2"],
+  );
+  assert.deepEqual(
+    teacher.students.map((x) => x.id),
+    ["s2"],
+  );
+});
