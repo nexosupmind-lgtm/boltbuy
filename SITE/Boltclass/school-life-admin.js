@@ -21,14 +21,15 @@
   const select = (name, label, rows) =>
     `<label class="field">${esc(label)}<select name="${name}">${options(rows)}</select></label>`;
   const form = (action, body, title = "Salvar") =>
-    `<form data-life-form="${action}">${body}<button class="btn" type="submit">${title}</button></form>`;
+    `<form data-life-form="${action}">${body}<button class="btn" type="submit">${title}</button><p class="life-form-status" data-life-status role="status" aria-live="polite" tabindex="-1"></p></form>`;
   const card = (title, body) =>
     `<section class="card"><h2>${title}</h2>${body}</section>`;
   const blank = '<p class="muted">Nenhum registro neste momento.</p>';
   let ctx,
     pane = "alerts",
     result,
-    generation = 0;
+    generation = 0,
+    permissionsUser = "";
   async function api(method, body) {
     const token = (await ctx.workspace.client.auth.getSession()).data?.session
       ?.access_token;
@@ -70,29 +71,70 @@
       "</fieldset>"
     );
   }
+  function feedback(form, message, error = false) {
+    const local = form?.querySelector("[data-life-status]");
+    const target = local || document.getElementById("life-result");
+    if (!target) return;
+    target.textContent = message;
+    target.setAttribute("role", error ? "alert" : "status");
+    if (error) {
+      target.focus?.({ preventScroll: true });
+      target.scrollIntoView?.({ block: "nearest" });
+    }
+  }
   function credential(data) {
-    const block = document.getElementById("life-credential");
-    block.hidden = false;
-    block.replaceChildren();
-    const title = document.createElement("strong");
-    title.textContent =
-      "Acesso criado. Guarde e envie estas credenciais agora.";
-    block.append(title);
-    const details = document.createElement("p");
-    details.style.whiteSpace = "pre-wrap";
+    document.getElementById("life-credential-dialog")?.remove();
+    const dialog = document.createElement("dialog");
+    dialog.id = "life-credential-dialog";
+    dialog.className = "life-credentials";
+    dialog.setAttribute("aria-labelledby", "life-credential-title");
+    const title = document.createElement("h2");
+    title.id = "life-credential-title";
+    title.textContent = "Acesso pronto para enviar";
+    const description = document.createElement("p");
+    description.textContent = "Copie os dados abaixo antes de fechar.";
+    dialog.append(title, description);
     const link = new URL(data.login_url, location.origin).href;
-    details.textContent =
-      "Link: " +
-      link +
-      "\nLogin: " +
-      (data.username || data.email) +
-      (data.password
-        ? "\nSenha: " + data.password
-        : "\nUtilize a senha já definida no portal.");
-    block.append(details);
+    const values = [
+      ["Link de acesso", link],
+      ["Login", data.username || data.email],
+      ["Senha", data.password || "Utilize a senha já definida no portal."],
+    ];
+    for (const [label, value] of values) {
+      const field = document.createElement("label");
+      field.className = "field";
+      field.append(document.createTextNode(label));
+      const input = document.createElement("input");
+      input.readOnly = true;
+      input.value = value;
+      input.addEventListener("focus", () => input.select());
+      field.append(input);
+      dialog.append(field);
+    }
+    const message = values
+      .map(([label, value]) => label + ": " + value)
+      .join("\n");
+    const status = document.createElement("p");
+    status.setAttribute("role", "status");
+    const actions = document.createElement("div");
+    actions.className = "life-actions";
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "btn";
+    copy.textContent = "Copiar acesso";
+    copy.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(message);
+        status.textContent = "Acesso copiado.";
+      } catch {
+        status.textContent = "Selecione e copie os campos acima.";
+      }
+    };
+    actions.append(copy);
     if (data.phone) {
-      const a = document.createElement("a");
-      a.className = "btn";
+      const teacher = link.includes("/teacher"),
+        a = document.createElement("a");
+      a.className = "btn alt";
       a.target = "_blank";
       a.rel = "noopener";
       a.href =
@@ -102,13 +144,88 @@
         encodeURIComponent(
           "Olá! A " +
             ctx.school().name +
-            " preparou seu acesso ao Portal da Família.\n\n" +
-            details.textContent +
-            "\n\nAcompanhe a rotina, as atividades e os comunicados dos seus filhos.",
+            " preparou seu acesso " +
+            (teacher ? "à área do professor." : "ao Portal da Família.") +
+            "\n\n" +
+            message,
         );
-      a.textContent = "Preparar envio no WhatsApp";
-      block.append(a);
+      a.textContent = "Enviar pelo WhatsApp";
+      actions.append(a);
     }
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "btn alt";
+    close.textContent = "Fechar";
+    close.onclick = () => {
+      if (dialog.close) dialog.close();
+      else dialog.remove();
+    };
+    actions.append(close);
+    dialog.append(actions, status);
+    dialog.addEventListener("close", () => dialog.remove());
+    document.body.append(dialog);
+    if (dialog.showModal) dialog.showModal();
+    else {
+      dialog.setAttribute("open", "");
+      dialog.setAttribute("role", "dialog");
+      dialog.setAttribute("aria-modal", "true");
+    }
+  }
+  function teachingState(staffId) {
+    const s = ctx.school(),
+      teacher = (s.schoolLife?.teachers || []).find(
+        (x) => x.staffId === staffId,
+      );
+    const assignments = (s.teacherAssignments || []).filter(
+      (x) => x.teacherId === staffId,
+    );
+    const names = new Set(
+      [
+        ...(teacher?.subjects || []),
+        ...assignments.flatMap((x) => x.subjects || []),
+      ].map((x) => String(x).toLowerCase()),
+    );
+    return {
+      classIds: (s.classes || [])
+        .filter(
+          (c) =>
+            c.teacherId === staffId ||
+            assignments.some((a) => a.classId === c.id),
+        )
+        .map((c) => c.id),
+      subjectIds: (s.subjects || [])
+        .filter(
+          (x) =>
+            x.teacherId === staffId || names.has(String(x.name).toLowerCase()),
+        )
+        .map((x) => x.id),
+    };
+  }
+  function teachingChecks(selected) {
+    const s = ctx.school();
+    return [
+      ["classIds", "Turmas", s.classes || [], selected.classIds, "classes"],
+      [
+        "subjectIds",
+        "Disciplinas",
+        s.subjects || [],
+        selected.subjectIds,
+        "subjects",
+      ],
+    ]
+      .map(
+        ([name, label, items, checked, page]) =>
+          `<fieldset class="life-teaching-options"><legend>${label}</legend>${items.length ? `<button class="btn alt small" type="button" data-life-select-all="${name}">Marcar todas</button><div class="life-check-grid">${items.map((item) => `<label class="life-check"><input type="checkbox" name="${name}" value="${esc(item.id)}" ${checked.includes(item.id) ? "checked" : ""}>${esc(item.name)}</label>`).join("")}</div>` : `<p>Cadastre as ${label.toLowerCase()} da escola para selecionar aqui.</p><button class="btn alt" type="button" data-life-nav="${page}">Cadastrar ${label.toLowerCase()}</button>`}</fieldset>`,
+      )
+      .join("");
+  }
+  function applyTeaching(form, staffId) {
+    const selected = teachingState(staffId);
+    for (const name of ["classIds", "subjectIds"])
+      for (const checkbox of form.querySelectorAll(
+        'input[name="' + name + '"]',
+      ))
+        checkbox.checked = selected[name].includes(checkbox.value);
   }
   function content() {
     const s = ctx.school(),
@@ -126,63 +243,77 @@
             `<article class="life-row"><div><strong>${esc(a.name)}</strong><p>${esc(a.text)}</p></div><button class="btn alt" data-life-nav="${esc(a.page)}">Resolver</button></article>`,
         ),
       );
-    if (pane === "team")
-      return (
-        card(
-          "Criar acesso real do professor",
-          `<p>Vincule as turmas em Equipe ou no vínculo abaixo. O professor acessa somente suas turmas e disciplinas.</p>` +
-            form(
-              "teacher-create",
-              select(
-                "staffId",
-                "Profissional",
-                staff.map((x) => [x.id, x.name]),
-              ) +
-                input("email", "E-mail do professor", "email") +
-                input(
-                  "subjects",
-                  "Disciplinas permitidas, separadas por vírgula",
-                ) +
-                '<p class="muted">Uma senha forte será gerada. A conta entra pelo link próprio do professor.</p>',
-              "Criar login do professor",
-            ),
-        ) +
-        card(
-          "Vincular turma",
-          form(
-            "assign-teacher",
+    if (pane === "team") {
+      const accounts = life.teachers || [],
+        available = staff.filter(
+          (person) => !accounts.some((t) => t.staffId === person.id),
+        );
+      const first = available[0],
+        selection = first
+          ? teachingState(first.id)
+          : { classIds: [], subjectIds: [] };
+      const create = first
+        ? form(
+            "teacher-create",
             select(
-              "classId",
-              "Turma",
-              (s.classes || []).map((x) => [x.id, x.name]),
+              "staffId",
+              "Professor",
+              available.map((x) => [x.id, x.name]),
             ) +
-              select(
-                "teacherId",
-                "Professor",
-                staff.map((x) => [x.id, x.name]),
-              ) +
               input(
-                "subjects",
-                "Disciplinas nesta turma, separadas por vírgula",
-                "text",
-                "",
-                false,
+                "email",
+                "E-mail do professor",
+                "email",
+                first.email || "",
               ) +
-              select("mode", "Ação", [
-                ["assign", "Vincular / atualizar disciplinas"],
-                ["remove", "Remover vínculo"],
-              ]),
-          ),
-        ) +
+              teachingChecks(selection) +
+              '<p class="muted">A senha será gerada e mostrada ao criar o acesso. As turmas e disciplinas selecionadas já serão vinculadas.</p>',
+            "Criar acesso e gerar senha",
+          )
+        : "<p>" +
+          (!staff.length
+            ? "Cadastre o profissional para criar o acesso."
+            : "Os profissionais já têm acesso cadastrado. Use as opções abaixo para editar ou reativar.") +
+          '</p><button class="btn alt" data-life-nav="staff">Abrir Equipe</button>';
+      const choices = accounts.filter((t) =>
+        staff.some((x) => x.id === t.staffId),
+      );
+      const account =
+        choices.find((x) => x.userId === permissionsUser) || choices[0];
+      if (account) permissionsUser = account.userId;
+      const edit = account
+        ? card(
+            "Editar turmas e disciplinas",
+            form(
+              "teacher-permissions",
+              '<label class="field">Professor<select name="userId">' +
+                choices
+                  .map(
+                    (t) =>
+                      `<option value="${esc(t.userId)}" ${t.userId === permissionsUser ? "selected" : ""}>${esc(staff.find((x) => x.id === t.staffId)?.name || t.email)}</option>`,
+                  )
+                  .join("") +
+                "</select></label>" +
+                teachingChecks(teachingState(account.staffId)),
+              "Salvar turmas e disciplinas",
+            ),
+          )
+        : "";
+      return (
+        card("Criar acesso do professor", create) +
+        edit +
         card(
           "Acessos cadastrados",
-          rows(
-            life.teachers || [],
-            (t) =>
-              `<article class="life-row"><div><strong>${esc(staff.find((x) => x.id === t.staffId)?.name || "Profissional")}</strong><p>${esc(t.email)} · ${t.active === false ? "Revogado" : "Ativo"}</p><a href="/teacher.html?slug=${encodeURIComponent(s.slug)}" target="_blank" rel="noopener">Abrir login do professor</a></div>${t.active !== false ? `<button class="btn alt" data-life-reset="${esc(t.userId)}">Redefinir senha</button><button class="btn danger" data-life-revoke="teacher" data-user="${esc(t.userId)}">Revogar acesso</button>` : `<button class="btn" data-life-activate="${esc(t.userId)}">Reativar</button>`}</article>`,
-          ),
+          rows(accounts, (t) => {
+            const assigned = teachingState(t.staffId),
+              names = (s.classes || [])
+                .filter((c) => assigned.classIds.includes(c.id))
+                .map((c) => c.name);
+            return `<article class="life-row"><div><strong>${esc(staff.find((x) => x.id === t.staffId)?.name || "Profissional")}</strong><p>${esc(t.email)} · ${t.active === false ? "Revogado" : "Ativo"}</p><p>Turmas: ${esc(names.join(", ") || "Nenhuma vinculada")}</p><p>Disciplinas: ${esc((t.subjects || []).join(", "))}</p><a href="/teacher.html?slug=${encodeURIComponent(s.slug)}" target="_blank" rel="noopener">Abrir login do professor</a></div>${t.active !== false ? `<button class="btn alt" data-life-reset="${esc(t.userId)}">Redefinir senha</button><button class="btn danger" data-life-revoke="teacher" data-user="${esc(t.userId)}">Revogar acesso</button>` : `<button class="btn" data-life-activate="${esc(t.userId)}">Reativar</button>`}</article>`;
+          }),
         )
       );
+    }
     if (pane === "routines")
       return (
         card(
@@ -419,9 +550,7 @@
             ([id, label]) =>
               `<button class="btn ${id === pane ? "" : "alt"}" data-life-pane="${id}">${label}</button>`,
           )
-          .join(
-            "",
-          )}</div><p id="life-result" role="status"></p><section class="card" id="life-credential" hidden></section>${content()}`,
+          .join("")}</div><p id="life-result" role="status"></p>${content()}`,
       );
     } catch (error) {
       const node = document.querySelector(".main");
@@ -437,19 +566,41 @@
     if (!(await ctx.workspace.flush()))
       throw Error("Há alterações pendentes. Aguarde.");
     const data = await api("POST", body);
-    const latest = await ctx.workspace.refresh();
-    ctx.replace(latest.data);
-    await render(ctx);
     if (data.password || data.credentials) credential(data);
+    try {
+      const latest = await ctx.workspace.refresh();
+      ctx.replace(latest.data);
+      await render(ctx);
+    } catch (error) {
+      data.refreshWarning =
+        "A alteração foi salva, mas a lista não atualizou. Recarregue a página para conferir.";
+      const status = document.querySelector(
+        "#life-credential-dialog [role=status]",
+      );
+      if (status) status.textContent = data.refreshWarning;
+    }
     return data;
   }
   document.addEventListener(
     "click",
     async (e) => {
       const b = e.target.closest(
-        "[data-life-pane],[data-life-nav],[data-life-revoke],[data-life-payment],[data-life-publish],[data-life-grade],[data-life-push],[data-life-share],[data-life-proof],[data-life-reset],[data-life-activate]",
+        "[data-life-pane],[data-life-nav],[data-life-revoke],[data-life-payment],[data-life-publish],[data-life-grade],[data-life-push],[data-life-share],[data-life-proof],[data-life-reset],[data-life-activate],[data-life-select-all]",
       );
       if (!b || !ctx) return;
+      if (b.dataset.lifeSelectAll) {
+        const fields = [
+            ...b
+              .closest("form")
+              .querySelectorAll(
+                'input[name="' + b.dataset.lifeSelectAll + '"]',
+              ),
+          ],
+          checked = fields.some((x) => !x.checked);
+        for (const field of fields) field.checked = checked;
+        b.textContent = checked ? "Desmarcar todas" : "Marcar todas";
+        return;
+      }
       if (b.dataset.lifePane) {
         pane = b.dataset.lifePane;
         await render(ctx);
@@ -517,7 +668,18 @@
           await mutate(body);
         }
       } catch (error) {
-        document.getElementById("life-result").textContent = error.message;
+        const local = b.closest("article") || b.closest("form");
+        let status = local?.querySelector("[data-life-status]");
+        if (local && !status) {
+          status = document.createElement("p");
+          status.dataset.lifeStatus = "";
+          local.append(status);
+        }
+        if (status) {
+          status.textContent = error.message;
+          status.setAttribute("role", "alert");
+          status.scrollIntoView?.({ block: "nearest" });
+        } else feedback(null, error.message, true);
       } finally {
         b.disabled = false;
       }
@@ -531,7 +693,7 @@
       if (!form.dataset.lifeForm || !ctx) return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      const b = form.querySelector("button"),
+      const b = form.querySelector('button[type="submit"]'),
         fd = new FormData(form),
         body = Object.fromEntries(fd);
       body.action = form.dataset.lifeForm;
@@ -543,11 +705,26 @@
           .split(",")
           .map((x) => x.trim())
           .filter(Boolean);
+      if (["teacher-create", "teacher-permissions"].includes(body.action)) {
+        body.classIds = fd.getAll("classIds");
+        body.subjectIds = fd.getAll("subjectIds");
+      }
       body.requiresConsent = fd.has("requiresConsent");
       body.resolve = fd.has("resolve");
       body.requireReview = fd.has("requireReview");
+      const buttonText = b.textContent;
       b.disabled = true;
+      b.textContent =
+        body.action === "teacher-create" ? "Criando acesso…" : "Salvando…";
+      feedback(form, "Aguarde a confirmação.");
       try {
+        if (["teacher-create", "teacher-permissions"].includes(body.action)) {
+          if (!body.classIds.length)
+            throw Error("Marque pelo menos uma turma.");
+          if (!body.subjectIds.length)
+            throw Error("Marque pelo menos uma disciplina.");
+        }
+        let saved;
         if (body.action === "assign-teacher") {
           const next = structuredClone(ctx.db());
           const s = next.schools[0];
@@ -571,15 +748,53 @@
           await ctx.workspace.persist(next);
           ctx.replace(next);
           await render(ctx);
-        } else await mutate(body);
-        const out = document.getElementById("life-result");
-        if (out) out.textContent = "Alteração confirmada.";
+        } else saved = await mutate(body);
+        feedback(form, saved?.refreshWarning || "Alteração confirmada.");
       } catch (error) {
-        const out = document.getElementById("life-result");
-        if (out) out.textContent = error.message;
+        feedback(form, error.message, true);
       } finally {
         b.disabled = false;
+        b.textContent = buttonText;
       }
+    },
+    true,
+  );
+  document.addEventListener(
+    "change",
+    (e) => {
+      const form = e.target.closest("form");
+      if (!form || !ctx) return;
+      if (
+        form.dataset.lifeForm === "teacher-create" &&
+        e.target.name === "staffId"
+      ) {
+        const person = ctx.school().staff.find((x) => x.id === e.target.value);
+        form.elements.namedItem("email").value = person?.email || "";
+        applyTeaching(form, person?.id);
+      }
+      if (
+        form.dataset.lifeForm === "teacher-permissions" &&
+        e.target.name === "userId"
+      ) {
+        permissionsUser = e.target.value;
+        const account = (ctx.school().schoolLife?.teachers || []).find(
+          (x) => x.userId === permissionsUser,
+        );
+        applyTeaching(form, account?.staffId);
+      }
+    },
+    true,
+  );
+  document.addEventListener(
+    "invalid",
+    (e) => {
+      const form = e.target.closest("form[data-life-form]");
+      if (form)
+        feedback(
+          form,
+          e.target.validationMessage || "Confira os campos obrigatórios.",
+          true,
+        );
     },
     true,
   );
