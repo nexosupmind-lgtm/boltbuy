@@ -132,6 +132,16 @@ async function harness() {
     const url = new URL(input),
       body = options.body ? JSON.parse(options.body) : null;
     calls.push({ url, options, body });
+    if (url.pathname.startsWith("/auth/v1/admin/users/") && !options.method) {
+      const id = url.pathname.split("/").at(-1);
+      return response({
+        id,
+        app_metadata: {
+          bolt_school_id: id === "teacher" ? clientId : "other-school",
+          bolt_school_role: "teacher",
+        },
+      });
+    }
     if (url.pathname === "/auth/v1/user")
       return actor === "unknown"
         ? response({}, 401)
@@ -952,4 +962,21 @@ test("Only the school owner can reset an active teacher password and revoked acc
   );
   h.setActor("teacher");
   assert.equal((await h.request()).status, 200);
+});
+test("An owner cannot reset a global account by injecting it into the school teacher map", async () => {
+  const h = await harness();
+  h.school.schoolLife.teachers.push({
+    userId: "another-admin",
+    staffId: "p2",
+    active: true,
+    email: "other@example.test",
+  });
+  const result = await h.request("teacher-reset", { userId: "another-admin" });
+  assert.equal(result.status, 403);
+  assert(
+    !h.calls.some(
+      (c) =>
+        c.options.method === "PUT" && c.url.pathname.endsWith("/another-admin"),
+    ),
+  );
 });

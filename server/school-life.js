@@ -356,6 +356,21 @@ export async function onRequest(context) {
         (x) => x.userId === body.userId && x.active !== false,
       );
       if (!account) fail(404, "Professor sem acesso ativo.");
+      const verified = await fetch(
+        base + "/auth/v1/admin/users/" + encodeURIComponent(account.userId),
+        { headers },
+      );
+      if (!verified.ok)
+        fail(503, "Não foi possível confirmar a conta do professor.");
+      const authUser = await verified.json();
+      if (
+        authUser.app_metadata?.bolt_school_id !== client.id ||
+        authUser.app_metadata?.bolt_school_role !== "teacher"
+      )
+        fail(
+          403,
+          "Esta conta não foi criada como acesso de professor desta escola.",
+        );
       const generated = password();
       const result = await fetch(
         base + "/auth/v1/admin/users/" + encodeURIComponent(account.userId),
@@ -505,6 +520,10 @@ export async function onRequest(context) {
           password: generated,
           email_confirm: true,
           user_metadata: { full_name: staff.name },
+          app_metadata: {
+            bolt_school_id: client.id,
+            bolt_school_role: "teacher",
+          },
         }),
       });
       if (!r.ok)
