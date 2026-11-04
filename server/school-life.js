@@ -1,4 +1,5 @@
 import { uploadReceipt, removeReceipt, receiptURL } from "./school-receipts.js";
+import { canonicalKey, gradeAnswers } from "./answer-key.js";
 import { normalizePhone, guardianFingerprint, seal, unseal } from "./family.js";
 import {
   list,
@@ -1197,6 +1198,34 @@ export async function onRequest(context) {
           }
           break;
         }
+        case "teacher-answer-key": {
+          feature("grades");
+          if (!scope) fail(403, "Acesso do professor necessário.");
+          const exam = list(s.teacherItems).find(
+            (x) =>
+              x.id === body.examId &&
+              x.type === "exam" &&
+              x.teacherId === scope.staffId,
+          );
+          if (!exam || !scope.allows(exam.classId, exam.subject))
+            fail(403, "Prova não autorizada.");
+          let key;
+          try {
+            key = canonicalKey(body.key);
+          } catch (error) {
+            fail(400, error.message);
+          }
+          if (
+            exam.answerKey !== key &&
+            list(s.gradeReviewQueue).some((x) => x.examId === exam.id)
+          )
+            fail(
+              409,
+              "Conclua ou descarte as análises pendentes antes de alterar o gabarito.",
+            );
+          exam.answerKey = key;
+          break;
+        }
         case "review-enqueue":
         case "review-approve":
         case "review-discard": {
@@ -1214,9 +1243,19 @@ export async function onRequest(context) {
           if (action === "review-enqueue") {
             const record = body.record || {},
               student = studentById(s, record.studentId);
-            const score = Number(record.score),
-              correct = Number(record.correct),
-              total = Number(record.total);
+            let computed;
+            const key = exam.answerKey || record.key;
+            if (exam.answerKey && record.key !== exam.answerKey)
+              fail(
+                409,
+                "O gabarito mudou. Atualize a prova e confira as respostas novamente.",
+              );
+            try {
+              computed = gradeAnswers(key, record.answers);
+            } catch (error) {
+              fail(400, error.message);
+            }
+            const { score, correct, total } = computed;
             if (
               student.classId !== exam.classId ||
               !Number.isFinite(score) ||
@@ -1238,7 +1277,7 @@ export async function onRequest(context) {
               examId: exam.id,
               teacherId: scope.staffId,
               studentId: student.id,
-              key: text(record.key, 4000),
+              key: text(key, 4000),
               answers: text(record.answers, 4000),
               score,
               correct,

@@ -311,3 +311,231 @@
 .life-credentials [role="status"] {
   white-space: pre-wrap;
 }
+.teacher-card {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid #dfe4f0;
+  border-radius: 20px;
+  background: #fbfcff;
+  color: #20243e;
+}
+.review-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.review-heading small {
+  font-size: 10px;
+  letter-spacing: 1.3px;
+  font-weight: 750;
+  color: #6e6296;
+}
+.review-heading h3 {
+  margin: 4px 0;
+  font-size: 20px;
+}
+.review-symbol {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 15px;
+  background: #eae3fa;
+  color: #7550af;
+  font-size: 28px;
+}
+.teacher-card > p {
+  font-size: 13px;
+  color: #5c6980;
+  line-height: 1.7;
+}
+.review-key-editor {
+  background: white;
+  border: 1px solid #e1d9f0;
+  border-radius: 16px;
+  padding: 16px;
+  margin: 18px 0;
+}
+.review-key-editor summary {
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.review-key-editor [data-key-state] {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: #62448c;
+  background: #eee8f8;
+}
+.review-key-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  gap: 9px;
+  margin: 16px 0;
+}
+.review-key-grid label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #dfe4ef;
+  border-radius: 10px;
+  padding: 8px;
+  background: #fafbfe;
+}
+.review-key-grid label > span {
+  font-size: 11px;
+  color: #6b7890;
+}
+.review-key-grid select {
+  min-width: 0;
+  width: 100%;
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  color: #283650;
+  font: 600 14px system-ui;
+}
+.review-key-grid label:has(select:valid) {
+  background: #f1eef9;
+  border-color: #c9bedf;
+}
+.class-review-form > .field {
+  display: grid;
+  gap: 7px;
+  margin: 16px 0;
+}
+.review-official {
+  font-size: 12px;
+  color: #647089;
+  margin: 12px 0;
+}
+.review-upload {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 24px 18px;
+  text-align: center;
+  border: 1.5px dashed #b8a8d4;
+  border-radius: 16px;
+  background: #f3effa;
+  color: #4f3c72;
+  font-size: 14px;
+  font-weight: 700;
+}
+.review-upload input {
+  max-width: 100%;
+  color: #4f3c72;
+  font: 12px system-ui;
+  margin: auto;
+}
+.review-upload small {
+  font-size: 10px;
+  font-weight: 400;
+}
+.review-photo-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 270px;
+  object-fit: contain;
+  margin: 16px auto;
+  border-radius: 10px;
+  border: 1px solid #dfe5ef;
+}
+.review-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  background: #e9f4ee;
+  border: 1px solid #c9e2d3;
+  border-radius: 16px;
+  padding: 18px;
+  margin: 18px 0;
+  color: #265440;
+  font-size: 13px;
+}
+.review-score strong {
+  font-size: 34px;
+  line-height: 1;
+}
+.review-score small {
+  font-size: 14px;
+  font-weight: 500;
+}
+.review-score > span {
+  max-width: 280px;
+  font-size: 12px;
+}
+.teacher-card [data-review-count] {
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: #eee7fa;
+  color: #62448c;
+  font-size: 12px;
+}
+.teacher-card [data-review-list] summary {
+  line-height: 1.7;
+  cursor: pointer;
+}
+.teacher-card .life-check {
+  padding: 12px 0;
+  line-height: 1.6;
+  font-size: 12px;
+}
+.teacher-card [role="status"]:not(:empty) {
+  padding: 13px;
+  background: #edf1fa;
+  color: #344566;
+  border-radius: 10px;
+  margin-top: 16px;
+  overflow-wrap: anywhere;
+}
+.teacher-card [hidden] {
+  display: none !important;
+}
+.teacher-card[aria-busy="true"] {
+  opacity: 0.75;
+}
+.teacher-card input[type="file"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 9px 0;
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+}
+.teacher-card input[type="file"]::file-selector-button {
+  padding: 10px 12px;
+  margin-right: 8px;
+  border: 1px solid #d6c9e9;
+  border-radius: 10px;
+  color: #593e80;
+  background: #fff;
+  font: 600 11px system-ui;
+  cursor: pointer;
+}
+.review-format-help {
+  font-size: 12px;
+  color: #657087;
+  line-height: 1.7;
+}
+@media (max-width: 680px) {
+  .teacher-card {
+    padding: 16px;
+  }
+  .review-heading h3 {
+    font-size: 17px;
+  }
+  .review-key-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .review-score {
+    gap: 10px;
+  }
+}

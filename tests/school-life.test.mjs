@@ -409,6 +409,113 @@ test("Professor photo review queue requires human approval before a grade is rec
   assert.equal(h.school.grades[0].score, 9);
   assert.equal(h.school.gradeReviewQueue.length, 0);
 });
+test("Official answer keys are saved per authorized exam and scores are recomputed on the server", async () => {
+  const h = await harness();
+  h.setActor("teacher");
+  assert.equal(
+    (await h.request("teacher-answer-key", { examId: "e1", key: "2 b\n1 a" }))
+      .status,
+    200,
+  );
+  assert.equal(h.school.teacherItems[0].answerKey, "01 A\n02 B");
+  assert.equal(
+    (
+      await h.request("review-enqueue", {
+        examId: "e1",
+        record: {
+          studentId: "s1",
+          key: "01 A\n02 B",
+          answers: "01 A\n02 C",
+          score: 10,
+          correct: 2,
+          total: 2,
+        },
+      })
+    ).status,
+    200,
+  );
+  assert.equal(h.school.gradeReviewQueue[0].score, 5);
+  assert.equal(h.school.gradeReviewQueue[0].correct, 1);
+  assert.equal(h.school.grades.length, 0);
+  assert.equal(
+    (await h.request("teacher-answer-key", { examId: "e1", key: "01 B\n02 B" }))
+      .status,
+    409,
+  );
+  const id = h.school.gradeReviewQueue[0].id;
+  assert.equal(
+    (await h.request("review-discard", { examId: "e1", reviewId: id })).status,
+    200,
+  );
+  assert.equal(
+    (await h.request("teacher-answer-key", { examId: "e1", key: "01 B\n02 B" }))
+      .status,
+    200,
+  );
+});
+test("Answer key setup rejects other teachers, families, invalid numbering and stale correction keys", async () => {
+  const h = await harness();
+  h.school.teacherItems.push({
+    id: "e2",
+    teacherId: "p2",
+    classId: "c2",
+    type: "exam",
+    subject: "Matemática",
+  });
+  h.setActor("teacher");
+  assert.equal(
+    (await h.request("teacher-answer-key", { examId: "e2", key: "01 A" }))
+      .status,
+    403,
+  );
+  assert.equal(
+    (await h.request("teacher-answer-key", { examId: "e1", key: "01 A\n03 B" }))
+      .status,
+    400,
+  );
+  assert.equal(
+    (await h.request("teacher-answer-key", { examId: "e1", key: "01 A\n01 B" }))
+      .status,
+    400,
+  );
+  assert.equal(
+    (await h.request("teacher-answer-key", { examId: "e1", key: "01 A" }))
+      .status,
+    200,
+  );
+  assert.equal(
+    (
+      await h.request("review-enqueue", {
+        examId: "e1",
+        record: {
+          studentId: "s1",
+          key: "01 B",
+          answers: "01 A",
+          score: 0,
+          correct: 0,
+          total: 1,
+        },
+      })
+    ).status,
+    409,
+  );
+  assert.equal(
+    (
+      await h.request("review-enqueue", {
+        examId: "e1",
+        record: { studentId: "s2", key: "01 A", answers: "01 A" },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(h.school.gradeReviewQueue?.length || 0, 0);
+  h.setActor("parent");
+  assert.equal(
+    (await h.request("teacher-answer-key", { examId: "e1", key: "01 B" }))
+      .status,
+    403,
+  );
+});
 test("Family may acknowledge or decline only a published notice addressed to its own child", async () => {
   const h = await harness();
   h.setActor("parent");
