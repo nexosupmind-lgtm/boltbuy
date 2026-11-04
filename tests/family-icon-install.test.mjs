@@ -12,7 +12,7 @@ test('Family install exposes only the school icon, with no BOLT Class candidate'
  assert.equal(body.start_url,'/family.html?slug=escola-a');
 });
 
-test('Saved school PNG is delivered directly to the installer without a stale cache',async()=>{
+test('Saved school PNG has an immutable direct URL without a stale cache',async()=>{
  const original=globalThis.fetch;
  const logo='https://project.supabase.co/storage/v1/object/public/bolt-branding/school-id/family-icon-ab12.png';
  const calls=[];
@@ -26,11 +26,11 @@ test('Saved school PNG is delivered directly to the installer without a stale ca
  };
  try{
   const result=await icon({request:new Request('https://bolt.test/api/family-icon?slug=escola-a&v=2'),env:{SUPABASE_URL:'https://project.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'test'}});
-  assert.equal(result.status,200);
-  assert.equal(result.headers.get('content-type'),'image/png');
+  assert.equal(result.status,302);
+  assert.equal(result.headers.get('location'),logo);
   assert.equal(result.headers.get('cache-control'),'no-store');
-  assert.deepEqual([...new Uint8Array(await result.arrayBuffer())],[137,80,78,71]);
-  assert(calls.includes(logo));
+  
+  assert(!calls.includes(logo));
  }finally{globalThis.fetch=original}
 });
 

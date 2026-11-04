@@ -24,10 +24,7 @@ export async function onRequest({request,env}){
    const source=new URL(custom);
    const prefix='/storage/v1/object/public/bolt-branding/'+encodeURIComponent(client.id)+'/family-icon-';
    if(source.origin===base.origin&&source.pathname.startsWith(prefix)&&/^[-a-f0-9]+\.png$/.test(source.pathname.slice(prefix.length))){
-    const image=await fetch(source.href,{redirect:'error'});
-    if(image.ok&&image.headers.get('content-type')==='image/png'){
-     return new Response(image.body,{headers:{'content-type':'image/png','cache-control':'no-store','x-content-type-options':'nosniff'}});
-    }
+    return new Response(null,{status:302,headers:{location:source.href,'cache-control':'no-store','x-bolt-icon-status':'custom'}});
    }
   }
   stage='logo';
