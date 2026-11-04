@@ -23,20 +23,13 @@ window.BOLT_OPEN_SUPPORT=support;
 function setup(){
  document.documentElement.dataset.boltProduct=product;
  if(!document.querySelector('link[href="/bolt-shell.css"]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/bolt-shell.css';document.head.append(css);}
- if(master||slug){document.querySelectorAll('link[rel="manifest"]').forEach(e=>e.remove());const manifest=document.createElement('link');manifest.rel='manifest';manifest.href='/api/app-manifest?product='+product+'&surface='+surface+(slug?'&slug='+encodeURIComponent(slug):'');document.head.append(manifest);const icon=document.createElement('link');icon.rel='apple-touch-icon';icon.href='/assets/apps/'+product+'-192.png';document.head.append(icon);
- if(family&&slug){
-  const branded=document.createElement('img');
-  branded.onload=()=>{
-   try{
-    const canvas=document.createElement('canvas');
-    canvas.width=canvas.height=192;
-    canvas.getContext('2d').drawImage(branded,0,0,192,192);
-    icon.href=canvas.toDataURL('image/png');
-   }catch{}
-  };
-  branded.src='/api/family-icon?slug='+encodeURIComponent(slug);
+ if(master||slug){document.querySelectorAll('link[rel="manifest"]').forEach(e=>e.remove());const manifest=document.createElement('link');manifest.rel='manifest';manifest.href='/api/app-manifest?product='+product+'&surface='+surface+(slug?'&slug='+encodeURIComponent(slug):'');document.head.append(manifest);if(!document.querySelector('link[rel="apple-touch-icon"]')){
+  const icon=document.createElement('link');icon.rel='apple-touch-icon';
+  icon.href=family&&slug?'/api/family-icon?slug='+encodeURIComponent(slug)+'&v=2':'/assets/apps/'+product+'-192.png';
+  document.head.append(icon);
  }
  }
+
  for(const [name,content]of [['theme-color','#0b1020'],['apple-mobile-web-app-capable','yes'],['apple-mobile-web-app-status-bar-style','black-translucent']]){if(!document.querySelector('meta[name="'+name+'"]')){const m=document.createElement('meta');m.name=name;m.content=content;document.head.append(m)}}
  if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(()=>{});
  let deferred=null;const install=document.createElement('button');install.type='button';install.className='bolt-install';install.textContent='Instalar aplicativo';install.hidden=true;document.body.append(install);
