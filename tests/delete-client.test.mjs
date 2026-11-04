@@ -24,3 +24,12 @@ test('Delivery uses the tenant path and leaves school clients untouched',async()
 test('Both deployment wrappers share the deletion handler',async()=>{const a=await import('../functions/api/delete-client.js'),b=await import('../SITE/functions/api/delete-client.js');assert.equal(a.onRequest,onRequest);assert.equal(b.onRequest,onRequest)});
 
 test('A verification failure after database deletion is reported as partial, never as an untouched client',async()=>{const h=harness(),plan=await(await h.request()).json();h.setVerifyFailure(true);const r=await h.request('DELETE',{plan:plan.plan,confirmation:'escola-a'});assert.equal(r.status,202);const data=await r.json();assert.equal(data.deleted,true);assert.equal(data.cleanup_complete,false);assert.equal(h.clients.length,1);assert(h.files.get('bolt-branding').has(idA+'/logo.png'));h.setVerifyFailure(false);assert.equal((await h.request('DELETE',{plan:plan.plan,confirmation:'escola-a'})).status,200)});
+test('Deleting a school also cleans private receipts by that school prefix only',async()=>{
+ const h=harness();
+ h.files.set('bolt-school-receipts',new Set([idA+'/proof.png',idB+'/proof.png']));
+ const plan=await(await h.request()).json();
+ const result=await h.request('DELETE',{plan:plan.plan,confirmation:'escola-a'});
+ assert.equal(result.status,200);
+ assert(!h.files.get('bolt-school-receipts').has(idA+'/proof.png'));
+ assert(h.files.get('bolt-school-receipts').has(idB+'/proof.png'));
+});

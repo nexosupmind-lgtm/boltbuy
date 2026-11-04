@@ -7,3 +7,20 @@ self.addEventListener('fetch',e=>{
  if(e.request.method!=='GET'||u.origin!==self.location.origin||u.pathname.startsWith('/api/'))return;
  if(e.request.mode==='navigate')e.respondWith(fetch(e.request).catch(()=>caches.match('/offline.html')));
 });
+
+self.addEventListener('push',event=>{
+ let data={};try{data=event.data?.json()||{}}catch{}
+ const target=new URL(data.url||'/family.html',self.location.origin);
+ const allowed=target.origin===self.location.origin&&target.pathname==='/family.html';
+ event.waitUntil(self.registration.showNotification('Novidades da escola',{body:'Você recebeu uma atualização no Portal da Família.',icon:'/assets/apps/class-192.png',badge:'/assets/apps/class-192.png',tag:typeof data.tag==='string'?data.tag:'school-news',data:{url:allowed?target.href:self.location.origin+'/family.html'}}));
+});
+self.addEventListener('notificationclick',event=>{
+ event.notification.close();
+ const target=new URL(event.notification.data?.url||'/family.html',self.location.origin);
+ if(target.origin!==self.location.origin||target.pathname!=='/family.html')return;
+ event.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(async windows=>{
+  const client=windows.find(x=>x.url===target.href);
+  if(client)return client.focus();
+  return self.clients.openWindow(target.href);
+ }));
+});

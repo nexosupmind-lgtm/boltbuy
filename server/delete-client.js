@@ -22,7 +22,7 @@ export async function onRequest({request,env}){
   else{const raw=await request.text();if(raw.length>12000)fail(413,'Solicitação inválida.');try{body=JSON.parse(raw)}catch{fail(400,'Solicitação inválida.')}plan=await verifyPlan(body.plan,secret);({product,id}=plan);if(body.confirmation!==plan.slug)fail(400,'Digite exatamente o identificador informado para confirmar.');}
   const table=product==='buy'?'bolt_tenants':'bolt_commercial_clients',filter='id=eq.'+id+(product==='buy'?'':'&product=eq.'+product),found=await rows(table+'?'+filter+'&select=id,name,slug');
   const client=found[0];if(request.method==='GET'&&!client)fail(404,'Cliente não encontrado.');
-  const buckets=['bolt-branding','bolt-product-images'];
+  const buckets=['bolt-branding','bolt-product-images',...(product==='class'?['bolt-school-receipts']:[])];
   async function listFiles(bucket,limit=500){const queue=[id+'/'],files=[];let truncated=false,folders=0;while(queue.length){if(++folders>200)throw Error('Too many nested folders');const prefix=queue.shift();let offset=0;for(;;){const r=await fetch(base+'/storage/v1/object/list/'+bucket,{method:'POST',headers:h,body:JSON.stringify({prefix,limit:100,offset,sortBy:{column:'name',order:'asc'}})});if(r.status===404)return {files:[],truncated:false};if(!r.ok)throw Error('Storage unavailable');const objects=await r.json();if(!Array.isArray(objects))throw Error('Invalid storage list');for(const object of objects){const name=object.name;if(typeof name!=='string'||!name||name==='.'||name==='..'||/[\\/]/.test(name))throw Error('Invalid storage key');const path=prefix+name;if(!path.startsWith(id+'/'))throw Error('Invalid client prefix');if(object.id==null){queue.push(path+'/')}else{if(files.length>=limit){truncated=true;break}files.push(path)}}if(truncated)break;if(objects.length<100)break;offset+=100}if(truncated)break}return {files,truncated}}
   if(request.method==='GET'){
    const counts={};for(const [name,column]of tables[product]){const r=await rest(name+'?'+column+'=eq.'+id+'&select=*&limit=0',{headers:{Prefer:'count=exact'}},optional.has(name));counts[name]=r?Number((r.headers.get('content-range')||'*/0').split('/').at(-1))||0:0;}
@@ -35,7 +35,11 @@ export async function onRequest({request,env}){
   if(client){
    const membership=product==='buy'?'bolt_memberships?tenant_id=eq.':'bolt_commercial_memberships?client_id=eq.';
    candidates=(await rows(membership+id+'&select=user_id')).map(x=>x.user_id);
-   if(product==='class')candidates.push(...(await rows('bolt_family_accounts?client_id=eq.'+id+'&select=user_id',true)).map(x=>x.user_id));
+   if(product==='class'){
+    candidates.push(...(await rows('bolt_family_accounts?client_id=eq.'+id+'&select=user_id',true)).map(x=>x.user_id));
+    const workspaces=await rows('bolt_commercial_workspaces?client_id=eq.'+id+'&select=payload',true);
+    candidates.push(...(workspaces[0]?.payload?.schools?.[0]?.schoolLife?.teachers||[]).map(x=>x.userId));
+   }
    const deleted=await fetch(base+'/rest/v1/'+table+'?'+filter+'&slug=eq.'+encodeURIComponent(plan.slug),{method:'DELETE',headers:{...h,Prefer:'return=representation'}});
    if(!deleted.ok){
     const error=await deleted.json().catch(()=>({}));
