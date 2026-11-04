@@ -17,7 +17,7 @@ test('Saved school PNG is delivered directly to the installer without a stale ca
  const logo='https://project.supabase.co/storage/v1/object/public/bolt-branding/school-id/family-icon-ab12.png';
  const calls=[];
  globalThis.fetch=async input=>{
-  const url=String(input);calls.push(url);
+  assert.equal(typeof input,'string','Worker fetch receives a URL string');const url=input;calls.push(url);
   if(url.includes('/rest/v1/bolt_commercial_clients?'))return Response.json([{id:'school-id',status:'active'}]);
   if(url.includes('/rest/v1/bolt_client_branding?'))return Response.json([{primary_color:'#ff0000'}]);
   if(url.includes('/rest/v1/bolt_client_studio_settings?'))return Response.json([{features:{family_icon_url:logo}}]);

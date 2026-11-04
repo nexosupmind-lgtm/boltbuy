@@ -6,7 +6,7 @@ export async function onRequest({request,env}){
   const base=new URL(env.SUPABASE_URL),key=env.SUPABASE_SERVICE_ROLE_KEY;
   const headers={apikey:key,authorization:'Bearer '+key};
   const read=async path=>{
-   const response=await fetch(new URL('/rest/v1/'+path,base),{headers});
+   const response=await fetch(new URL('/rest/v1/'+path,base).href,{headers});
    if(!response.ok)throw Error('database-'+response.status);
    return response.json();
   };
@@ -19,7 +19,7 @@ export async function onRequest({request,env}){
    const source=new URL(custom);
    const prefix='/storage/v1/object/public/bolt-branding/'+encodeURIComponent(client.id)+'/family-icon-';
    if(source.origin===base.origin&&source.pathname.startsWith(prefix)&&/^[-a-f0-9]+\.png$/.test(source.pathname.slice(prefix.length))){
-    const image=await fetch(source,{redirect:'error'});
+    const image=await fetch(source.href,{redirect:'error'});
     if(image.ok&&image.headers.get('content-type')==='image/png'){
      return new Response(image.body,{headers:{'content-type':'image/png','cache-control':'no-store','x-content-type-options':'nosniff'}});
     }
@@ -30,7 +30,7 @@ export async function onRequest({request,env}){
   if(!logo.startsWith('data:')){
    const source=new URL(logo);
    if(source.origin!==base.origin||!source.pathname.startsWith('/storage/v1/object/public/'))return fallback();
-   const image=await fetch(source,{redirect:'error'});
+   const image=await fetch(source.href,{redirect:'error'});
    const type=image.headers.get('content-type');
    if(!image.ok||!/^image\/(png|jpeg|webp)$/.test(type||''))return fallback();
    const bytes=new Uint8Array(await image.arrayBuffer());
