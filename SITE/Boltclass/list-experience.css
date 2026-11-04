@@ -1,0 +1,309 @@
+/* School colors are inherited from each client's identity. */
+.main .class-list-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 20px 0 12px;
+}
+.class-list-count {
+  color: var(--ink, #17213a);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--blue) 9%, white);
+  padding: 9px 13px;
+  border-radius: 12px;
+}
+.class-list-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #526078;
+  font-size: 12px;
+  font-weight: 600;
+}
+.class-list-search input {
+  width: min(280px, 100%);
+  min-height: 42px;
+  border: 1px solid #dce3ee;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  color: #17213a;
+  font: inherit;
+}
+.class-list-search input:focus-visible,
+.class-list-sort:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+.main .class-record-table {
+  border-collapse: separate;
+  border-spacing: 0 9px;
+  width: 100%;
+}
+.main .class-record-table th {
+  background: transparent;
+  border: 0;
+  color: #59677c;
+  font-size: 12px;
+  padding: 8px 14px;
+}
+.class-list-sort {
+  background: transparent;
+  border: 0;
+  padding: 6px 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+.class-list-sort::after {
+  content: " ↕";
+  opacity: 0.45;
+}
+[aria-sort="ascending"] .class-list-sort::after {
+  content: " ↑";
+  opacity: 1;
+}
+[aria-sort="descending"] .class-list-sort::after {
+  content: " ↓";
+  opacity: 1;
+}
+.main .class-record-table td {
+  background: #fff;
+  color: #26364e;
+  padding: 17px 14px;
+  border-top: 1px solid #e6ebf3;
+  border-bottom: 1px solid #e6ebf3;
+  vertical-align: middle;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+.class-record-table td:first-child {
+  border-left: 1px solid #e6ebf3;
+  border-radius: 16px 0 0 16px;
+}
+.class-record-table td:last-child {
+  border-right: 1px solid #e6ebf3;
+  border-radius: 0 16px 16px 0;
+}
+.main .class-record-table tr:hover td {
+  background: color-mix(in srgb, var(--blue) 4%, white);
+  border-color: color-mix(in srgb, var(--blue) 22%, #e6ebf3);
+}
+.class-record-title {
+  font-weight: 700;
+  min-width: 180px;
+}
+.class-record-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.class-record-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--blue) 10%, white);
+  color: var(--ink, #17213a);
+  font-size: 14px;
+  font-weight: 800;
+  border: 1px solid color-mix(in srgb, var(--blue) 17%, white);
+}
+.class-record-table small {
+  display: block;
+  color: #65738a;
+  margin-top: 5px;
+  font-weight: 400;
+}
+.class-record-actions {
+  min-width: 150px;
+}
+.class-record-actions .btn {
+  margin: 3px;
+  border-radius: 10px;
+  min-height: 36px;
+}
+.class-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 99px;
+  padding: 7px 11px;
+  background: #eef2f7;
+  color: #3f526e;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.class-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.class-status[data-tone="success"] {
+  background: #e8f6ed;
+  color: #206340;
+}
+.class-status[data-tone="attention"] {
+  background: #fff1df;
+  color: #8a480c;
+}
+.class-list-no-results {
+  text-align: center;
+  padding: 28px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  color: #526078;
+}
+.main .life-row {
+  border: 1px solid #e4e9f2;
+  border-left: 4px solid var(--blue);
+  border-radius: 16px;
+  padding: 18px;
+  margin: 12px 0;
+  box-shadow: 0 4px 15px #17213a04;
+  gap: 14px;
+  transition: box-shadow 0.18s ease;
+}
+.main .life-row:hover {
+  box-shadow: 0 6px 20px #17213a0b;
+}
+.main .life-row strong {
+  color: #17213a;
+  font-size: 15px;
+}
+.main .life-row p {
+  color: #59677c;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 6px 0;
+}
+.main .card {
+  animation: class-page-in 0.2s ease-out;
+}
+@keyframes class-page-in {
+  from {
+    opacity: 0.65;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.main .class-record-table tr[hidden],
+.class-list-no-results[hidden] {
+  display: none !important;
+}
+@media (max-width: 760px) {
+  .main .class-list-tools {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .class-list-count {
+    align-self: flex-start;
+  }
+  .class-list-search {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .class-list-search input {
+    width: 100%;
+    font-size: 16px;
+  }
+  .main .tablewrap:has(.class-record-table:not(.class-record-empty)) {
+    overflow: visible;
+  }
+  .main .class-record-table:not(.class-record-empty),
+  .main .class-record-table:not(.class-record-empty) tbody {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+  .class-record-table:not(.class-record-empty) thead {
+    display: none;
+  }
+  .main .class-record-table:not(.class-record-empty) tr:has(th) {
+    display: none;
+  }
+  .main .class-record-table:not(.class-record-empty) tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    background: white;
+    padding: 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    margin: 0 0 14px;
+    box-shadow: 0 4px 18px #17213a05;
+  }
+  .main .class-record-table:not(.class-record-empty) td {
+    display: block;
+    padding: 0;
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 13px;
+  }
+  .class-record-table td::before {
+    content: attr(data-label);
+    display: block;
+    color: #68778c;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .class-record-table td:first-child,
+  .class-record-table .class-record-actions {
+    grid-column: 1/-1;
+  }
+  .class-record-table td:first-child::before,
+  .class-record-actions::before {
+    display: none;
+  }
+  .class-record-table td:first-child {
+    font-size: 16px;
+    border-bottom: 1px solid #edf0f5 !important;
+    padding-bottom: 14px !important;
+  }
+  .class-record-table .class-record-actions {
+    border-top: 1px solid #edf0f5 !important;
+    padding-top: 12px !important;
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .class-record-actions .btn {
+    margin: 0;
+    min-height: 42px;
+    flex: 1 1 auto;
+  }
+  .main .life-row {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .main .card {
+    animation: none;
+  }
+  .main .life-row,
+  .main .class-record-table td {
+    transition: none;
+  }
+}
