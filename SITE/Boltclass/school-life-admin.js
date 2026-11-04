@@ -400,6 +400,7 @@
     try {
       if (!(await ctx.workspace.flush()))
         throw Error("Aguarde o salvamento das alterações.");
+      if (!ctx.workspace.bundle.data) await ctx.workspace.persist(ctx.db());
       result = await api("GET");
       if (own !== generation) return;
       ctx.layout(
