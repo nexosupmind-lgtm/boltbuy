@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
+import { inflateSync } from "node:zlib";
 const { chromium } = createRequire(import.meta.url)("playwright");
 const base = fileURLToPath(new URL("../SITE/", import.meta.url));
 const browser = await chromium.launch({
@@ -212,6 +213,7 @@ try {
   await page
     .getByText("Gabarito salvo. Agora envie a foto do aluno.")
     .waitFor();
+  await page.locator("select[name=photoMode]").selectOption("sheet");
   await page.locator("[data-read-photo]").click();
   await feedback.filter({ hasText: "Leitura concluída" }).waitFor();
   assert.equal(
@@ -252,6 +254,126 @@ try {
   assert.equal(await input.isEnabled(), true);
   await page.screenshot({
     path: "/tmp/school-photo-feedback.png",
+    fullPage: true,
+  });
+  // The user's normal A–E grid is a supported input without BOLT markers.
+  await page.locator("select[name=photoMode]").selectOption("grid");
+  await page.locator("[data-key-form] input[name=count]").fill("10");
+  await page
+    .locator("[data-key-form] input[name=count]")
+    .dispatchEvent("change");
+  for (let n = 1; n <= 10; n++)
+    await page.locator(`[data-key-q="${n}"]`).selectOption("A");
+  await page.getByRole("button", { name: "Salvar gabarito da prova" }).click();
+  await page
+    .getByText("Gabarito salvo. Agora envie a foto do aluno.")
+    .waitFor();
+  const fixture = JSON.parse(
+    readFileSync(
+      new URL("./fixtures/standard-answer-grid.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const raster = {
+    width: fixture.width,
+    height: fixture.height,
+    gray: inflateSync(Buffer.from(fixture.gray_zlib, "base64")).toString(
+      "base64",
+    ),
+  };
+  const makeGrid = (marks) =>
+    page.evaluate(
+      ({ raster, marks }) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = raster.width;
+        canvas.height = raster.height;
+        const context = canvas.getContext("2d"),
+          pixels = context.createImageData(canvas.width, canvas.height),
+          gray = atob(raster.gray);
+        for (let i = 0; i < gray.length; i++) {
+          pixels.data[i * 4] =
+            pixels.data[i * 4 + 1] =
+            pixels.data[i * 4 + 2] =
+              gray.charCodeAt(i);
+          pixels.data[i * 4 + 3] = 255;
+        }
+        context.putImageData(pixels, 0, 0);
+        const xs = [134, 211, 289, 367, 445],
+          ys = [40, 91, 145, 202, 257, 312, 369, 426, 481, 544];
+        context.fillStyle = "#142050";
+        marks.forEach((a, n) => {
+          context.beginPath();
+          context.arc(xs["ABCDE".indexOf(a)], ys[n], 11, 0, Math.PI * 2);
+          context.fill();
+        });
+        return canvas.toDataURL().split(",")[1];
+      },
+      { raster, marks },
+    );
+  const noMarks = await makeGrid([]);
+  await input.setInputFiles({
+    name: "gabarito-comum.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(noMarks, "base64"),
+  });
+  await feedback.filter({ hasText: "Foto lida. Confira" }).waitFor();
+  assert.equal(
+    await page.locator("[data-detection-results] [data-state=blank]").count(),
+    10,
+  );
+  const marked = await makeGrid([
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+  ]);
+  await input.setInputFiles({
+    name: "gabarito-marcado.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(marked, "base64"),
+  });
+  await feedback.filter({ hasText: "Leitura concluída" }).waitFor();
+  assert.equal(
+    await page.locator("[data-detection-results] [data-state=marked]").count(),
+    10,
+  );
+  assert.match(
+    await page.locator("[data-score-preview]").innerText(),
+    /2 acertos de 10/,
+  );
+  assert.equal(await page.locator("input[name=checked]").isChecked(), false);
+  const jpeg = await page.evaluate(async (encoded) => {
+    const image = new Image();
+    image.src = "data:image/png;base64," + encoded;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    canvas.getContext("2d").drawImage(image, 0, 0);
+    return canvas.toDataURL("image/jpeg", 0.72).split(",")[1];
+  }, marked);
+  await input.setInputFiles({
+    name: "gabarito-camera.jpg",
+    mimeType: "image/jpeg",
+    buffer: Buffer.from(jpeg, "base64"),
+  });
+  await feedback.filter({ hasText: "Leitura concluída" }).waitFor();
+  assert.equal(
+    await page.locator("[data-detection-results] [data-state=marked]").count(),
+    10,
+  );
+  assert.match(
+    await page.locator("[data-score-preview]").innerText(),
+    /2 acertos de 10/,
+  );
+  await page.screenshot({
+    path: "/tmp/standard-grid-read.png",
     fullPage: true,
   });
   for (const [url, ready, shot] of [

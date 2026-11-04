@@ -205,14 +205,15 @@
   <form class="class-review-form">
    <label class="field">2 · Aluno<select name="studentId" required><option value="">Selecione o aluno</option>${students.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("")}</select></label>
    ${saveKey ? `<details class="review-official"><summary>Conferir gabarito salvo</summary><label class="field">Gabarito oficial<textarea name="key" required readonly rows="4">${esc(exam.answerKey || "")}</textarea></label></details>` : `<label class="field">Gabarito oficial<textarea name="key" required maxlength="4000" rows="4" placeholder="01 A"></textarea><input type="file" aria-label="Foto do gabarito oficial" data-ocr="key" accept="image/png,image/jpeg,image/webp"></label>`}
-   <label class="field">3 · Formato da foto<select name="photoMode"><option value="sheet">Folha BOLT com bolhas preenchidas (até 40 questões)</option><option value="text">Lista numerada de alternativas (01 A, 02 B…)</option></select></label>
-   <p class="review-format-help">Para ler bolhas, use a folha BOLT impressa abaixo. Fotos de outros modelos e respostas discursivas precisam de lançamento manual. Na lista numerada, confira o texto reconhecido.</p>
+   <label class="field">3 · Formato da foto<select name="photoMode"><option value="grid">Gabarito comum · número e círculos A–E</option><option value="sheet">Folha BOLT com bolhas preenchidas (até 40 questões)</option><option value="text">Lista numerada de alternativas (01 A, 02 B…)</option></select></label>
+   <p class="review-format-help">No gabarito comum, envie uma coluna inteira com questões de 1 até a última e alternativas A–E. A letra pode estar preenchida ou marcada com X, usando caneta escura. Letras impressas não contam como resposta. Folhas com vários blocos e respostas discursivas exigem conferência manual.</p>
    <button class="btn alt" type="button" data-print-sheet>Imprimir folha de respostas</button>
    <label class="review-upload">Enviar foto das respostas<input type="file" aria-label="Foto das respostas do aluno" data-ocr="answers" accept="image/png,image/jpeg,image/webp"><small>JPG, PNG ou WebP · até 8 MB · foto processada neste aparelho</small></label>
    <div class="review-photo-feedback" data-photo-feedback role="status" aria-live="polite" tabindex="-1" hidden></div>
    <button class="btn alt" type="button" data-read-photo>Ler foto selecionada novamente</button>
    <img class="review-photo-preview" data-photo-preview alt="Foto enviada para conferência" hidden>
    <label class="field">Respostas lidas · confira e ajuste se necessário<textarea name="answers" required maxlength="4000" rows="5" placeholder="01 A&#10;02 B&#10;03 -"></textarea></label>
+   <div data-detection-results class="review-detections" aria-label="Resultado da leitura por questão" hidden></div>
    <output class="review-score" data-score-preview aria-live="polite">A nota aparecerá depois da leitura das respostas.</output>
    <label class="life-check"><input type="checkbox" name="checked" required> Conferi as respostas lidas com a foto do aluno.</label>
    <button class="btn" type="submit">Enviar nota para análise</button>
@@ -243,17 +244,19 @@
       }
     };
     form.elements.answers.addEventListener("input", () => {
+      showDetections([]);
       form.elements.checked.checked = false;
       preview();
     });
     form.elements.key.addEventListener("input", preview);
     form.elements.studentId.addEventListener("change", () => {
+      showDetections([]);
       form.elements.answers.value = "";
       form.elements.checked.checked = false;
       section.querySelector("[data-photo-preview]").hidden = true;
       preview();
     });
-    if (exam.answerKey && parse(exam.answerKey).size > 40)
+    if (exam.answerKey && parse(exam.answerKey).size > 100)
       form.elements.photoMode.value = "text";
     const keyForm = section.querySelector("[data-key-form]");
     if (keyForm) {
@@ -289,7 +292,7 @@
           exam.answerKey = key;
           form.elements.key.value = key;
           form.elements.checked.checked = false;
-          if (parse(key).size > 40) form.elements.photoMode.value = "text";
+          if (parse(key).size > 100) form.elements.photoMode.value = "text";
           section.querySelector("[data-key-state]").textContent =
             "Salvo nesta prova";
           status.textContent = "Gabarito salvo. Agora envie a foto do aluno.";
@@ -307,6 +310,7 @@
         if (!window.BOLT_ANSWER_SHEET)
           throw Error("Atualize a página para carregar a folha de respostas.");
         const svg = window.BOLT_ANSWER_SHEET.sheet(count, exam.title);
+        form.elements.photoMode.value = "sheet";
         const popup = window.open("", "_blank");
         if (!popup)
           throw Error("Permita a abertura da janela para imprimir a folha.");
@@ -320,6 +324,16 @@
       } catch (error) {
         status.textContent = error.message;
       }
+    };
+    const detections = section.querySelector("[data-detection-results]");
+    const showDetections = (questions) => {
+      detections.hidden = !questions.length;
+      detections.innerHTML = questions
+        .map(
+          (q) =>
+            `<span class="review-detection" data-state="${q.state}"><strong>${String(q.number).padStart(2, "0")}</strong><span>${q.answer === "-" ? { blank: "Em branco", multiple: "Duas marcas", uncertain: "Conferir" }[q.state] || "Conferir" : q.answer}</span></span>`,
+        )
+        .join("");
     };
     const photoStatus = section.querySelector("[data-photo-feedback]");
     let reading = false;
@@ -348,6 +362,7 @@
         true,
       );
       status.textContent = "";
+      showDetections([]);
       const previousImage = section.querySelector("[data-photo-preview]");
       previousImage.hidden = true;
       previousImage.removeAttribute("src");
@@ -371,7 +386,7 @@
           uncertain = [];
         if (
           input.dataset.ocr === "answers" &&
-          form.elements.photoMode.value === "sheet"
+          form.elements.photoMode.value !== "text"
         ) {
           if (!form.elements.key.value.trim())
             throw Error(
@@ -382,12 +397,18 @@
               "O leitor da folha ainda não carregou. Atualize a página e tente novamente.",
             );
           report(
-            "Foto recebida. Localizando as marcações da folha BOLT…",
+            form.elements.photoMode.value === "grid"
+              ? "Foto recebida. Localizando as alternativas A–E e as marcações…"
+              : "Foto recebida. Localizando as marcações da folha BOLT…",
             false,
             true,
           );
           await new Promise((resolve) => setTimeout(resolve, 30));
-          const result = window.BOLT_ANSWER_SHEET.read(
+          const read =
+            form.elements.photoMode.value === "grid"
+              ? window.BOLT_ANSWER_SHEET.readGrid
+              : window.BOLT_ANSWER_SHEET.read;
+          const result = read(
             canvas
               .getContext("2d")
               .getImageData(0, 0, canvas.width, canvas.height),
@@ -395,6 +416,8 @@
           );
           text = result.text;
           uncertain = result.uncertain;
+          if (result.questions) showDetections(result.questions);
+          else showDetections([]);
         } else
           text = await recognize(file, (message) =>
             report(message, false, true),
@@ -452,6 +475,7 @@
           "Nota sugerida incluída na fila. Confira abaixo e confirme o lançamento.";
         form.elements.answers.value = "";
         form.elements.studentId.value = "";
+        showDetections([]);
         form.elements.checked.checked = false;
         section.querySelector("[data-photo-preview]").hidden = true;
         preview();
