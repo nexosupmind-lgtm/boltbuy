@@ -980,3 +980,133 @@ test("An owner cannot reset a global account by injecting it into the school tea
     ),
   );
 });
+test("A resubmitted payment keeps the earlier report and exposes the latest state", async () => {
+  const h = await harness();
+  h.setActor("parent");
+  assert.equal(
+    (
+      await h.request("payment-submit", {
+        studentId: "s1",
+        chargeId: "fee1",
+        reference: "first-transfer",
+      })
+    ).status,
+    200,
+  );
+  const first = structuredClone(h.school.schoolLife.payments[0]);
+  h.setActor("owner");
+  assert.equal(
+    (
+      await h.request("payment-review", {
+        paymentId: first.id,
+        approve: false,
+      })
+    ).status,
+    200,
+  );
+  h.setActor("parent");
+  assert.equal(
+    (
+      await h.request("payment-submit", {
+        studentId: "s1",
+        chargeId: "fee1",
+        reference: "corrected-transfer",
+      })
+    ).status,
+    200,
+  );
+  assert.equal(h.school.schoolLife.payments.length, 2);
+  assert.equal(h.school.schoolLife.payments[0].status, "rejected");
+  const finance = familyLife(h.school, h.school.students[0], "parent")
+    .finance[0];
+  assert.equal(finance.confirmation.status, "pending");
+  assert.equal(finance.confirmation.reference, "corrected-transfer");
+  assert.equal(finance.proofHistory.length, 2);
+  assert.equal(finance.proofHistory[1].id, first.id);
+  h.setActor("owner");
+  assert.equal(
+    (
+      await h.request("payment-review", {
+        paymentId: first.id,
+        approve: true,
+      })
+    ).status,
+    409,
+  );
+  assert.equal(h.school.finance[0].status, "Pendente");
+});
+
+test("A stale review cannot reverse an already confirmed payment report", async () => {
+  const h = await harness();
+  h.setActor("parent");
+  await h.request("payment-submit", {
+    studentId: "s1",
+    chargeId: "fee1",
+    reference: "confirmed-transfer",
+  });
+  const id = h.school.schoolLife.payments[0].id;
+  h.setActor("owner");
+  assert.equal(
+    (await h.request("payment-review", { paymentId: id, approve: true }))
+      .status,
+    200,
+  );
+  assert.equal(
+    (await h.request("payment-review", { paymentId: id, approve: false }))
+      .status,
+    409,
+  );
+  assert.equal(h.school.finance[0].status, "Pago");
+  assert.equal(h.school.schoolLife.payments[0].status, "confirmed");
+});
+
+test("Cancelled charges cannot receive a payment report or generate Pix", async () => {
+  const h = await harness();
+  h.school.finance[0].status = "Cancelado";
+  h.setActor("parent");
+  assert.equal(
+    (
+      await h.request("payment-submit", {
+        studentId: "s1",
+        chargeId: "fee1",
+        reference: "cancelled-charge",
+      })
+    ).status,
+    409,
+  );
+  assert.equal(
+    familyLife(h.school, h.school.students[0], "parent").finance[0].pix,
+    "",
+  );
+  assert.equal(
+    pixPayload(
+      { key: "school@example.test", receiver: "Escola", city: "Inhumas" },
+      h.school.finance[0],
+    ),
+    "",
+  );
+});
+
+test("A second guardian sees billing status without another guardian's bank reference or proof history", async () => {
+  const h = await harness();
+  h.school.schoolLife.payments = [
+    {
+      id: "report1",
+      studentId: "s1",
+      chargeId: "fee1",
+      userId: "parent",
+      reference: "private-bank-reference",
+      proofPath: clientId + "/receipt.png",
+      status: "pending",
+    },
+  ];
+  const parent = familyLife(h.school, h.school.students[0], "parent")
+    .finance[0];
+  const other = familyLife(h.school, h.school.students[0], "second-parent")
+    .finance[0];
+  assert(parent.confirmation.hasProof);
+  assert.equal(other.confirmation.status, "pending");
+  assert.equal(other.confirmation.hasProof, false);
+  assert.equal(other.proofHistory.length, 0);
+  assert(!JSON.stringify(other).includes("private-bank-reference"));
+});

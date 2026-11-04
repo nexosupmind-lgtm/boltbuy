@@ -9,6 +9,7 @@ import {
   familyStudents,
   familyLife,
   schoolAlerts,
+  isChargeOpen,
 } from "./school-life-model.js";
 import {
   createPushKeys,
@@ -455,12 +456,7 @@ export async function onRequest(context) {
         charge = list(s.finance).find(
           (x) => x.id === body.chargeId && x.studentId === student.id,
         );
-      if (
-        !charge ||
-        ["paid", "pago", "quitado"].includes(
-          String(charge.status).toLowerCase(),
-        )
-      )
+      if (!charge || !isChargeOpen(charge))
         fail(409, "Cobrança indisponível para pagamento.");
       if (
         list(s.schoolLife?.payments).some(
@@ -960,19 +956,13 @@ export async function onRequest(context) {
               (x) => x.id === body.chargeId && x.studentId === student.id,
             );
           if (!charge) fail(404, "Cobrança não encontrada.");
-          if (
-            ["paid", "pago", "quitado"].includes(
-              String(charge.status).toLowerCase(),
-            )
-          )
-            fail(409, "Este pagamento já foi confirmado.");
+          if (!isChargeOpen(charge))
+            fail(409, "Esta cobrança não está aberta para pagamento.");
           const existing = list(life.payments).find(
             (x) => x.chargeId === charge.id && x.status === "pending",
           );
           if (existing) fail(409, "Este pagamento já aguarda conferência.");
-          life.payments = list(life.payments).filter(
-            (x) => !(x.chargeId === charge.id && x.status !== "confirmed"),
-          );
+          life.payments = list(life.payments);
           life.payments.push({
             id,
             studentId: student.id,
@@ -999,6 +989,8 @@ export async function onRequest(context) {
             (x) => x.id === body.paymentId,
           );
           if (!payment) fail(404, "Pagamento não encontrado.");
+          if (payment.status !== "pending")
+            fail(409, "Este envio já foi conferido. Atualize a lista.");
           payment.status = body.approve ? "confirmed" : "rejected";
           payment.confirmedAt = body.approve ? now() : null;
           payment.reviewedBy = user.id;
