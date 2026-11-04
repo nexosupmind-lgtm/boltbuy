@@ -21,7 +21,7 @@ export async function onRequest({request,env}){
    if(source.origin===base.origin&&source.pathname.startsWith(prefix)&&/^[-a-f0-9]+\.png$/.test(source.pathname.slice(prefix.length))){
     const image=await fetch(source,{redirect:'error'});
     if(image.ok&&image.headers.get('content-type')==='image/png'){
-     return new Response(image.body,{headers:{'content-type':'image/png','cache-control':'public, max-age=60','x-content-type-options':'nosniff'}});
+     return new Response(image.body,{headers:{'content-type':'image/png','cache-control':'no-store','x-content-type-options':'nosniff'}});
     }
    }
   }
@@ -40,6 +40,6 @@ export async function onRequest({request,env}){
    logo='data:'+type+';base64,'+btoa(binary);
   }
   if(logo.length>470000||!/^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(logo))return fallback();
-  return new Response(`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="${color}"/><image href="${logo}" x="76" y="76" width="360" height="360"/></svg>`,{headers:{'content-type':'image/svg+xml','cache-control':'public, max-age=300','x-content-type-options':'nosniff'}});
+  return new Response(`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="${color}"/><image href="${logo}" x="76" y="76" width="360" height="360"/></svg>`,{headers:{'content-type':'image/svg+xml','cache-control':'no-store','x-content-type-options':'nosniff'}});
  }catch{return fallback()}
 }
