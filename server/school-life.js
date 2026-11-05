@@ -364,6 +364,23 @@ export async function onRequest(context) {
       if (owner && query.get("view") === "alerts")
         return json(200, { ok: true, alerts: schoolAlerts(s) });
       const result = project();
+      if (result.role === "teacher") {
+        const branding = (
+          await rest(
+            "bolt_client_branding?client_id=eq." +
+              client.id +
+              "&select=logo_url,primary_color",
+          )
+        )[0];
+        if (branding)
+          result.school = {
+            ...result.school,
+            logo: branding.logo_url || "",
+            color: /^#[a-f0-9]{6}$/i.test(branding.primary_color || "")
+              ? branding.primary_color
+              : result.school.color,
+          };
+      }
       if (owner) {
         const rows = await rest(
           "bolt_family_accounts?client_id=eq." +

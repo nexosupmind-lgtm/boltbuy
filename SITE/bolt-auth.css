@@ -41,3 +41,53 @@ html.bolt-locked body > :not(#bolt-auth-root):not(#bolt-support-dialog):not(scri
 @media(prefers-reduced-motion:reduce){.bolt-master-form input,.bolt-master-submit{transition:none}.bolt-master-submit:hover{transform:none}}
 
 .bolt-auth-master [hidden]{display:none!important}#bolt-switch-account{background:transparent;color:#aebed5;border:0;font:inherit;padding:16px;cursor:pointer;width:100%}.bolt-buy-white{filter:url(#bolt-buy-login-white);width:min(350px,80vw)!important}.bolt-auth-master #bolt-enter{width:100%;margin-top:24px}
+
+/* Master login — the approved dark purple control-plane identity. */
+#bolt-auth-root.bolt-auth-master{background:#080710;color:#f7f2fc;isolation:isolate}
+#bolt-auth-root.bolt-auth-master::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 82% 10%,#57207a24,transparent 56%),#080710}
+.bolt-auth-master .bolt-master-shell{width:min(1600px,100%);grid-template-columns:1.05fr 1fr;min-height:100dvh}
+.bolt-auth-master .bolt-master-story{background:radial-gradient(ellipse at 5% 5%,#6b2a9020,transparent 60%),#0e0a18;border-right:1px solid #bd82df14;padding:45px clamp(32px,5vw,78px)}
+.bolt-auth-master .bolt-master-story::after{width:850px;height:370px;right:-120px;bottom:-70px;border:0;border-top:2px solid #a03bdd;border-radius:60% 70% 0 0;transform:rotate(-13deg);box-shadow:0 -18px 42px -20px #c356ff99;background:radial-gradient(ellipse at 50% 0%,#8026c044,transparent 65%);opacity:.85}
+.bolt-auth-master .bolt-master-logo{width:169px;max-height:69px;filter:none}
+.bolt-auth-master .bolt-master-eyebrow{font-size:10px;letter-spacing:2px;color:#bf8bde}
+.bolt-auth-master .bolt-master-intro{margin:64px 0;animation:master-login-reveal .5s ease-out both}
+.bolt-auth-master .bolt-master-intro h1{color:#fcf8ff;font-size:clamp(38px,4vw,61px);font-weight:700;letter-spacing:-2.5px;line-height:1.1;margin:20px 0 24px}
+.bolt-auth-master .bolt-master-intro em{color:#c47bf1}
+.bolt-auth-master .bolt-master-intro>p{font-size:14px;color:#b8acc8;line-height:1.85}
+.bolt-auth-master .bolt-master-platforms{gap:11px;margin-top:35px;max-width:510px}
+.bolt-auth-master .bolt-master-platforms>div{border:1px solid #bd84da24;border-radius:16px;padding:17px 14px;background:linear-gradient(135deg,#2b183c88,#130d1e);box-shadow:inset 0 1px #fff04;gap:9px;transition:border-color .2s,transform .2s}
+.bolt-auth-master .bolt-master-platforms>div:hover{border-color:#c579f16b;transform:translateY(-2px)}
+.bolt-auth-master .bolt-master-platforms span{color:#a579bb;font-size:10px}
+.bolt-auth-master .bolt-master-platforms strong{font-size:13px;color:#f3eafa}
+.bolt-auth-master .bolt-master-platforms small{color:#a693b8;font-size:10px}
+.bolt-auth-master .bolt-master-copyright{color:#8b769e;font-size:10px;position:relative;z-index:1}
+.bolt-auth-master .bolt-master-access{position:relative;background:transparent;min-width:0;padding:45px 35px 30px;overflow:hidden}
+.bolt-auth-master .bolt-master-access::before{content:'';pointer-events:none;position:absolute;top:4%;right:-120px;width:680px;height:300px;border-top:2px solid #842cb6;border-radius:60% 65% 0 0;transform:rotate(-13deg);background:radial-gradient(ellipse at 50% 0%,#7224a63d,transparent 65%);box-shadow:0 -15px 35px -21px #a83ced99;z-index:-1;opacity:.7}
+.bolt-auth-master .bolt-master-card{width:min(440px,100%);padding:33px 32px 22px;border:1px solid #c690e128;border-radius:24px;background:linear-gradient(135deg,#20142bcc,#110b1bef);box-shadow:inset 0 1px #ffffff05,0 24px 90px #0004;animation:master-login-reveal .55s ease-out .06s both}
+.bolt-auth-master .bolt-master-access-icon{width:47px;height:47px;border:1px solid #c47ceb34;border-radius:15px;background:radial-gradient(ellipse at 50% 0%,#8a3bbd35,#2a153c55);color:#c47bf1;margin-bottom:26px;box-shadow:0 0 24px #a349d710}
+.bolt-auth-master .bolt-master-card h2{color:#faf5ff;font-size:29px;line-height:1.2;letter-spacing:-.8px;font-weight:650;margin:13px 0 12px}
+.bolt-auth-master .bolt-master-description{color:#b3a0c3;font-size:12px;line-height:1.8;margin-bottom:26px}
+.bolt-auth-master .bolt-master-form label{color:#dccbe9;font-size:12px;font-weight:500;margin-top:16px}
+.bolt-auth-master .bolt-master-form input{height:49px;background:#0d0915;border:1px solid #9e6cb539;border-radius:12px;color:#f0e4fa;padding-left:14px;font-size:13px;transition:border-color .2s,box-shadow .2s}
+.bolt-auth-master .bolt-master-form input::placeholder{color:#796489}
+.bolt-auth-master .bolt-master-form input:focus{border-color:#b268df;box-shadow:0 0 0 3px #ac55d918;background:#110b1b}
+.bolt-auth-master .bolt-master-password>button{color:#b99aca;top:8px;right:7px;border-radius:8px}
+.bolt-auth-master .bolt-master-password>button:hover{background:#a65ad91a;color:#f2defd}
+.bolt-auth-master .bolt-master-submit{height:49px;border:1px solid #bf73e64a;border-radius:12px;background:linear-gradient(110deg,#8b37bf,#572675);color:white;font-weight:600;font-size:13px;box-shadow:0 7px 23px #8732b51c;transition:filter .2s,transform .2s,box-shadow .2s}
+.bolt-auth-master .bolt-master-submit:hover{background:linear-gradient(110deg,#9843cf,#663087);filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 8px 27px #aa4bd22a}
+.bolt-auth-master .bolt-master-submit:active{transform:translateY(0)}
+.bolt-auth-master .bolt-master-submit:disabled{transform:none;filter:none;opacity:.6}
+.bolt-auth-master .bolt-master-note{font-size:10px;color:#927bA4;margin:19px 0 4px;line-height:1.7}
+.bolt-auth-master .bolt-master-access-footer{position:static;color:#806b93;font-size:10px;margin:22px 0 0;line-height:1.5}
+.bolt-auth-master #bolt-switch-account{color:#bc9ed0;font-size:12px;padding:15px 10px 5px}
+.bolt-auth-master #bolt-switch-account:hover{color:white}
+.bolt-auth-master .bolt-master-form .bolt-login-error{color:#ffa9c0;font-size:12px}
+.bolt-auth-master :focus-visible{outline:2px solid #d293fb;outline-offset:4px}
+@keyframes master-login-reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1050px) and (min-width:851px){.bolt-auth-master .bolt-master-story{padding:36px 30px}.bolt-auth-master .bolt-master-platforms{grid-template-columns:1fr}.bolt-auth-master .bolt-master-platforms>div{display:grid;grid-template-columns:24px 1fr;gap:3px 8px;padding:12px 14px}.bolt-auth-master .bolt-master-platforms small{grid-column:2}.bolt-auth-master .bolt-master-intro{margin:40px 0}.bolt-auth-master .bolt-master-access{padding:30px 25px}.bolt-auth-master .bolt-master-card{padding:30px 25px}.bolt-auth-master .bolt-master-intro h1{font-size:41px}}
+@media(max-width:850px){.bolt-auth-master .bolt-master-shell{display:block}.bolt-auth-master .bolt-master-story{display:none}.bolt-auth-master .bolt-master-access{min-height:100dvh;padding:30px 19px max(30px,env(safe-area-inset-bottom));justify-content:center}.bolt-auth-master .bolt-master-card{padding:28px 25px 22px;width:min(430px,100%);border-radius:24px}.bolt-auth-master .bolt-master-mobile-logo{display:block;width:149px;max-height:65px;margin:0 0 30px;object-fit:contain;object-position:left center}.bolt-auth-master .bolt-master-access-icon{display:none}.bolt-auth-master .bolt-master-card h2{font-size:27px}.bolt-auth-master .bolt-master-access::before{top:5%;right:-210px;width:620px;height:290px}.bolt-auth-master .bolt-master-access-footer{font-size:9px;margin-top:24px;max-width:280px}.bolt-auth-master .bolt-master-description{font-size:12px}.bolt-auth-master .bolt-master-form input{font-size:16px}.bolt-auth-master .bolt-master-note{font-size:10px}}
+@media(max-width:360px){.bolt-auth-master .bolt-master-access{padding-left:13px;padding-right:13px}.bolt-auth-master .bolt-master-card{padding:25px 21px 20px}.bolt-auth-master .bolt-master-card h2{font-size:25px}.bolt-auth-master .bolt-master-mobile-logo{margin-bottom:25px}}
+@media(prefers-reduced-motion:reduce){.bolt-auth-master *,.bolt-auth-master *::before,.bolt-auth-master *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+/* Override legacy Master-wide input rules inside the isolated login surface. */
+#bolt-auth-root.bolt-auth-master .bolt-master-form input{background:#0d0915!important;color:#f0e4fa!important;border:1px solid #9e6cb539!important;border-radius:12px!important}
+#bolt-auth-root.bolt-auth-master .bolt-master-form input:focus{background:#110b1b!important;border-color:#b268df!important;box-shadow:0 0 0 3px #ac55d918!important}
