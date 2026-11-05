@@ -27,3 +27,9 @@ body.buy-admin-app { color-scheme: dark; color: #f5f7fc; --white: #f5f7fc; --mut
 .buy-admin-app .sidebar { background:#071321!important; }
 .buy-admin-app .hero { background:linear-gradient(115deg,#10283e,color-mix(in srgb,var(--brand-primary,var(--red)) 24%,#0b1729))!important; }
 .buy-admin-app .hero b { color:#f5f7fc; }
+
+/* Keep labels inherited from their own card; adaptive contrast handles mixed surfaces. */
+.buy-admin-app .page h2, .buy-admin-app .page h3, .buy-admin-app .page h4,
+.buy-admin-app .panel-head strong, .buy-admin-app .product h4,
+.buy-admin-app .order-card > strong { color:inherit; }
+.buy-admin-app input::placeholder, .buy-admin-app textarea::placeholder { color:currentColor; opacity:.75; }
