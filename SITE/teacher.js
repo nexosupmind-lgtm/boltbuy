@@ -97,6 +97,8 @@
     value ||
     "Em aberto";
   function home() {
+    if (window.BOLT_CLASS_REFERENCE)
+      return window.BOLT_CLASS_REFERENCE.teacherHome(data);
     const pending = (data.gradeReviewQueue || []).length;
     const threads = data.threads.filter((x) => x.status !== "resolved").length;
     const agenda = data.items
@@ -202,7 +204,10 @@
       data.subjects.find((x) => x.classId === classId)?.subjects || [];
     const subjectSelect = `<label class="field">Disciplina<select name="subject" required>${subjects.map((x) => `<option>${esc(x)}</option>`).join("")}</select></label>`;
     let body = "";
-    if (tab === "home") body = home();
+    const referencePanel = window.BOLT_CLASS_REFERENCE?.teacherPanel(tab, data);
+    if (referencePanel !== null && referencePanel !== undefined)
+      body = referencePanel;
+    else if (tab === "home") body = home();
     else if (!classId && tab !== "account")
       body =
         "<p>Suas turmas ainda precisam ser vinculadas pela coordenação.</p>";
@@ -255,7 +260,9 @@
     const currentTab = tabs.find((x) => x[0] === tab) || tabs[0];
     const navButton = ([id, label, glyph]) =>
       `<button class="btn ${id === tab ? "" : "alt"}" data-teacher-tab="${id}" ${id === tab ? 'aria-current="page"' : ""}>${icon(glyph)}<span>${label}</span></button>`;
-    root.innerHTML = `<header class="teacher-topbar"><a class="teacher-school-brand" href="?slug=${encodeURIComponent(slug)}" aria-label="Início da escola">${data.school.logo ? `<img src="${esc(data.school.logo)}" alt="${esc(schoolName)}">` : `<span>${icon("book")}</span><strong>${esc(schoolName)}</strong>`}</a><div class="teacher-account"><span>${esc(initials(data.teacher))}</span><div><small>Olá, professor(a)</small><strong>${esc(data.teacher)}</strong></div><button class="btn alt" id="teacher-logout">Sair</button></div></header><nav class="life-tabs teacher-desktop-nav" aria-label="Área do professor">${tabs.map(navButton).join("")}</nav><div class="teacher-page-heading"><div><span class="teacher-kicker">${new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Sao_Paulo" })}</span><h1>${currentTab[1]}</h1></div>${tab !== "home" ? `<button class="btn alt" data-teacher-tab="home">${icon("home")} Início</button>` : ""}</div><section class="${tab === "home" ? "teacher-home" : "card teacher-workspace"}">${body}<p id="teacher-status" role="status" tabindex="-1" aria-live="polite"></p></section><nav class="teacher-mobile-nav" aria-label="Navegação do professor">${tabs.slice(0, 4).map(navButton).join("")}<details><summary>${icon("user")}<span>Mais</span></summary><div>${tabs.slice(4).map(navButton).join("")}</div></details></nav>`;
+    root.innerHTML =
+      window.BOLT_CLASS_REFERENCE?.teacherShell({ data, tab, body, tabs }) ||
+      `<header class="teacher-topbar"><a class="teacher-school-brand" href="?slug=${encodeURIComponent(slug)}" aria-label="Início da escola">${data.school.logo ? `<img src="${esc(data.school.logo)}" alt="${esc(schoolName)}">` : `<span>${icon("book")}</span><strong>${esc(schoolName)}</strong>`}</a><div class="teacher-account"><span>${esc(initials(data.teacher))}</span><div><small>Olá, professor(a)</small><strong>${esc(data.teacher)}</strong></div><button class="btn alt" id="teacher-logout">Sair</button></div></header><nav class="life-tabs teacher-desktop-nav" aria-label="Área do professor">${tabs.map(navButton).join("")}</nav><div class="teacher-page-heading"><div><span class="teacher-kicker">${new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Sao_Paulo" })}</span><h1>${currentTab[1]}</h1></div>${tab !== "home" ? `<button class="btn alt" data-teacher-tab="home">${icon("home")} Início</button>` : ""}</div><section class="${tab === "home" ? "teacher-home" : "card teacher-workspace"}">${body}<p id="teacher-status" role="status" tabindex="-1" aria-live="polite"></p></section><nav class="teacher-mobile-nav" aria-label="Navegação do professor">${tabs.slice(0, 4).map(navButton).join("")}<details><summary>${icon("user")}<span>Mais</span></summary><div>${tabs.slice(4).map(navButton).join("")}</div></details></nav>`;
     if (tab === "attendance") roster();
     if (
       tab === "grades" &&

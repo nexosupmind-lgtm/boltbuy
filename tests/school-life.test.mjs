@@ -179,6 +179,13 @@ async function harness() {
       return response(
         actor === "owner" ? [{ user_id: "owner", role: "owner" }] : [],
       );
+    if (table === "bolt_client_branding")
+      return response([
+        {
+          logo_url: "https://school.example/logo.png",
+          primary_color: "#810e27",
+        },
+      ]);
     if (table === "bolt_client_subscriptions")
       return response(features ? [{ plan_id: "p" }] : []);
     if (table === "bolt_platform_plans") return response([{ features }]);
@@ -267,6 +274,8 @@ test("Teacher GET excludes guardian contact, health, finances, other classes and
     d = await r.json();
   assert.equal(r.status, 200);
   assert.equal(d.role, "teacher");
+  assert.equal(d.school.color, "#810e27");
+  assert.equal(d.school.logo, "https://school.example/logo.png");
   assert.deepEqual(
     d.students.map((x) => x.id),
     ["s1"],

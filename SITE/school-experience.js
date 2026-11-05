@@ -94,7 +94,7 @@
           seen.add(button);
           const name = button.dataset.familyTab,
             span = button.querySelector("span");
-          if (span && paths[name])
+          if (span && paths[name] && !button.querySelector("svg"))
             span.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]}</svg>`;
           if (button.classList.contains("active"))
             button.setAttribute("aria-current", "page");

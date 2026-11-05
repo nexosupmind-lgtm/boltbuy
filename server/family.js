@@ -30,7 +30,7 @@ export function projectFamily(s,student,client,branding={}){
  attendance:(s.attendance||[]).filter(x=>x.studentId===student.id).map(x=>({date:x.date,status:x.status})),
  messages:(s.messages||[]).filter(x=>visibleToStudent(x,student)&&published(x)).map(x=>({id:x.id,title:x.title,content:x.content,date:x.date,requiresConsent:x.requiresConsent===true,kind:x.kind})),
  calendar:(s.calendar||[]).filter(x=>visibleToStudent(x,student)&&published(x)).map(x=>({title:x.title,date:x.date,description:x.description})),
- activities:(s.teacherItems||[]).filter(x=>x.classId===student.classId&&x.status==='published'&&visibleToStudent(x,student)).map(x=>({title:x.title,description:x.description||x.content||'',due:x.due||x.date,kind:x.kind}))};
+ activities:(s.teacherItems||[]).filter(x=>x.classId===student.classId&&x.status==='published'&&visibleToStudent(x,student)).map(x=>({title:x.title,description:x.description||x.content||'',due:x.due||x.date,kind:x.kind,type:x.type}))};
 }
 export async function onRequest({request,env}){
  try{
