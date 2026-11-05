@@ -72,7 +72,7 @@ export async function onRequest({request,env}){
    if(action==='usage')return json(200,{ok:true,usage:await rest('rpc/bolt_platform_usage',{method:'POST',body:'{}'})});
    if(action!=='overview')fail(400,'Ação inválida.');
    const [buy,commercial,plans,subscriptions,invoices,tickets]=await Promise.all([
-    all('bolt_tenants?select=id,name,slug,status,plan&order=name.asc,id.asc'),all('bolt_commercial_clients?select=id,name,slug,status,product,plan,monthly_fee&order=name.asc,id.asc'),all('bolt_platform_plans?select=*&order=product.asc,name.asc,id.asc'),all('bolt_client_subscriptions?select=*&order=id.asc'),all('bolt_client_invoices?select=*&order=due_date.desc,id.asc'),all('bolt_support_tickets?select=*&order=created_at.desc,id.asc')]);
+    all('bolt_tenants?select=id,name,slug,status,plan,created_at&order=name.asc,id.asc'),all('bolt_commercial_clients?select=id,name,slug,status,product,plan,monthly_fee,created_at&order=name.asc,id.asc'),all('bolt_platform_plans?select=*&order=product.asc,name.asc,id.asc'),all('bolt_client_subscriptions?select=*&order=id.asc'),all('bolt_client_invoices?select=*&order=due_date.desc,id.asc'),all('bolt_support_tickets?select=*&order=created_at.desc,id.asc')]);
    const clients=[...buy.map(c=>({...c,product:'buy'})),...commercial];return json(200,{ok:true,clients,plans,subscriptions,invoices,tickets,modules:MODULES,metrics:metrics(clients,subscriptions,invoices),as_of:new Date().toISOString()});
   }
   if(action==='plan'){
