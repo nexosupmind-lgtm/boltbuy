@@ -1,0 +1,29 @@
+/* Dark admin surfaces own their text palette; merchant accent stays independent. */
+body.buy-admin-app { color-scheme: dark; color: #f5f7fc; --white: #f5f7fc; --muted: #b4c3d6; }
+.buy-admin-app .shell { color: #f5f7fc; }
+.buy-admin-app .sidebar, .buy-admin-app .main { color: #f5f7fc; }
+.buy-admin-app .brand strong, .buy-admin-app .topbar h1,
+.buy-admin-app .page h2, .buy-admin-app .page h3, .buy-admin-app .page h4,
+.buy-admin-app .metric strong, .buy-admin-app .panel-head strong,
+.buy-admin-app .product h4, .buy-admin-app .order-card > strong { color: #f5f7fc; }
+.buy-admin-app .brand small, .buy-admin-app .topbar p,
+.buy-admin-app .metric small, .buy-admin-app .hint, .buy-admin-app .muted,
+.buy-admin-app .sidefoot, .buy-admin-app th { color: #b4c3d6; }
+.buy-admin-app .panel, .buy-admin-app .metric, .buy-admin-app .product,
+.buy-admin-app .order-card { color: #f5f7fc; }
+.buy-admin-app .field input, .buy-admin-app .field select,
+.buy-admin-app .field textarea, .buy-admin-app .search { color: #f5f7fc; background: #09192c; }
+.buy-admin-app input::placeholder, .buy-admin-app textarea::placeholder { color: #a9bad0; opacity: 1; }
+.buy-admin-app .metric em { color: #4ee7ac; }
+/* These components intentionally use light surfaces. */
+.buy-admin-app .buy-product-checks label { color-scheme: light; color: #263950; }
+.buy-admin-app .buy-quote-line input { color-scheme: light; color: #24354c; background: #fff; }
+.buy-admin-app .bolt-shell-dialog { color-scheme: light; }
+
+.buy-admin-app .buy-dialog { color-scheme: light; color: #25334a; }
+.buy-admin-app .buy-dialog h2, .buy-admin-app .buy-dialog h3, .buy-admin-app .buy-dialog strong { color: #25334a; }
+
+/* Studio background may be white; these navigation/banner surfaces stay dark. */
+.buy-admin-app .sidebar { background:#071321!important; }
+.buy-admin-app .hero { background:linear-gradient(115deg,#10283e,color-mix(in srgb,var(--brand-primary,var(--red)) 24%,#0b1729))!important; }
+.buy-admin-app .hero b { color:#f5f7fc; }
