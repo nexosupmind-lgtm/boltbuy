@@ -307,3 +307,5 @@
     transition: none;
   }
 }
+
+.class-list-tools button[hidden] { display:none!important; }
