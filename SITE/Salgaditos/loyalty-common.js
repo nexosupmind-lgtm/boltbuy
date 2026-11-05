@@ -1,7 +1,7 @@
 
 const loyaltyDefault={enabled:true,target:5,reward:10};
 function getLoyalty(d){return {...loyaltyDefault,...(d.loyalty||{})}}
-function normPhone(v){return String(v||'').replace(/\D/g,'')}
+function normPhone(v){const n=String(v||'').replace(/\D/g,'');return n.startsWith('55')&&(n.length===12||n.length===13)?n.slice(2):n}
 function validCoupon(d,code,subtotal,phone){
  const c=(d.coupons||[]).find(x=>x.code===String(code||'').trim().toUpperCase());
  if(!c)return {error:'Cupom não encontrado.'};
@@ -9,7 +9,7 @@ function validCoupon(d,code,subtotal,phone){
  if(c.expires&&new Date(c.expires+'T23:59:59').getTime()<Date.now())return {error:'Cupom expirado.'};
  if(subtotal<Number(c.min||0))return {error:'Pedido mínimo: '+money(c.min)};
  if(c.limit>0&&Number(c.used||0)>=c.limit)return {error:'Cupom esgotado.'};
- if(c.loyaltyPhone&&c.loyaltyPhone!==normPhone(phone))return {error:'Recompensa vinculada a outro telefone.'};
+ if(c.loyaltyPhone&&normPhone(c.loyaltyPhone)!==normPhone(phone))return {error:'Recompensa vinculada a outro telefone.'};
  if(c.loyaltyPhone&& (d.orders||[]).some(o=>o.coupon===c.code&&o.status!=='cancelado'))return {error:'Recompensa já utilizada.'};
  let discount=c.type==='percent'?subtotal*Number(c.value)/100:Number(c.value);
  return {coupon:c,discount:Math.round(Math.min(subtotal,Math.max(0,discount))*100)/100};

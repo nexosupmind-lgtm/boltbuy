@@ -2,7 +2,7 @@
 let appliedCode='';
 function customerReward(d,phone){
  const key=normPhone(phone);
- return (d.coupons||[]).find(c=>c.loyaltyPhone===key&&c.active&&!c.used&&!d.orders.some(o=>o.coupon===c.code&&o.status!=='cancelado'));
+ return (d.coupons||[]).find(c=>normPhone(c.loyaltyPhone)===key&&c.active&&!c.used&&!d.orders.some(o=>o.coupon===c.code&&o.status!=='cancelado'));
 }
 function calculateDiscount(d,t){
  if(!appliedCode)return {discount:0};
