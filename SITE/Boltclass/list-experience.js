@@ -33,16 +33,18 @@
     const summary = document.createElement("span");
     summary.className = "class-list-count";
     summary.setAttribute("role", "status");
+    const existingSearch = table.classList.contains("student-table") ? document.getElementById("studentSearch") : null;
     const label = document.createElement("label");
     label.className = "class-list-search";
     const caption = document.createElement("span");
     caption.textContent = "Buscar nesta lista";
-    const input = document.createElement("input");
+    const input = existingSearch || document.createElement("input");
     input.type = "search";
     input.placeholder = "Nome, turma, situação…";
     input.autocomplete = "off";
-    label.append(caption, input);
-    toolbar.append(summary, label);
+    if (!existingSearch) label.append(caption, input);
+    toolbar.append(summary);
+    if (!existingSearch) toolbar.append(label);
     wrap.before(toolbar);
     const empty = document.createElement("p");
     empty.className = "class-list-no-results";
@@ -111,20 +113,34 @@
       });
       return { row, text: normalize(row.textContent) };
     });
-    function filter() {
+    const pageSize = 50;
+    let page = 0;
+    const previous = document.createElement("button"), next = document.createElement("button");
+    previous.type = next.type = "button";
+    previous.className = next.className = "btn alt small";
+    previous.textContent = "← Anterior"; next.textContent = "Próxima →";
+    previous.setAttribute("aria-label", "Página anterior da lista");
+    next.setAttribute("aria-label", "Próxima página da lista");
+    toolbar.append(previous, next);
+    function filter(reset = true) {
+      if (reset) page = 0;
       const terms = normalize(input.value).split(/\s+/).filter(Boolean);
-      let count = 0;
-      indexed.forEach((item) => {
-        item.row.hidden = !terms.every((term) => item.text.includes(term));
-        if (!item.row.hidden) count++;
-      });
-      summary.textContent =
-        count === records.length
-          ? `${count} ${count === 1 ? "registro" : "registros"}`
-          : `${count} de ${records.length} registros`;
+      const matches = indexed.filter(item => terms.every(term => item.text.includes(term)));
+      const count = matches.length;
+      page = Math.min(page, Math.max(0, Math.ceil(count / pageSize) - 1));
+      const visible = new Set(matches.slice(page * pageSize, (page + 1) * pageSize));
+      indexed.forEach(item => { item.row.hidden = !visible.has(item); });
+      summary.textContent = count > pageSize
+        ? `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, count)} de ${count} registros`
+        : `${count} ${count === 1 ? "registro" : "registros"}`;
       empty.hidden = count > 0;
+      previous.hidden = next.hidden = count <= pageSize;
+      previous.disabled = page === 0;
+      next.disabled = (page + 1) * pageSize >= count;
     }
-    input.addEventListener("input", filter);
+    previous.addEventListener("click", () => { page--; filter(false); });
+    next.addEventListener("click", () => { page++; filter(false); });
+    input.addEventListener("input", () => filter());
     filter();
     table.id ||= `class-list-${++sequence}`;
     input.setAttribute("aria-controls", table.id);
@@ -157,21 +173,29 @@
             }) * (descending ? -1 : 1)
           );
         });
-        sorted.forEach((row) => row.parentNode.append(row));
+        const order = new Map(sorted.map((row, index) => [row, index]));
+        indexed.sort((a, b) => order.get(a.row) - order.get(b.row));
+        const fragment = document.createDocumentFragment();
+        sorted.forEach(row => fragment.append(row));
+        const parent = header.parentNode.tagName === "THEAD" ? table.tBodies[0] : header.parentNode;
+        parent.append(fragment);
+        filter();
       });
     });
   }
   let scheduled = false;
   function scan() {
     scheduled = false;
-    root
-      .querySelectorAll(".main table:not([data-class-list])")
-      .forEach(enhance);
+    observer.disconnect();
+    try {
+      root.querySelectorAll(".main table:not([data-class-list])").forEach(enhance);
+    } finally { observer.observe(root, { childList: true, subtree: true }); }
   }
-  new MutationObserver(() => {
+  const observer = new MutationObserver(records => {
+    if (!records.some(record => [...record.addedNodes].some(node => node.nodeType === 1 && (node.matches?.("table") || node.querySelector?.("table"))))) return;
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(scan);
-  }).observe(root, { childList: true, subtree: true });
+  });
   scan();
 })();

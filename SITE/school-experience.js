@@ -114,14 +114,17 @@
     }
   }
   let scheduled = false;
-  new MutationObserver(() => {
+  const observer = new MutationObserver(records => {
+    if (!records.some(record => [...record.addedNodes].some(node => node.nodeType === 1))) return;
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(() => {
       scheduled = false;
-      scan();
+      observer.disconnect();
+      try { scan(); } finally { observer.observe(root, { childList: true, subtree: true }); }
     });
-  }).observe(root, { childList: true, subtree: true });
+  });
+  observer.observe(root, { childList: true, subtree: true });
   document.addEventListener(
     "pointerup",
     (event) => {
