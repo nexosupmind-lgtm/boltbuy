@@ -45,6 +45,20 @@
         r * 0.2126 + g * 0.7152 + b * 0.0722 > 0.179 ? "#17213a" : "#fff",
       );
     }
+    root.querySelectorAll('[data-key-grid]').forEach(grid=>{
+      grid.classList.add('visual-answer-sheet');
+      grid.querySelectorAll('[data-key-q]').forEach(select=>{
+        if(seen.has(select))return;seen.add(select);
+        const row=select.closest('label');row.classList.add('visual-answer-row');
+        const choices=document.createElement('span');choices.className='visual-answer-choices';choices.setAttribute('role','group');choices.setAttribute('aria-label','Questão '+select.dataset.keyQ);
+        for(const letter of 'ABCDE'){
+          const button=document.createElement('button');button.type='button';button.textContent=letter;button.setAttribute('aria-label','Questão '+select.dataset.keyQ+', alternativa '+letter);
+          const sync=()=>button.setAttribute('aria-pressed',String(select.value===letter));sync();select.addEventListener('change',sync);
+          button.addEventListener('click',()=>{select.value=letter;select.dispatchEvent(new Event('change',{bubbles:true}));});choices.append(button);
+        }
+        select.classList.add('visual-answer-native');row.append(choices);
+      });
+    });
     let index = 0;
     root
       .querySelectorAll(

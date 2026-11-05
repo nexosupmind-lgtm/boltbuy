@@ -365,3 +365,24 @@ body[data-school-surface="family"] .feed-heading button {
     scroll-behavior: auto !important;
   }
 }
+
+/* A readable answer sheet with immediate selection feedback. */
+.teacher-card .visual-answer-sheet{display:grid;grid-template-columns:1fr;gap:0;border:1px solid #dce3ed;border-radius:16px;overflow:hidden;background:white}
+.teacher-card .visual-answer-row{display:flex;align-items:center;justify-content:space-between;border:0;border-radius:0;margin:0;padding:12px 16px;gap:16px;background:#fff}
+.teacher-card .visual-answer-row:nth-child(odd){background:#f0f3f8}
+.teacher-card .visual-answer-row>span:first-child{font-size:15px;font-weight:750;color:#26364f}
+.visual-answer-choices{display:flex;gap:12px}
+.teacher-card .visual-answer-choices button{display:grid;place-items:center;width:38px;height:38px;min-height:38px;padding:0;border:1.5px solid #8390a4;border-radius:50%;background:transparent;color:#34415a;font:700 15px system-ui;cursor:pointer}
+.teacher-card .visual-answer-choices button[aria-pressed=true]{background:var(--school-primary,#475569);color:var(--school-on-primary,#fff);border-color:transparent;box-shadow:0 0 0 4px color-mix(in srgb,var(--school-primary,#475569) 15%,transparent)}
+.visual-answer-native{position:absolute!important;clip-path:inset(50%);width:1px!important;height:1px!important;min-height:0!important;padding:0!important;overflow:hidden}
+body[data-school-surface] .btn{letter-spacing:.01em;font-weight:700}
+body[data-school-surface] .btn:disabled{cursor:wait;opacity:.55;box-shadow:none}
+body[data-school-surface] .life-row,body[data-school-surface] .entry{transition:border-color .18s,box-shadow .18s}
+body[data-school-surface] .life-row:hover,body[data-school-surface] .entry:hover{border-color:color-mix(in srgb,var(--experience-primary) 35%,#dce3ed);box-shadow:0 5px 18px #20304708}
+body[data-school-surface] .chart-track{border-radius:12px;overflow:hidden;background:#edf1f7}
+body[data-school-surface] .chart-track>div{border-radius:8px 8px 0 0}
+body[data-school-surface] .chart-col>span{font-weight:750;font-variant-numeric:tabular-nums}
+body[data-school-surface] .metric strong,body[data-school-surface] .teacher-metric strong{font-variant-numeric:tabular-nums}
+body[data-school-surface] .field:focus-within{color:var(--experience-primary)}
+@media(prefers-reduced-motion:no-preference){.visual-answer-choices button[aria-pressed=true]{animation:answer-picked .22s ease-out}@keyframes answer-picked{from{transform:scale(.85)}to{transform:scale(1)}}}
+@media(max-width:480px){.teacher-card .visual-answer-row{padding:12px 9px;gap:8px}.visual-answer-choices{gap:7px}.teacher-card .visual-answer-choices button{width:32px;height:36px;min-height:36px;font-size:13px}}
