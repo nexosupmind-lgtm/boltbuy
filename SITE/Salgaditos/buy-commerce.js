@@ -104,8 +104,8 @@ function pickCombo(combo, done) {
   document.getElementById("buy-combo-picker")?.remove();
   const dialog = document.createElement("dialog");
   dialog.id = "buy-combo-picker";
-  dialog.className = "buy-dialog";
-  dialog.innerHTML = `<form><header><div><small>MONTE DO SEU JEITO</small><h2>${esc(combo.name)}</h2></div><button type="button" data-close aria-label="Fechar">×</button></header><p>${esc(combo.description)}</p><p>${combo.mode === "single" ? `Escolha um sabor para as ${combo.units} unidades.` : `Distribua ${combo.units} unidades entre até ${combo.maxFlavors} sabores.`}</p><div class="buy-flavors">${products.map((p) => `<label class="buy-flavor">${photo(p)}<strong>${esc(p.name)}</strong>${combo.mode === "single" ? `<input type="radio" name="flavor" value="${esc(p.id)}" required>` : `<input type="number" min="0" max="${combo.units}" step="1" value="0" data-flavor="${esc(p.id)}" aria-label="Quantidade de ${esc(p.name)}">`}</label>`).join("")}</div><p data-count role="status"></p><button class="btn red full" type="submit" disabled>Adicionar · ${amount(combo.price)}</button></form>`;
+  dialog.className = admin ? "buy-dialog" : "buy-dialog delivery-detail";
+  dialog.innerHTML = `<form><header><div><small>MONTE DO SEU JEITO</small><h2>${esc(combo.name)}</h2></div><button type="button" data-close aria-label="Fechar">×</button></header>${admin ? "" : '<div class="delivery-photo">' + photo(products[0]) + "</div>"}<p>${esc(combo.description)}</p><p>${combo.mode === "single" ? `Escolha um sabor para as ${combo.units} unidades.` : `Distribua ${combo.units} unidades entre até ${combo.maxFlavors} sabores.`}</p><div class="buy-flavors">${products.map((p) => `<label class="buy-flavor">${photo(p)}<strong>${esc(p.name)}</strong>${combo.mode === "single" ? `<input type="radio" name="flavor" value="${esc(p.id)}" required>` : `<input type="number" min="0" max="${combo.units}" step="1" value="0" data-flavor="${esc(p.id)}" aria-label="Quantidade de ${esc(p.name)}">`}</label>`).join("")}</div><p data-count role="status"></p><button class="btn red full" type="submit" disabled>Adicionar · ${amount(combo.price)}</button></form>`;
   document.body.append(dialog);
   const form = dialog.querySelector("form"),
     submit = form.querySelector("[type=submit]");
@@ -678,7 +678,42 @@ async function refreshOrders() {
     refreshing = false;
   }
 }
+function productDetails(id) {
+  const item = catalog().find(p => p.id === id && p.active);
+  if (!item) return;
+  const dialog = document.createElement("dialog");
+  dialog.className = "delivery-detail";
+  dialog.setAttribute("aria-label", "Detalhes do produto");
+  dialog.innerHTML = `<header><button aria-label="Voltar">←</button>Detalhes do produto</header><div class="delivery-photo">${photo(item)}</div><section><h2>${esc(item.name)}</h2><p>${esc(item.description)}</p><strong>${amount(item.price)}</strong></section><footer><button data-less aria-label="Diminuir quantidade">−</button><output>1</output><button data-more aria-label="Aumentar quantidade">+</button><button data-add></button></footer>`;
+  let qty = 1;
+  function update() {
+    dialog.querySelector("output").textContent = qty;
+    dialog.querySelector("[data-less]").disabled = qty <= 1;
+    dialog.querySelector("[data-add]").textContent = "Adicionar · " + amount(qty * item.price);
+  }
+  dialog.querySelector("header button").onclick = () => dialog.close();
+  dialog.querySelector("[data-more]").onclick = () => { qty++; update(); };
+  dialog.querySelector("[data-less]").onclick = () => { qty--; update(); };
+  dialog.querySelector("[data-add]").onclick = () => { window.addItem(id, qty); dialog.close(); };
+  dialog.onclose = () => dialog.remove();
+  document.body.append(dialog);
+  update();
+  dialog.showModal();
+}
 function installShop() {
+  const locationButton = document.getElementById("delivery-location");
+  const address = document.getElementById("address");
+  if (locationButton) {
+    locationButton.onclick = () => { view("cart"); document.getElementById("mode").value = "delivery"; renderShop(); address.focus(); };
+    address.addEventListener("input", () => { locationButton.textContent = "⌖  " + (address.value.trim() || "Informar endereço de entrega"); });
+  }
+  document.getElementById("homeView").addEventListener("click", event => {
+    const card = event.target.closest(".product");
+    const id = card?.querySelector("button[onclick]")?.getAttribute("onclick")?.match(/^addItem\('([^']+)'\)/)?.[1];
+    if (!id) return;
+    event.stopPropagation();
+    productDetails(id);
+  }, true);
   const applyExisting = window.applyCoupon;
   window.applyCoupon = async () => {
     const code = document.getElementById("couponCode").value;
