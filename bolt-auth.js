@@ -10,16 +10,16 @@ function setup(){
  document.body.appendChild(root);
  const enter=document.getElementById('bolt-enter'),form=document.getElementById('bolt-login-form');
  enter.addEventListener('click',async()=>{
-  if(authorized){unlock();return}
+  if(authorized){await unlock();return}
   if(!configured()){form.classList.add('show');error('Configure bolt-config.js e execute o SQL do Supabase antes de entrar.');return}
   enter.disabled=true;enter.textContent='VERIFICANDO ACESSO...';
-  try{const {data}=await client.auth.getSession();if(data.session){session=data.session;if(await checkAccess(data.session)){unlock();return}}}catch(e){}
+  try{const {data}=await client.auth.getSession();if(data.session){session=data.session;if(await checkAccess(data.session)){await unlock();return}}}catch(e){}
   form.classList.add('show');enter.textContent='ENTRAR';enter.disabled=false;document.getElementById('bolt-email').focus();
  });
  form.addEventListener('submit',async e=>{
   e.preventDefault();error('');if(!configured()){error('Configure o Supabase primeiro.');return}
   const b=form.querySelector('button');b.disabled=true;b.textContent='AUTENTICANDO...';
-  try{const {data, error:authError}=await client.auth.signInWithPassword({email:document.getElementById('bolt-email').value.trim(),password:document.getElementById('bolt-password').value});if(authError)throw authError;session=data.session;if(!await checkAccess(session)){await client.auth.signOut();session=null;throw new Error(isMaster?'Usuário sem permissão de administrador Master.':'Este login não está autorizado para '+tenantSlug+'.')}unlock()}
+  try{const {data, error:authError}=await client.auth.signInWithPassword({email:document.getElementById('bolt-email').value.trim(),password:document.getElementById('bolt-password').value});if(authError)throw authError;session=data.session;if(!await checkAccess(session)){await client.auth.signOut();session=null;throw new Error(isMaster?'Usuário sem permissão de administrador Master.':'Este login não está autorizado para '+tenantSlug+'.')}await unlock()}
   catch(err){error(err.message||'Não foi possível entrar.');}finally{b.disabled=false;b.textContent='AUTENTICAR E ENTRAR'}
  });
  if(!configured())error('Configure bolt-config.js com URL e chave pública do Supabase.');
@@ -30,9 +30,9 @@ async function checkAccess(s){if(!s?.user)return false;
  if(isMaster){const {data,error:e}=await client.from('bolt_master_admins').select('user_id').eq('user_id',s.user.id).maybeSingle();if(e)throw e;return !!data}
  const {data,error:e}=await client.from('bolt_memberships').select('tenant_id,bolt_tenants!inner(slug)').eq('user_id',s.user.id).eq('bolt_tenants.slug',tenantSlug);if(e)throw e;return !!data?.length;
 }
-function unlock(){authorized=true;document.documentElement.classList.remove('bolt-locked');document.getElementById('bolt-auth-root').hidden=true;
+async function unlock(){if(isMaster&&typeof window.BOLT_MASTER_REFRESH==='function'){const synced=await window.BOLT_MASTER_REFRESH();if(!synced){error('Não foi possível sincronizar os clientes do Supabase. Verifique a conexão e tente novamente.');return false}}authorized=true;document.documentElement.classList.remove('bolt-locked');document.getElementById('bolt-auth-root').hidden=true;
  if(!document.getElementById('bolt-logout')){const b=document.createElement('button');b.id='bolt-logout';b.className='bolt-logout';b.textContent='⏻ Sair';b.addEventListener('click',async()=>{authorized=false;await client.auth.signOut();session=null;document.documentElement.classList.add('bolt-locked');document.getElementById('bolt-auth-root').hidden=false;document.getElementById('bolt-login-form').classList.remove('show');document.getElementById('bolt-enter').textContent='ENTRAR ⚡';b.remove()});document.body.appendChild(b)}
- if(isMaster&&typeof window.boltCloudInit==='function')window.boltCloudInit();
+ if(isMaster&&typeof window.boltCloudInit==='function')window.boltCloudInit();return true;
 }
 window.BOLT_GET_SESSION=()=>session;
 document.addEventListener('DOMContentLoaded',setup);
