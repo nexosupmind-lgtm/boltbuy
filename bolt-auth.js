@@ -13,7 +13,7 @@ function setup(){
   if(authorized){await unlock();return}
   if(!configured()){form.classList.add('show');error('Configure bolt-config.js e execute o SQL do Supabase antes de entrar.');return}
   enter.disabled=true;enter.textContent='VERIFICANDO ACESSO...';
-  try{const {data}=await client.auth.getSession();if(data.session){session=data.session;if(await checkAccess(data.session)){await unlock();return}}}catch(e){}
+  try{const {data}=await client.auth.getSession();if(data.session){session=data.session;if(await checkAccess(data.session)){if(await unlock())return}}}catch(e){}
   form.classList.add('show');enter.textContent='ENTRAR';enter.disabled=false;document.getElementById('bolt-email').focus();
  });
  form.addEventListener('submit',async e=>{
