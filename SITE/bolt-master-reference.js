@@ -81,7 +81,7 @@
   const logo = (product) =>
     `<img class="mr-product-logo" src="${products[product].asset}" alt="BOLT ${product === "class" ? "Class" : product === "church" ? "Church" : "Buy"}" width="180" height="72">`;
   const brand = () =>
-    `<span class="mr-brand-mark">${icon("bolt")}</span><span class="mr-brand-copy"><strong>BOLT</strong><small>Operational Technology</small></span>`;
+    `<img class="mr-official-logo" src="/bolt-brand-white.png" alt="BOLT">`;
   const rowLink = (page, label, name, extra = "") =>
     `<button class="nav mr-nav" data-mr-page="${page}" aria-label="${label}" title="${label}" ${extra}>${icon(name)}<span>${label}</span></button>`;
   function mascot() {
@@ -92,7 +92,7 @@
       <g class="mr-robot-body"><path d="m101 208-6 27q14 11 33 0l-1-22m32-8 8 29q17 9 30-3l-15-29" fill="url(#mr-metal)" stroke="#d8b5ff" stroke-width="2"/>
       <path d="M100 155q35-19 70 2l15 44q-43 34-91 0Z" fill="url(#mr-metal)" stroke="#d7b0ff" stroke-width="3"/><ellipse cx="139" cy="188" rx="27" ry="28" fill="#8e39ba" stroke="#e2c7ff" stroke-width="3"/><path d="m144 165-22 26h16l-5 18 23-28h-17Z" fill="#e6b4ff"/>
       <path d="M178 167q30 8 24 40" fill="none" stroke="url(#mr-metal)" stroke-width="22" stroke-linecap="round"/>
-      <g class="mr-thumb"><path d="M101 170q-32 21-45 6" fill="none" stroke="url(#mr-metal)" stroke-width="20" stroke-linecap="round"/><path d="m48 182-14-12q-7-10 1-15l9 2-1-20q2-13 9-7l4 25 12 3q6 5 1 17l-6 10Z" fill="url(#mr-metal)" stroke="#d3b6f7" stroke-width="2"/><path d="m44 165 15 5m-14 3 15 5" stroke="#805c9d" stroke-width="2"/></g></g>
+      <path d="M99 167q-22 11-22 37" fill="none" stroke="url(#mr-metal)" stroke-width="22" stroke-linecap="round"/></g>
       <g transform="rotate(8 137 89)"><rect x="47" y="44" width="22" height="65" rx="11" fill="url(#mr-ear)" stroke="#d9b0ff" stroke-width="3"/><rect x="198" y="48" width="24" height="67" rx="12" fill="url(#mr-ear)" stroke="#e1b5ff" stroke-width="3"/>
       <rect x="60" y="17" width="145" height="131" rx="53" fill="url(#mr-metal)" stroke="#f1dfff" stroke-width="3"/><path d="M83 37q56-25 100 13" fill="none" stroke="white" opacity=".7" stroke-width="5" stroke-linecap="round"/><rect x="72" y="43" width="121" height="91" rx="37" fill="url(#mr-visor)" stroke="#6f438f" stroke-width="4"/>
       <g class="mr-robot-eyes"><path d="M93 87q10-26 22 0m25 0q11-26 23 0" fill="none" stroke="#c883ff" stroke-width="12" filter="url(#mr-glow)"/><path d="M93 87q10-26 22 0m25 0q11-26 23 0" fill="none" stroke="#f1d8ff" stroke-width="6" stroke-linecap="round"/></g><path d="M119 108q11 8 22-1" fill="none" stroke="#a45ed3" stroke-width="3" stroke-linecap="round"/></g></svg>`;

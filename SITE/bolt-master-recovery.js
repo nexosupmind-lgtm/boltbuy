@@ -10,6 +10,7 @@
   if(error){message('Erro ao carregar empresas: '+error.message,true);return}
   tenants=(data||[]).map(t=>({cloudId:t.id,slug:t.slug,name:t.name,owner:t.owner_name||'',logo:t.logo_url||'',primary:t.primary_color||'#ef652c',background:t.background_color||'#101e37',tagline:t.tagline||'',plan:t.plan||'Pro',status:({ativo:'Ativo',teste:'Teste',suspenso:'Suspenso'}[String(t.status||'').toLowerCase()]||'Teste'),price:0,due:''}));
   render();document.getElementById('bolt-cloud-status')?.remove();window.dispatchEvent(new Event('bolt:clients-refreshed'));
+  return tenants;
  }
  window.BOLT_MASTER_REFRESH=refresh;
  document.addEventListener('DOMContentLoaded',()=>{

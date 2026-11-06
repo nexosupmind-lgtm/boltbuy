@@ -2422,3 +2422,5 @@ body.bolt-master-reference main {
     height: 39px;
   }
 }
+
+.mr-brand .mr-official-logo{width:145px;max-width:70%;height:48px;object-fit:contain}.mr-sidebar-collapsed .mr-official-logo{width:38px;object-fit:contain}
