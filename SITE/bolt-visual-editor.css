@@ -1,0 +1,35 @@
+#bolt-visual-editor{box-sizing:border-box;position:fixed;inset:12px;width:calc(100vw - 24px);height:calc(100dvh - 24px);max-width:none;max-height:none;margin:0;padding:0;border:1px solid #504366;border-radius:20px;background:#101018;color:#eceaf7;font:14px/1.5 system-ui;overflow:hidden;box-shadow:0 30px 100px #0009}
+#bolt-visual-editor[open]{display:flex;flex-direction:column}
+#bolt-visual-editor::backdrop{background:#05050be8}
+#bolt-visual-editor *{box-sizing:border-box}
+#bolt-visual-editor header{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:14px 22px;background:#1b1727;border-bottom:1px solid #373044;flex-wrap:wrap}
+#bolt-visual-editor header small{color:#b9a0ff;letter-spacing:.15em;font-size:10px}
+#bolt-visual-editor h2{font-size:18px;margin:0}
+#bolt-visual-editor h3{font-size:13px;color:#d3c2f3;margin:18px 0 10px}
+#bolt-visual-editor button,#bolt-visual-editor select,#bolt-visual-editor input,#bolt-visual-editor textarea{font:inherit;color:inherit;background:#242031;border:1px solid #494054;border-radius:8px;padding:8px 10px;min-width:0}
+#bolt-visual-editor button{cursor:pointer;transition:background .15s,border-color .15s}
+#bolt-visual-editor button:hover{background:#383047;border-color:#ae83f6}
+#bolt-visual-editor button:disabled{opacity:.45;cursor:default}
+#bolt-visual-editor .visual-primary,#bolt-visual-editor [aria-pressed=true]{background:#794de0;border-color:#ac82ff;color:white}
+#bolt-visual-editor .visual-actions{display:flex;gap:7px;flex-wrap:wrap}
+#bolt-visual-editor .visual-workspace{display:grid;grid-template-columns:210px minmax(0,1fr) 270px;flex:1;min-height:0}
+#bolt-visual-editor aside{overflow:auto;padding:0 16px 20px;background:#191621}
+#bolt-visual-editor .visual-pages{border-right:1px solid #373044}
+#bolt-visual-editor .visual-properties{border-left:1px solid #373044}
+#bolt-visual-editor #visual-pages-list{display:grid;gap:5px}
+#bolt-visual-editor #visual-pages-list button{text-align:left;font-size:12px}
+#bolt-visual-editor main{display:flex;flex-direction:column;min-width:0;min-height:0}
+#bolt-visual-editor .visual-toolbar{display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;background:#191621;border-bottom:1px solid #373044}
+#bolt-visual-editor .visual-toolbar span{font-size:12px;color:#b3a8c8;flex:1}
+#bolt-visual-editor .visual-canvas{flex:1;overflow:auto;padding:20px;min-height:0;background-color:#0d0c13;background-image:radial-gradient(#343040 1px,transparent 1px);background-size:18px 18px}
+#bolt-visual-editor iframe{display:block;height:100%;min-height:540px;max-width:none;margin:0 auto;background:white;border:1px solid #51445f;border-radius:10px}
+#bolt-visual-editor fieldset{border:0;padding:0;margin:0}
+#bolt-visual-editor label{display:grid;gap:4px;font-size:12px;color:#c9c0d6;margin-bottom:12px}
+#bolt-visual-editor input,#bolt-visual-editor textarea,#bolt-visual-editor select{width:100%}
+#bolt-visual-editor .visual-property-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;margin-top:12px}
+#bolt-visual-editor .visual-hint,#visual-text-hint{font-size:11px;color:#a79ab9}
+#visual-selection{font-size:11px;overflow-wrap:anywhere;color:#c4acd9}
+#bolt-visual-editor a{color:#c5a5ff}
+#bolt-visual-editor footer{display:flex;justify-content:space-between;gap:14px;padding:10px 20px;border-top:1px solid #373044;font-size:12px;background:#1b1727}
+@media(max-width:900px){#bolt-visual-editor .visual-workspace{grid-template-columns:150px minmax(0,1fr) 220px}#bolt-visual-editor header{padding:10px}#bolt-visual-editor .visual-actions button{font-size:11px}}
+@media(max-width:650px){#bolt-visual-editor{inset:0;width:100vw;height:100dvh;border-radius:0}#bolt-visual-editor .visual-workspace{grid-template-columns:130px minmax(0,1fr);overflow:auto}#bolt-visual-editor .visual-properties{grid-column:1/-1;min-height:300px}#bolt-visual-editor main{min-height:650px}#bolt-visual-editor .visual-property-grid{grid-template-columns:repeat(3,1fr)}}

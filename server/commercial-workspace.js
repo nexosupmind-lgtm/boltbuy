@@ -74,7 +74,9 @@ export async function onRequest({ request, env, waitUntil }) {
     // This edition exposes administrator modules only. Do not elevate other membership roles.
     const isOwner = memberships.length === 1 && memberships[0].role === "owner";
     const studioImport = product === "class" && q.get("studio") === "import";
-    if (studioImport) {
+    const studioPreview = q.get("studio") === "preview";
+    if (studioPreview && request.method !== "GET") return response(403, { error: "A prévia do Studio permite somente leitura." });
+    if (studioImport || studioPreview) {
       const admins = await read(
         "bolt_master_admins?user_id=eq." +
           encodeURIComponent(user.id) +
@@ -403,3 +405,4 @@ export async function onRequest({ request, env, waitUntil }) {
     });
   }
 }
+

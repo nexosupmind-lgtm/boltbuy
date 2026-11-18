@@ -21,6 +21,7 @@ function support(){
 }
 window.BOLT_OPEN_SUPPORT=support;
 function setup(){
+ if(!master&&!document.querySelector('script[data-visual-runtime]')){const runtime=document.createElement('script');runtime.src='/bolt-visual-runtime.js';runtime.dataset.visualRuntime='';document.body.append(runtime);}
  document.documentElement.dataset.boltProduct=product;
  if(!document.querySelector('link[href="/bolt-shell.css"]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/bolt-shell.css';document.head.append(css);}
  if(master||slug){document.querySelectorAll('link[rel="manifest"]').forEach(e=>e.remove());const manifest=document.createElement('link');manifest.rel='manifest';manifest.href='/api/app-manifest?product='+product+'&surface='+surface+(slug?'&slug='+encodeURIComponent(slug):'');document.head.append(manifest);if(!document.querySelector('link[rel="apple-touch-icon"]')){
@@ -67,3 +68,4 @@ function setup(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();
+
