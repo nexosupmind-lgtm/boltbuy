@@ -18,7 +18,9 @@
       maxWidth:'none',maxHeight:'none',margin:'0',padding:'0',border:'0',
       overflow:'hidden',background:'transparent',display:'none'
     })) modal.style.setProperty(key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),value,'important');
-    const shadow = modal.attachShadow({mode:'open'});
+    const host = document.createElement('div');
+    modal.append(host);
+    const shadow = host.attachShadow({mode:'open'});
     const stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
     stylesheet.href = '/bolt-visual-editor.css?v=isolated2';
