@@ -9,11 +9,29 @@
   const copy = value => structuredClone(value);
   const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
   async function open(context) {
-    if (document.getElementById('bolt-visual-editor')) return;
-    const dialog = document.createElement('dialog');
+    if (document.getElementById('bolt-visual-dialog')) return;
+    const modal = document.createElement('dialog');
+    modal.id = 'bolt-visual-dialog';
+    modal.setAttribute('aria-label', 'Editor visual do cliente');
+    for (const [key,value] of Object.entries({
+      position:'fixed',inset:'0',width:'100vw',height:'100dvh',
+      maxWidth:'none',maxHeight:'none',margin:'0',padding:'0',border:'0',
+      overflow:'hidden',background:'transparent',display:'none'
+    })) modal.style.setProperty(key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),value,'important');
+    const shadow = modal.attachShadow({mode:'open'});
+    const stylesheet = document.createElement('link');
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = '/bolt-visual-editor.css?v=isolated2';
+    const stylesReady = new Promise((resolve,reject) => {
+      stylesheet.onload = resolve;
+      stylesheet.onerror = () => reject(Error('Não foi possível carregar o editor. Atualize a página e tente novamente.'));
+    });
+    const dialog = document.createElement('div');
     dialog.id = 'bolt-visual-editor';
+    dialog.setAttribute('open','');
+    shadow.append(stylesheet,dialog);
     dialog.innerHTML = `<header><div><small>BOLT STUDIO</small><h2></h2></div><div class="visual-actions"><button data-action="undo" disabled>Desfazer</button><button data-action="redo" disabled>Refazer</button><button data-action="reload">Recarregar configurações</button><button data-action="save" class="visual-primary" disabled>Publicar alterações</button><button data-action="close" aria-label="Fechar editor">×</button></div></header><div class="visual-workspace"><aside class="visual-pages"><h3>Ambientes</h3><select aria-label="Ambiente" id="visual-surface"></select><h3>Páginas e seções</h3><div id="visual-pages-list"></div><p class="visual-hint">Os menus do ambiente aberto aparecem aqui. Páginas protegidas exigem o acesso correspondente do cliente.</p><a id="visual-open" target="_blank" rel="noopener">Abrir em outra aba ↗</a></aside><main><div class="visual-toolbar"><button data-action="inspect" aria-pressed="false">Selecionar elemento</button><span>Navegar</span><select id="visual-device" aria-label="Tamanho da prévia"><option value="390">Celular · 390 px</option><option value="768">Tablet · 768 px</option><option value="1280" selected>Desktop · 1280 px</option></select></div><div class="visual-canvas"><iframe title="Prévia editável do cliente" id="visual-frame"></iframe></div></main><aside class="visual-properties"><h3>Propriedades</h3><p id="visual-selection">Ative “Selecionar elemento” e clique na prévia.</p><fieldset id="visual-fields" disabled><label>Texto<textarea id="visual-text" rows="4" maxlength="2000"></textarea></label><small id="visual-text-hint"></small><div class="visual-property-grid">${properties.map(([key,label])=>`<label>${label}<input data-style="${key}" placeholder="${/color/i.test(key)?'#ffffff':'Ex.: 16px'}"></label>`).join('')}</div><label>Alinhamento<select data-style="textAlign"><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select></label><label>Fonte<select data-style="fontFamily"><option value="inherit">Fonte do sistema</option><option value="Arial, sans-serif">Arial</option><option value="Georgia, serif">Georgia</option><option value="system-ui, sans-serif">Sistema</option><option value="monospace">Monoespaçada</option></select></label><button data-action="reset" type="button">Restaurar elemento</button></fieldset><p class="visual-hint">A edição de texto fica disponível para títulos e rótulos. Produtos, valores e cadastros são editados nos módulos do cliente.</p></aside></div><footer><span id="visual-status" role="status">Carregando configurações…</span><span id="visual-count"></span></footer>`;
-    document.body.append(dialog);
+    document.body.append(modal);
     dialog.querySelector('h2').textContent = context.name || context.slug;
     const el = id => dialog.querySelector('#' + id);
     const action = name => dialog.querySelector('[data-action=' + name + ']');
@@ -148,11 +166,19 @@
       if(busy){status('Aguarde a operação em andamento.');return}
       if(!same(visual,saved)&&!confirm('Fechar e descartar as alterações ainda não publicadas?'))return;
       window.removeEventListener('message',receive);window.removeEventListener('beforeunload',warn);
-      dialog.close();dialog.remove();
+      modal.close();modal.remove();
     }
-    action('close').onclick=close;dialog.addEventListener('cancel',close);
+    action('close').onclick=close;modal.addEventListener('cancel',close);
     window.addEventListener('message',receive);window.addEventListener('beforeunload',warn);
-    dialog.showModal();loadPage(routes[context.product][0]);await loadSettings();
+    try { await stylesReady; }
+    catch(error) {
+      window.removeEventListener('message',receive);
+      window.removeEventListener('beforeunload',warn);
+      modal.remove(); alert(error.message); return;
+    }
+    modal.showModal();
+    modal.style.setProperty('display','block','important');
+    loadPage(routes[context.product][0]);await loadSettings();
   }
   window.BOLT_VISUAL_EDITOR = { mount(host,context) {
     if(!host||host.querySelector('[data-visual-launch]'))return;
