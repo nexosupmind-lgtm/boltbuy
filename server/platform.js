@@ -2,7 +2,8 @@
 export const MODULES={
  buy:{pdv:'PDV e caixa',products:'Produtos e fotos',orders:'Pedidos',ifood:'iFood',reports:'Relatórios',banners:'Promoções',delivery:'Entrega e frete',assistant:'Bolt',customers:'Clientes',stock:'Estoque'},
  class:{students:'Alunos',enrollments:'Matrículas',classes:'Turmas',subjects:'Disciplinas',schedule:'Horários',attendance:'Chamada',grades:'Notas',assessments:'Avaliações',documents:'Documentos',staff:'Equipe',family:'Portal da família',finance:'Mensalidades',contracts:'Contratos',expenses:'Despesas',inventory:'Patrimônio',library:'Biblioteca',transport:'Transporte',messages:'Comunicados',calendar:'Calendário',tasks:'Tarefas',incidents:'Ocorrências',meetings:'Conselho',reports:'Relatórios'},
- church:{reports:'Relatórios',members:'Membros',ministries:'Ministérios',events:'Eventos',notices:'Comunicados',courses:'Cursos',enrollments:'Inscrições',attendance:'Presenças',devotionals:'Devocionais'}
+ church:{reports:'Relatórios',members:'Membros',ministries:'Ministérios',events:'Eventos',notices:'Comunicados',courses:'Cursos',enrollments:'Inscrições',attendance:'Presenças',devotionals:'Devocionais'},
+ barber:{bookings:'Agendamentos',customers:'Clientes',reports:'Relatórios',ledger:'Contas a pagar e a receber',catalog:'Catálogo e equipe'}
 };
 const json=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json','cache-control':'no-store'}});
 const fail=(status,message)=>{throw Object.assign(Error(message),{status})};

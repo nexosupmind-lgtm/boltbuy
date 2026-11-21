@@ -23,7 +23,7 @@ export async function onRequest({request,env}){
   if(admins.length!==1)return reply(403,{error:'Apenas administradores Master.'});
   const query=new URL(request.url).searchParams;
   const product=query.get('product'),id=query.get('id');
-  if(!['class','church','buy'].includes(product)||!uuid.test(id||''))return reply(400,{error:'Cliente inválido.'});
+  if(!['class','church','buy','barber'].includes(product)||!uuid.test(id||''))return reply(400,{error:'Cliente inválido.'});
   const buy=product==='buy';
   const clients=await read((buy?'bolt_tenants':'bolt_commercial_clients')+'?id=eq.'+id+(buy?'':'&product=eq.'+product)+'&select=id');
   if(clients.length!==1)return reply(404,{error:'Cliente não encontrado.'});
