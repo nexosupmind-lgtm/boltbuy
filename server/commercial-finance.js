@@ -111,12 +111,25 @@ export async function onRequest({ request, env }) {
     const partner = master ? null : (await rest('bolt_partner_access?select=product,partner&user_id=eq.' + user))[0];
     if (!master && (!partner || method !== 'GET' || action !== 'summary')) return reply(403, { error: 'Acesso negado.' });
 
-    if (method === 'POST' && ['expense','payout','partner'].includes(action)) {
+    if (method === 'POST' && ['expense','payout','partner','customization'].includes(action)) {
       const raw = await request.text();
       if (raw.length > 4096) return reply(413, { error: 'Solicitação muito grande.' });
       let body;
       try { body = JSON.parse(raw); } catch { return reply(400, { error: 'Dados inválidos.' }); }
-      if (action === 'partner') {
+      if (action === 'customization') {
+        if (!/^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(body?.client_id || '') ||
+            !['customization','bug','separate_quote'].includes(body.kind) ||
+            typeof body.description !== 'string' || !body.description.trim() || body.description.length > 250)
+          return reply(400, { error: 'Confira a empresa, o tipo e a descrição.' });
+        try {
+          await rest('rpc/bolt_record_barber_customization', {
+            p_client: body.client_id, p_actor: user, p_kind: body.kind, p_description: body.description.trim()
+          });
+        } catch (error) {
+          if (error.status === 400) return reply(409, { error: 'A cota mensal de personalizações foi atingida.' });
+          throw error;
+        }
+      } else if (action === 'partner') {
         if (!['barber','class'].includes(body?.product) || !/^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(body.user_id || ''))
           return reply(400, { error: 'Informe o UUID de uma conta já cadastrada e o produto.' });
         await rest('bolt_partner_access?on_conflict=product', {
@@ -168,9 +181,11 @@ export async function onRequest({ request, env }) {
       return { client: client?.name, product: client?.product, days, due_date: i.due_date, amount: i.amount };
     }) : [];
     const partners = master ? await rest('bolt_partner_access?select=product,partner,user_id&order=product') : [];
+    const customizations = master ? await rest('bolt_barber_customizations?select=client_id,kind,description,accounting_month&order=recorded_at.desc,id.desc&limit=100') : [];
+    const barberClients = master ? commercial.filter(c => c.product === 'barber') : [];
     const audit = master ? await rest('bolt_financial_audit?select=event,subject,metadata,created_at&order=id.desc&limit=100') : [];
     return reply(200, { from, to, report: master ? report : { [partner.product]: report[partner.product] },
-      clients: master ? undefined : commercial, invoices: master ? undefined : scopedInvoices, expenses, audit, partners, overdueAlerts,
+      clients: master ? undefined : commercial, invoices: master ? undefined : scopedInvoices, expenses, audit, partners, overdueAlerts, customizations, barberClients,
       commissions: scopedCommissions, payouts: master ? payouts : payouts.map(({ id, month, recorded_at })=>({ id, month, recorded_at })) });
   } catch (error) {
     return reply(error.status === 409 ? 409 : 503, { error: 'Não foi possível concluir. Confira as migrações e o período selecionado.' });

@@ -139,4 +139,44 @@ begin
 end $$;
 revoke all on function public.bolt_record_commission_payout(date,uuid,text) from public,anon,authenticated;
 grant execute on function public.bolt_record_commission_payout(date,uuid,text) to service_role;
+create table public.bolt_barber_customizations (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references public.bolt_commercial_clients(id),
+  kind text not null check(kind in ('customization','bug','separate_quote')),
+  description text not null check(length(trim(description)) between 1 and 250),
+  accounting_month date not null check(extract(day from accounting_month)=1),
+  actor uuid not null,
+  recorded_at timestamptz not null default now()
+);
+create index bolt_barber_customizations_month on public.bolt_barber_customizations(client_id, accounting_month)
+  where kind='customization';
+alter table public.bolt_barber_customizations enable row level security;
+revoke all on public.bolt_barber_customizations from public,anon,authenticated;
+grant select on public.bolt_barber_customizations to service_role;
+
+create function public.bolt_record_barber_customization(p_client uuid,p_actor uuid,p_kind text,p_description text)
+returns uuid language plpgsql security definer set search_path=pg_catalog,public as $$
+declare
+  new_id uuid;
+  quota integer;
+  month_start date := date_trunc('month',now() at time zone 'America/Sao_Paulo')::date;
+begin
+  if not exists(select 1 from public.bolt_master_admins where user_id=p_actor)
+    then raise exception 'Acesso negado.'; end if;
+  perform 1 from public.bolt_commercial_clients where id=p_client and product='barber' for update;
+  if not found then raise exception 'Cliente Barber inválido.'; end if;
+  if p_kind='customization' then
+    select coalesce((p.barber_terms->>'customizations')::integer,0) into quota
+      from public.bolt_client_subscriptions s join public.bolt_platform_plans p on p.id=s.plan_id
+      where s.client_id=p_client and s.status in ('active','trial');
+    if coalesce(quota,0) <= (select count(*) from public.bolt_barber_customizations
+      where client_id=p_client and accounting_month=month_start and kind='customization')
+      then raise exception 'Cota mensal de personalizações esgotada.' using errcode='23514'; end if;
+  end if;
+  insert into public.bolt_barber_customizations(client_id,kind,description,accounting_month,actor)
+    values(p_client,p_kind,p_description,month_start,p_actor) returning id into new_id;
+  return new_id;
+end $$;
+revoke all on function public.bolt_record_barber_customization(uuid,uuid,text,text) from public,anon,authenticated;
+grant execute on function public.bolt_record_barber_customization(uuid,uuid,text,text) to service_role;
 commit;
