@@ -20,7 +20,7 @@ export async function onRequest({request,env}){
   if(!['GET','POST'].includes(request.method))return json(405,{error:'Método não permitido.'});
   const base=(env.SUPABASE_URL||'').replace(/\/$/,''),key=env.SUPABASE_SERVICE_ROLE_KEY;if(!/^https:\/\/[^/]+\.supabase\.co$/.test(base)||!key)fail(503,'Servidor não configurado.');
   const h={apikey:key,authorization:'Bearer '+key,'content-type':'application/json'};
-  async function rest(path,options={}){const r=await fetch(base+'/rest/v1/'+path,{...options,headers:{...h,...options.headers}});if(!r.ok){if(r.status===409)fail(409,'Registro já cadastrado ou em uso.');fail(503,'Estrutura indisponível. Confira a instalação V35.')}return r.status===204?null:r.json()}
+  async function rest(path,options={}){const r=await fetch(base+'/rest/v1/'+path,{...options,headers:{...h,...options.headers}});if(!r.ok){if(r.status===409)fail(409,'Registro já cadastrado ou em uso.');fail(503,'Estrutura indisponível. Confira a instalação V35.')}const result=await r.text();return result?JSON.parse(result):null}
   async function all(path){let out=[];for(let offset=0;offset<100000;offset+=1000){const rows=await rest(path+(path.includes('?')?'&':'?')+'limit=1000&offset='+offset);out.push(...rows);if(rows.length<1000)return out}fail(503,'Volume acima do limite desta consulta.');}
   const q=new URL(request.url).searchParams,action=q.get('action')||'overview';
   let body={};if(request.method==='POST'){const raw=await request.text();if(new TextEncoder().encode(raw).length>10000)fail(413,'Solicitação muito grande.');try{body=JSON.parse(raw)}catch{fail(400,'Solicitação inválida.')}}
