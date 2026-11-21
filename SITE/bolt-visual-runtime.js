@@ -7,6 +7,7 @@
   const path = location.pathname.replace(/\.html$/, '');
   const surface = path.includes('/Salgaditos/') || ['/shop', '/admin'].includes(path)
     ? (/cliente|shop/.test(path) ? 'shop' : 'delivery-admin')
+    : path.startsWith('/Boltbarber') ? ({ admin: 'barber-admin', login: 'barber-login' }[q.get('view')] || 'barber-site')
     : path.includes('/Boltclass/') ? 'class-admin'
     : path.includes('/Boltchurch/') ? 'church-admin'
     : path.endsWith('/family') ? 'family'
@@ -15,6 +16,7 @@
     : path.endsWith('/portal') ? 'login' : null;
   if (!surface) return;
   const product = surface === 'shop' || surface === 'delivery-admin' ? 'buy'
+    : surface.startsWith('barber-') ? 'barber'
     : ['class-admin', 'family', 'teacher'].includes(surface) ? 'class'
     : ['church-admin', 'member'].includes(surface) ? 'church' : q.get('product');
   const slug = q.get('tenant') || q.get('slug') || (product === 'buy' ? 'salgaditos' : '');
@@ -52,7 +54,7 @@
     originals.clear();
   }
   function viewKey() {
-    return [...document.querySelectorAll('nav [aria-current="page"], nav .active, .sidebar .active, .sidebar .selected, .tabs .active, .member-tabs [aria-selected="true"], .bottomnav .active')]
+    return [...document.querySelectorAll('nav [aria-current="page"], nav .active, #sideNav .active, .sidebar .active, .sidebar .selected, .tabs .active, .member-tabs [aria-selected="true"], .bottomnav .active')]
       .filter(el => el.getClientRects().length).map(el => selector(el)).join('|').slice(0,300) + location.hash;
   }
   let appliedView = '';
@@ -83,7 +85,7 @@
     for (const element of originals.keys()) if (!element.isConnected) originals.delete(element);
   }
   function navigation() {
-    const elements = [...document.querySelectorAll('nav a, nav button, .sidebar a, .sidebar button, .tabs button, .member-tabs button, .mobile-dock button, .bottomnav button')];
+    const elements = [...document.querySelectorAll('#sideNav button, nav a, nav button, .sidebar a, .sidebar button, .tabs button, .member-tabs button, .mobile-dock button, .bottomnav button')];
     return elements.filter(el => el.getClientRects().length && !/sair|logout|excluir/i.test(el.textContent)).slice(0,80).map(el => ({ selector: selector(el), label: el.textContent.trim().slice(0,80) }));
   }
   function clearHover() { document.querySelectorAll('[data-visual-hover]').forEach(el => el.removeAttribute('data-visual-hover')); }

@@ -11,3 +11,12 @@ test('Remembered Master session stays on login until an explicit Enter click',as
 
 test('Buy presents credentials immediately, toggles password, and refuses another tenant membership',async()=>{const h=harness({path:'/Salgaditos/admin.html',master:false,buyAllowed:false});vm.runInContext(readFileSync('SITE/bolt-auth.js','utf8'),h.context);h.events.DOMContentLoaded();await new Promise(setImmediate);assert.match(h.created[0].innerHTML,/bolt-login-form show/);assert.match(h.created[0].innerHTML,/data-bolt-login-card/);h.get('bolt-toggle-password').handlers.click();assert.equal(h.get('bolt-password').type,'text');h.get('bolt-email').value='wrong@example.test';h.get('bolt-password').value='test-password';await h.get('bolt-login-form').handlers.submit({preventDefault(){}});assert.notEqual(h.get('bolt-auth-root').hidden,true);assert.equal(h.signouts(),1);assert.match(h.get('bolt-login-error').textContent,/não está autorizado/)});
 test('Buy keeps remembered access behind an explicit Enter and allows switching accounts',async()=>{const h=harness({path:'/Salgaditos/admin.html',master:false,remembered:true});vm.runInContext(readFileSync('SITE/bolt-auth.js','utf8'),h.context);h.events.DOMContentLoaded();await new Promise(setImmediate);assert.equal(h.get('bolt-login-form').hidden,true);assert.equal(h.get('bolt-enter').hidden,false);assert.equal(h.get('bolt-enter').textContent,'Entrar no meu negócio →');assert.notEqual(h.get('bolt-auth-root').hidden,true);await h.get('bolt-switch-account').onclick();assert.equal(h.signouts(),1);assert.equal(h.get('bolt-login-form').hidden,false);assert.equal(h.get('bolt-enter').hidden,true)});
+
+test('Master advertises Barber alongside the other products on desktop and mobile',()=>{
+  const h=harness();
+  vm.runInContext(readFileSync('SITE/bolt-auth.js','utf8'),h.context);
+  h.events.DOMContentLoaded();
+  const markup=h.created.find(element=>element.id==='bolt-auth-root').innerHTML;
+  assert.match(markup,/<strong>BOLT Barber<\/strong>/);
+  assert.match(markup,/<li>BOLT Barber<\/li>/);
+});

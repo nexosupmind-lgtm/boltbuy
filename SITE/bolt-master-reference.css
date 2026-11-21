@@ -2424,3 +2424,6 @@ body.bolt-master-reference main {
 }
 
 .mr-brand .mr-official-logo{width:145px;max-width:70%;height:48px;object-fit:contain}.mr-sidebar-collapsed .mr-official-logo{width:38px;object-fit:contain}
+
+.bolt-master-reference .tile-barber{background:linear-gradient(145deg,#273218,#111710 75%) !important}
+.bolt-master-reference .tile-barber strong span{color:#d7fa76}

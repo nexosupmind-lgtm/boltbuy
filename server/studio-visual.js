@@ -1,7 +1,7 @@
 const reply = (status, body) => new Response(JSON.stringify(body), {
   status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' }
 });
-const surfaces = ['shop', 'delivery-admin', 'class-admin', 'church-admin', 'login', 'family', 'teacher', 'member'];
+const surfaces = ['shop', 'delivery-admin', 'class-admin', 'church-admin', 'login', 'family', 'teacher', 'member', 'barber-site', 'barber-login', 'barber-admin'];
 const properties = new Set(['color', 'backgroundColor', 'borderColor', 'borderRadius', 'fontSize', 'fontWeight', 'fontFamily', 'padding', 'gap', 'textAlign', 'maxWidth']);
 function validate(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw Error('Configuração inválida.');
@@ -35,7 +35,7 @@ export async function onRequest({ request, env }) {
   try {
     const q = new URL(request.url).searchParams;
     const product = q.get('product'), slug = q.get('slug');
-    if (!['buy', 'class', 'church'].includes(product) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug || '')) return reply(400, { error: 'Cliente inválido.' });
+    if (!['buy', 'class', 'church', 'barber'].includes(product) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug || '')) return reply(400, { error: 'Cliente inválido.' });
     const base = (env.SUPABASE_URL || '').replace(/\/$/, ''), key = env.SUPABASE_SERVICE_ROLE_KEY;
     if (!/^https:\/\/[^/]+\.supabase\.co$/.test(base) || !key) return reply(503, { error: 'Servidor não configurado.' });
     const headers = { apikey: key, authorization: 'Bearer ' + key, 'content-type': 'application/json' };
@@ -66,7 +66,8 @@ export async function onRequest({ request, env }) {
     const text = await request.text();
     if (text.length > 300000) return reply(413, { error: 'Limite de personalização excedido.' });
     let body;
-    try { body = JSON.parse(text); body.visual = validate(body.visual); }
+    try { body = JSON.parse(text); body.visual = validate(body.visual);
+      if (Object.keys(body.visual.pages).some(surface => surface.startsWith('barber-') !== (product === 'barber'))) throw Error('Página incompatível com o produto.'); }
     catch (error) { return reply(400, { error: error.message || 'Dados inválidos.' }); }
     if (body.revision !== (current?.updated_at || null)) return reply(409, { error: 'Outro editor salvou alterações. Recarregue as configurações antes de publicar.' });
     const revision = new Date().toISOString();

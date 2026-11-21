@@ -52,6 +52,7 @@
   const icon = (name) =>
     `<svg class="mr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] || paths.layers}"/></svg>`;
   const products = {
+    barber: { label: "BOLT Barber", desc: "Agendamentos e gestão para barbearias", page: "barberClients", icon: "users" },
     class: {
       label: "boltclass",
       desc: "Educação",
@@ -79,6 +80,7 @@
     identity = "João Vitor";
   const active = (status) => ["active", "ativo", "Ativo"].includes(status);
   const logo = (product) =>
+    product === "barber" ? "<strong>BOLT Barber</strong>" :
     `<img class="mr-product-logo" src="${products[product].asset}" alt="BOLT ${product === "class" ? "Class" : product === "church" ? "Church" : "Buy"}" width="180" height="72">`;
   const brand = () =>
     `<img class="mr-official-logo" src="/bolt-brand-white.png" alt="BOLT">`;
@@ -272,6 +274,7 @@
           classClients: "BOLT Class",
           churchClients: "BOLT Church",
           companies: "BOLT Buy",
+          barberClients: "BOLT Barber",
           billing: "Financeiro",
           plans: "Planos",
           support: "Suporte",
@@ -304,6 +307,7 @@
         "classClients",
         "churchClients",
         "companies",
+        "barberClients",
         "studio",
         "commercialEditor",
       ].includes(page)
@@ -341,6 +345,7 @@
         (b.onclick = () => {
           dialog.close();
           if (b.dataset.product === "buy") navigate("create");
+          else if (b.dataset.product === "barber") { navigate("barberClients"); window.boltNewBarberClient?.(); }
           else window.boltEditCommercial(b.dataset.product);
         }),
     );

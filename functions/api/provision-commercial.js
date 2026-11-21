@@ -10,7 +10,7 @@ export async function onRequestPost({request,env}) {
   const check=await fetch(url+'/rest/v1/bolt_master_admins?user_id=eq.'+encodeURIComponent(user.id)+'&select=user_id',{headers});
   if(!check.ok||(await check.json()).length!==1)return json(403,{error:'Apenas administradores Master.'});
   const body=await request.json();const product=body.product,slug=String(body.slug||'').trim(),email=String(body.email||'').trim().toLowerCase(),password=String(body.password||'');
-  if(!['church','class'].includes(product)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<12)return json(400,{error:'Informe cliente válido, e-mail e senha provisória de pelo menos 12 caracteres.'});
+  if(!['church','class','barber'].includes(product)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<12)return json(400,{error:'Informe cliente válido, e-mail e senha provisória de pelo menos 12 caracteres.'});
   const clientQuery='/rest/v1/bolt_commercial_clients?product=eq.'+product+'&slug=eq.'+encodeURIComponent(slug)+'&select=id,name,slug,status';
   const found=await fetch(url+clientQuery,{headers});if(!found.ok)return json(500,{error:'Não foi possível consultar o cliente.'});const clients=await found.json();
   if(clients.length!==1)return json(404,{error:'Cadastre primeiro o cliente no Comercial.'});
@@ -22,6 +22,6 @@ export async function onRequestPost({request,env}) {
   const payload=await created.json(),uid=payload.id||payload.user?.id;if(!uid)return json(500,{error:'Usuário criado, mas sem ID de retorno. Verifique Auth.'});
   const linked=await fetch(url+'/rest/v1/bolt_commercial_memberships',{method:'POST',headers:{...headers,Prefer:'return=minimal'},body:JSON.stringify({client_id:clients[0].id,user_id:uid,role:'owner'})});
   if(!linked.ok)return json(500,{error:'Usuário criado, mas vínculo falhou. Não recrie; verifique o Supabase.'});
-  return json(201,{ok:true,email,product,slug,login_url:'/portal.html?product='+product+'&slug='+encodeURIComponent(slug)});
+  return json(201,{ok:true,email,product,slug,login_url:product==='barber'?'/Boltbarber/?view=login&tenant='+encodeURIComponent(slug):'/portal.html?product='+product+'&slug='+encodeURIComponent(slug)});
  }catch(e){return json(500,{error:'Falha controlada: '+String(e.message||e).slice(0,140)})}
 }
