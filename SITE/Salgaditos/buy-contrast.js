@@ -28,6 +28,15 @@
     const shop = document.body.classList.contains('delivery-shop');
     if (!admin && !shop) return;
     const root = document.querySelector(admin ? '.shell' : '.shop'); if (!root) return;
+    if (admin) {
+      const syncLogout = () => {
+        const actionBar = root.querySelector('.top-actions');
+        const logout = document.getElementById('bolt-logout');
+        if (actionBar && logout && logout.parentElement !== actionBar) actionBar.append(logout);
+      };
+      syncLogout();
+      new MutationObserver(syncLogout).observe(document.body, { childList: true });
+    }
     const scopeSelector = admin ? '.shell, dialog.buy-dialog, dialog.bolt-shell-dialog'
       : '.shop, dialog.delivery-detail, dialog.buy-dialog';
     const overrides = new Map(); let scheduled = false;

@@ -162,3 +162,26 @@
 @media (prefers-reduced-motion: reduce) {
   .delivery-shop .product { transition: none; }
 }
+
+/* Keep utility actions aligned with the page header. */
+.buy-admin-app .topbar { padding: 16px 20px; border-radius: 14px; }
+.buy-admin-app .top-actions { flex-wrap: wrap; align-items: center; }
+.buy-admin-app .top-actions .bolt-logout {
+  position: static;
+  background: #fff;
+  color: var(--market-ink);
+  border: 1px solid #a3aab9;
+}
+.delivery-shop #delivery-location {
+  border: 1px solid var(--market-border);
+  border-radius: 12px;
+  background: #f1f2f5;
+  color: var(--market-ink);
+  min-height: 44px;
+  text-align: left;
+  padding: 10px 14px;
+}
+@media (max-width: 640px) {
+  .buy-admin-app .topbar { padding: 12px; align-items: flex-start; }
+  .buy-admin-app .top-actions { justify-content: flex-end; }
+}
