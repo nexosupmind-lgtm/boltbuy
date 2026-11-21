@@ -79,7 +79,8 @@ export async function onRequest({ request, env }) {
       ...options, headers: { ...headers, ...options.headers }
     });
     if (!result.ok) throw Error('Falha na persistência do Barber.');
-    return result.status === 204 ? null : result.json();
+    const body = await result.text();
+    return body ? JSON.parse(body) : null;
   };
   const mutate = (path, method, body, prefer = 'return=representation') =>
     rest(path, { method, headers: { Prefer: prefer }, body: JSON.stringify(body) });

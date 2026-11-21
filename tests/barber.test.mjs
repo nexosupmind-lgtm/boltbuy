@@ -143,18 +143,18 @@ test('A Master can create a Pro barbershop and retry after partial provisioning'
     if (resource.endsWith('/auth/v1/user') || resource.endsWith('/bolt_master_admins') ||
         resource.endsWith('/bolt_platform_plans')) return mockedFetch(url, options);
     if (resource.endsWith('/bolt_commercial_clients')) {
-      if (method === 'POST') { company ??= { id, ...body() }; return noContent(); }
+      if (method === 'POST') { company ??= { id, ...body() }; return new Response(null, { status: 201 }); }
       if (method === 'PATCH') { Object.assign(company, body()); return noContent(); }
       return Response.json(company ? [company] : []);
     }
     if (resource.endsWith('/bolt_barber_workspaces')) {
       workspace ??= body();
-      return noContent();
+      return new Response(null, { status: 201 });
     }
     if (resource.endsWith('/bolt_client_subscriptions')) {
       if (failOnce) { failOnce = false; return Response.json({}, { status: 503 }); }
       contract ??= body();
-      return noContent();
+      return new Response(null, { status: 201 });
     }
     throw Error(resource);
   });
@@ -168,4 +168,25 @@ test('A Master can create a Pro barbershop and retry after partial provisioning'
   assert.deepEqual(workspace.state.customers, []);
   assert.deepEqual(workspace.state.bookings, []);
   assert.equal((await request('create', 'master', business)).status, 409);
+});
+
+test('Barber plan creation accepts the empty HTTP 201 from PostgREST', async t => {
+  let saved;
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    if (new URL(url).pathname.endsWith('/bolt_platform_plans') && options.method === 'POST') {
+      saved = JSON.parse(options.body);
+      return new Response(null, { status: 201 });
+    }
+    return mockedFetch(url, options);
+  });
+  const payload = { product: 'barber', name: 'Premium', monthly_fee: 99.9, features: Object.keys(MODULES.barber) };
+  const result = await platform({
+    env,
+    request: new Request(origin + '/api/platform?action=plan', {
+      method: 'POST', headers: { authorization: 'Bearer master' }, body: JSON.stringify(payload)
+    })
+  });
+  assert.equal(result.status, 200);
+  assert.equal(saved.name, payload.name);
+  assert.equal(saved.monthly_fee, payload.monthly_fee);
 });
