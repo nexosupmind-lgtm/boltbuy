@@ -702,7 +702,7 @@ function productDetails(id) {
   const dialog = document.createElement("dialog");
   dialog.className = "delivery-detail";
   dialog.setAttribute("aria-label", "Detalhes do produto");
-  dialog.innerHTML = `<header><button aria-label="Voltar">←</button>Detalhes do produto</header><div class="delivery-photo">${photo(item)}</div><section><h2>${esc(item.name)}</h2><p>${esc(item.description)}</p><strong>${amount(item.price)}</strong></section><footer><button data-less aria-label="Diminuir quantidade">−</button><output>1</output><button data-more aria-label="Aumentar quantidade">+</button><button data-add></button></footer>`;
+  dialog.innerHTML = `<header><span>Seu próximo favorito</span><button type="button" aria-label="Fechar detalhes">×</button></header><div class="delivery-detail-body"><div class="delivery-photo">${photo(item)}</div><section><span class="delivery-category">${esc(item.category || "Cardápio")}</span><h2>${esc(item.name)}</h2>${item.description ? `<p>${esc(item.description)}</p>` : ""}<div class="delivery-price"><small>Valor unitário</small><strong>${amount(item.price)}</strong></div></section></div><footer><div class="delivery-quantity"><button type="button" data-less aria-label="Diminuir quantidade">−</button><output aria-live="polite">1</output><button type="button" data-more aria-label="Aumentar quantidade">+</button></div><button type="button" data-add></button></footer>`;
   let qty = 1;
   function update() {
     dialog.querySelector("output").textContent = qty;
