@@ -445,3 +445,19 @@ test("The local quote exporter emits an A4 PDF with multiple pages for long item
   assert.ok((text.match(/\/Type \/Page /g) || []).length >= 3);
   assert.equal(text.includes("(UNIT.)"), false);
 });
+
+test("Admin saves a variable-price bundle and checkout sums the selected quantities at catalog prices", async () => {
+  const h = harness();
+  const next = config();
+  next.combos[0].pricing = "unit";
+  const version = h.tables.bolt_delivery_storefronts[0].updated_at;
+  const saved = await h.request("configure", { config: next, version }, "owner");
+  assert.equal(saved.status, 200);
+  const cart = order();
+  cart.items[0].price = 0.01;
+  const response = await h.request("order", cart);
+  assert.ok(response.ok);
+  const record = h.tables.bolt_order_items[0];
+  assert.equal(Number(record.unit_price), 35);
+  assert.equal(Number(record.quantity), 2);
+});
