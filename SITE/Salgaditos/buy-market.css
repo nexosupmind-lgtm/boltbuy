@@ -314,3 +314,58 @@
 @media (prefers-reduced-motion: reduce) {
   .delivery-shop *, .delivery-shop *::before, .delivery-shop *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Softer hierarchy, tactile catalog and unobtrusive purchase feedback. */
+.delivery-shop { --market-canvas: #f8f9fb; }
+.delivery-shop .shophead { padding: 20px clamp(16px,3vw,34px); }
+.delivery-shop .brand-text strong { font-size: 20px; letter-spacing: -.6px; }
+.delivery-shop .brand-avatar { background: #fff; border-radius: 18px; }
+.delivery-shop #delivery-location { background: #f6f7f9; border-color: #e9ebf0; padding: 14px 16px; }
+.delivery-shop .banner-zone { border-radius: 26px; box-shadow: 0 12px 30px #18203912; }
+.delivery-shop .banner-copy h2 { letter-spacing: -.8px; line-height: 1.15; }
+.delivery-shop .panel-head { margin-top: 26px; margin-bottom: 16px; align-items: center; }
+.delivery-shop .panel-head h3 { font-size: clamp(18px,3vw,22px); letter-spacing: -.5px; }
+.delivery-shop .search-wrap { border: 1px solid #e5e7ed; border-radius: 18px; background: #fff; padding: 3px 12px; }
+.delivery-shop .search-wrap .search { border: 0; background: transparent; min-height: 48px; font-size: 16px; }
+.delivery-shop .chiprow { padding-block: 14px 18px; scrollbar-width: none; }
+.delivery-shop .chiprow::-webkit-scrollbar { display: none; }
+.delivery-shop .chip { border-color: #e5e7ed; font-size: 14px; font-weight: 600; box-shadow: 0 2px 4px #18203903; }
+.delivery-shop .chip.active { box-shadow: 0 4px 12px #18203918; }
+.delivery-shop :is(.product,.featured-card,.buy-combo-grid article) {
+  border-radius: 22px; border-color: #eaecf1;
+  box-shadow: 0 3px 12px #18203906; overflow: hidden;
+}
+.delivery-shop .foodpic { overflow: hidden; background: #f0f1f5; }
+.delivery-shop .foodpic img { transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+.delivery-shop .product h4 { font-size: 15px; line-height: 1.35; letter-spacing: -.2px; }
+.delivery-shop .product .btn { margin-top: 6px; font-size: 13px; font-weight: 700; border: 0; border-radius: 12px; }
+.delivery-shop .promo-slide { border-radius: 22px; }
+.delivery-shop .promo-dots { gap: 6px; }
+.delivery-shop .promo-dots button { transition: width .3s, background .3s; }
+.delivery-shop .cartline { padding: 16px 12px; border-radius: 16px; margin-bottom: 8px; }
+.delivery-shop .qty { gap: 12px; align-items: center; }
+.delivery-shop .qty button { width: 36px; min-height: 36px; border: 1px solid #dfe2e9; border-radius: 50%; background: #fff; color: #20222a; }
+.delivery-shop .bottomnav { box-shadow: 0 12px 40px #1820391a, inset 0 1px 0 #fff; }
+.delivery-shop .bottomnav > button.active { background: #eceef4; border-radius: 18px; }
+.delivery-shop .bottomnav .badge[hidden] { display: none; }
+.delivery-shop .buy-cart-feedback {
+  position: fixed; z-index: 150; left: 50%; top: max(18px,env(safe-area-inset-top));
+  transform: translate(-50%,-12px); opacity: 0; pointer-events: none;
+  width: max-content; max-width: calc(100vw - 32px); padding: 13px 20px;
+  background: #192335; color: #fff; border: 1px solid #ffffff24;
+  border-radius: 100px; box-shadow: 0 8px 24px #18203926;
+  font: 600 14px/1.4 system-ui; transition: transform .3s, opacity .3s;
+}
+.delivery-shop .buy-cart-feedback.visible { transform: translate(-50%,0); opacity: 1; }
+@media (hover:hover) {
+  .delivery-shop .product:hover .foodpic img { transform: scale(1.055); }
+  .delivery-shop .chip:not(.active):hover { background: #eff1f5 !important; }
+}
+@media (max-width: 640px) {
+  .delivery-shop .shophead { padding: 16px; }
+  .delivery-shop .category-block .shopproducts { gap: 12px; }
+  .delivery-shop .banner-zone { padding: 24px 20px 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .delivery-shop .foodpic img, .delivery-shop .buy-cart-feedback { transition: none; }
+}
