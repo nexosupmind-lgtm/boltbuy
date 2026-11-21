@@ -1084,7 +1084,7 @@ function theme() {
     document.documentElement.style.setProperty(
       "--buy-on-primary",
       v[0] * 0.2126 + v[1] * 0.7152 + v[2] * 0.0722 > 0.179
-        ? "#17213a"
+        ? "#000"
         : "#fff",
     );
   }

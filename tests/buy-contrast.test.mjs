@@ -16,3 +16,11 @@ test('Transparent layers blend with the parent, and gradient choices check all s
   assert.ok(stops.every(bg=>ratio(choose(stops),bg)>=4.5));
   assert.equal(parse('transparent'),null);
 });
+
+test('Modern sRGB colors and storefront reading surfaces retain minimum contrast', () => {
+  assert.deepEqual(parse('color(srgb 1 0.5 0 / 0.6)'), [255, 127.5, 0, 0.6]);
+  for (const bg of [[255,255,255], [247,247,248]]) {
+    assert.ok(ratio([32,34,42], bg) >= 4.5);
+    assert.ok(ratio([85,93,110], bg) >= 4.5);
+  }
+});
