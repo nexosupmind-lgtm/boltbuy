@@ -1,0 +1,187 @@
+/* Store identity remains on calls to action. Reading surfaces use fixed contrast pairs. */
+:is(.delivery-shop,.buy-admin-app) {
+  --market-canvas: #f7f7f8;
+  --market-card: #fff;
+  --market-ink: #20222a;
+  --market-muted: #555d6e;
+  --market-border: #dfe2e9;
+  --market-action: var(--brand-primary,#b62238);
+  --market-on-action: var(--buy-on-primary,#fff);
+  --market-focus: #245ad0;
+}
+:is(.delivery-shop,.buy-admin-app) :focus-visible {
+  outline: 3px solid var(--market-focus);
+  outline-offset: 3px;
+}
+.delivery-shop,
+.delivery-shop .shop {
+  background: var(--market-canvas) !important;
+  color: var(--market-ink);
+  color-scheme: light;
+}
+.delivery-shop .shop {
+  max-width: 1200px;
+  border: 0;
+  box-shadow: none;
+}
+.delivery-shop .shophead,
+.delivery-shop .bottomnav {
+  background: var(--market-card) !important;
+  color: var(--market-ink);
+  border-color: var(--market-border);
+}
+.delivery-shop .shophead { border-bottom: 1px solid var(--market-border); }
+.delivery-shop .shopbody { padding-inline: clamp(14px, 3vw, 34px); }
+.delivery-shop .brand-text :is(strong,small),
+.delivery-shop .panel-head :is(strong,h2,h3),
+.delivery-shop .section-title,
+.delivery-shop .bottomnav button { color: var(--market-ink); }
+.delivery-shop :is(.muted,.hint,.product p,.category-count,.reorder-empty,.empty),
+.buy-admin-app .main :is(.muted,.hint,.topbar p,.metric small,th) {
+  color: var(--market-muted);
+}
+.delivery-shop .banner-zone {
+  min-height: clamp(180px, 27vw, 300px);
+  margin-top: 16px;
+  background-color: #282634;
+  color: #fff;
+}
+.delivery-shop :is(.banner-zone,.promo-slide)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, #17151ee8 0%, #17151ed1 52%, #17151e45 100%);
+  z-index: 0;
+}
+.delivery-shop :is(.banner-copy,.banner-mark,.delivery-menu-link,.promo-text,.promo-icon) {
+  position: relative;
+  z-index: 1;
+}
+.delivery-shop .delivery-menu-link { position: absolute; }
+.delivery-shop :is(.banner-copy,.promo-text) :is(h1,h2,h3,p,small,span,strong) {
+  color: #fff;
+  opacity: 1;
+}
+.delivery-shop .promo-slide { position: relative; isolation: isolate; }
+.delivery-shop :is(.product,.featured-card,.buy-combo-grid article,.reorder-card,.panel,.order-card,.delivery-address,.chip) {
+  background: var(--market-card) !important;
+  color: var(--market-ink);
+  border: 1px solid var(--market-border);
+  box-shadow: none;
+}
+.delivery-shop :is(.product,.featured-card) :is(h3,h4,strong,.price) { color: var(--market-ink); }
+.delivery-shop .chip {
+  min-height: 44px;
+  padding: 9px 16px;
+  border-radius: 100px;
+}
+.delivery-shop .chiprow { gap: 8px; }
+.delivery-shop .chip.active,
+.delivery-shop .delivery-menu-link,
+.delivery-shop .floating-cart,
+.delivery-shop .product .btn,
+.delivery-shop .delivery-detail [data-add],
+.buy-admin-app .main .btn:not(.ghost):not(.green):not(.red) {
+  background: var(--market-action) !important;
+  color: var(--market-on-action) !important;
+}
+.delivery-shop .bottomnav button.active {
+  color: var(--market-ink);
+  background: #eceef3;
+  box-shadow: inset 0 -3px 0 var(--market-action);
+}
+.delivery-shop :is(.search,.field input,.field select,.field textarea),
+.buy-admin-app .main :is(.search,.field input,.field select,.field textarea) {
+  color: var(--market-ink);
+  background: var(--market-card);
+  border: 1px solid #a3aab9;
+}
+:is(.delivery-shop,.buy-admin-app) :is(input,textarea)::placeholder {
+  color: var(--market-muted);
+  opacity: 1;
+}
+.delivery-shop :is(.featured-frame,.search-wrap,.cartline,.totals,.qty button) {
+  background: var(--market-canvas);
+  color: var(--market-ink);
+  border-color: var(--market-border);
+}
+.delivery-shop .delivery-detail,
+.delivery-shop .delivery-detail :is(header,footer,section,button:not([data-add])) {
+  background: var(--market-card);
+  color: var(--market-ink);
+  border-color: var(--market-border);
+}
+.delivery-shop .category-block .shopproducts {
+  grid-template-columns: repeat(auto-fill,minmax(min(170px,calc(50% - 8px)),1fr));
+  gap: 12px;
+}
+.delivery-shop .product .foodpic { aspect-ratio: 4 / 3; background: #edeef1; }
+.delivery-shop .product { transition: box-shadow .16s ease, border-color .16s ease; }
+.delivery-shop .product:hover { box-shadow: 0 5px 20px #16182212; border-color: #b5bbc7; }
+
+.buy-admin-app .main {
+  background: var(--market-canvas);
+  color: var(--market-ink);
+  color-scheme: light;
+}
+.buy-admin-app .main :is(.panel,.metric,.product,.order-card,.topbar,.mobile-header) {
+  background: var(--market-card);
+  color: var(--market-ink);
+  border-color: var(--market-border);
+  box-shadow: 0 2px 8px #181c2909;
+}
+.buy-admin-app .main :is(.topbar h1,.metric strong,.panel-head strong,.mobile-header strong) {
+  color: var(--market-ink);
+}
+.buy-admin-app .main .page { color: var(--market-ink); }
+.buy-admin-app .main :is(.panel,.metric,.product,.order-card) { border-radius: 14px; }
+.buy-admin-app .main .hero { color: #fff; }
+.buy-admin-app .main :is(.sidefoot,.ghost,.qty button) {
+  background: var(--market-card);
+  color: var(--market-ink);
+  border: 1px solid var(--market-border);
+}
+.buy-admin-app .main :is(.tablewrap,.cartline,.totals,.barrow) {
+  background: var(--market-card);
+  color: var(--market-ink);
+  border-color: var(--market-border);
+}
+.buy-admin-app .main :is(td,th) { border-color: var(--market-border); }
+.buy-admin-app .main th { background: #f1f2f5; }
+.buy-admin-app .main .metric em { color: #126343; }
+.buy-admin-app .main .metric { border-top: 3px solid var(--market-action); }
+
+@media (max-width: 640px) {
+  .delivery-shop .shophead { padding: 12px 14px; }
+  .delivery-shop .banner-zone { border-radius: 16px; }
+  .delivery-shop .category-block .shopproducts { gap: 10px; }
+  .delivery-shop .bottomnav { border-top: 1px solid var(--market-border); }
+  .buy-admin-app .main :is(.panel,.metric) { border-radius: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .delivery-shop .product { transition: none; }
+}
+
+/* Keep utility actions aligned with the page header. */
+.buy-admin-app .topbar { padding: 16px 20px; border-radius: 14px; }
+.buy-admin-app .top-actions { flex-wrap: wrap; align-items: center; }
+.buy-admin-app .top-actions .bolt-logout {
+  position: static;
+  background: #fff;
+  color: var(--market-ink);
+  border: 1px solid #a3aab9;
+}
+.delivery-shop #delivery-location {
+  border: 1px solid var(--market-border);
+  border-radius: 12px;
+  background: #f1f2f5;
+  color: var(--market-ink);
+  min-height: 44px;
+  text-align: left;
+  padding: 10px 14px;
+}
+@media (max-width: 640px) {
+  .buy-admin-app .topbar { padding: 12px; align-items: flex-start; }
+  .buy-admin-app .top-actions { justify-content: flex-end; }
+}

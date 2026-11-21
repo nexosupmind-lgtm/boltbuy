@@ -8,7 +8,9 @@
   function ratio(a, b) { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
   function parse(value) {
     const m = String(value).match(/^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+))?\s*\)$/i);
-    return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]] : null;
+    if (m) return [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]];
+    const srgb = String(value).match(/^color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\)$/i);
+    return srgb ? [srgb[1] * 255, srgb[2] * 255, srgb[3] * 255, srgb[4] === undefined ? 1 : +srgb[4]] : null;
   }
   function over(fg, bg) { const a = fg[3] ?? 1; return fg.slice(0, 3).map((v, i) => v * a + bg[i] * (1 - a)); }
   function choose(backgrounds) {
@@ -22,11 +24,24 @@
   if (!scope.document) return;
   const document = scope.document;
   function start() {
-    if (!document.body.classList.contains('buy-admin-app')) return;
-    const root = document.querySelector('.shell'); if (!root) return;
+    const admin = document.body.classList.contains('buy-admin-app');
+    const shop = document.body.classList.contains('delivery-shop');
+    if (!admin && !shop) return;
+    const root = document.querySelector(admin ? '.shell' : '.shop'); if (!root) return;
+    if (admin) {
+      const syncLogout = () => {
+        const actionBar = root.querySelector('.top-actions');
+        const logout = document.getElementById('bolt-logout');
+        if (actionBar && logout && logout.parentElement !== actionBar) actionBar.append(logout);
+      };
+      syncLogout();
+      new MutationObserver(syncLogout).observe(document.body, { childList: true });
+    }
+    const scopeSelector = admin ? '.shell, dialog.buy-dialog, dialog.bolt-shell-dialog'
+      : '.shop, dialog.delivery-detail, dialog.buy-dialog';
     const overrides = new Map(); let scheduled = false;
     const options = { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'hidden', 'open'] };
-    const observer = new MutationObserver(records => { if (records.some(r => r.target === document.documentElement || r.target === document.body || root.contains(r.target))) schedule(); });
+    const observer = new MutationObserver(records => { if (records.some(r => r.target === document.documentElement || r.target === document.body || r.target.closest?.(scopeSelector))) schedule(); });
     function watch() { observer.observe(document.body, options); observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] }); }
     function update() {
       scheduled = false; observer.disconnect();
@@ -47,17 +62,19 @@
           let colors = solid[3] === 1 ? [solid.slice(0, 3)] : background(el.parentElement).map(bg => over(solid, bg));
           // Computed gradients resolve theme colors to RGB. Check every stop, not just the first.
           if (s.backgroundImage.includes('gradient(')) {
-            const stops = [...s.backgroundImage.matchAll(/rgba?\([^)]*\)/g)].map(m => parse(m[0])).filter(Boolean);
+            const stops = [...s.backgroundImage.matchAll(/(?:rgba?|color)\([^)]*\)/g)].map(m => parse(m[0])).filter(Boolean);
             if (stops.length) colors = stops.flatMap(stop => colors.map(bg => over(stop, bg)));
           }
           backgrounds.set(el, colors); return colors;
         }
         const changes = [];
-        for (const el of root.querySelectorAll('*')) {
+        for (const el of document.querySelectorAll(scopeSelector.split(', ').map(s => s + ' *').join(', '))) {
           if (!el.getClientRects().length || el.closest('svg,script,style,[aria-hidden="true"]')) continue;
           const input = el.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea');
           if (!input && ![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
           const s = style(el), fg = parse(s.color); if (!fg) continue;
+          const imageCopy = el.closest('.banner-copy, .promo-text');
+          if (shop && imageCopy && !el.closest('button,a')) continue;
           const bg = background(el), current = Math.min(...bg.map(b => ratio(over(fg, b), b)));
           if (current >= 4.5) continue;
           const best = choose(bg); if (Math.min(...bg.map(b => ratio(best, b))) <= current) continue;
