@@ -185,3 +185,59 @@
   .buy-admin-app .topbar { padding: 12px; align-items: flex-start; }
   .buy-admin-app .top-actions { justify-content: flex-end; }
 }
+
+/* Bolt is part of the shop navigation, so it never floats over the catalog. */
+.delivery-shop .bottomnav:has(.buy-bolt-support) {
+  display: grid;
+  grid-template-columns: repeat(5,minmax(0,1fr));
+}
+.delivery-shop .bottomnav:has(.buy-bolt-support) > button {
+  min-width: 0;
+}
+.delivery-shop .bottomnav .buy-bolt-support {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: #273250;
+}
+.delivery-shop .buy-bolt-support span {
+  font: inherit;
+}
+.delivery-shop .buy-bolt-support .bolt-shared-face {
+  display: block;
+  width: 31px;
+  height: 23px;
+  flex: none;
+  transform-origin: center;
+}
+.delivery-shop .buy-bolt-support:hover .bolt-shared-face,
+.delivery-shop .buy-bolt-support:focus-visible .bolt-shared-face {
+  animation: buy-bolt-greet .45s ease-out;
+}
+.delivery-shop .buy-bolt-support:active .bolt-shared-face {
+  transform: scale(.91);
+}
+.delivery-shop #bolt-support-dialog[open] {
+  animation: buy-help-enter .24s ease-out both;
+}
+.delivery-shop #bolt-support-dialog[open]::backdrop {
+  animation: buy-help-backdrop .20s ease-out both;
+}
+@keyframes buy-bolt-greet {
+  45% { transform: translateY(-3px) rotate(-7deg); }
+  75% { transform: rotate(4deg); }
+}
+@keyframes buy-help-enter {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes buy-help-backdrop { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .delivery-shop .buy-bolt-support .bolt-shared-face,
+  .delivery-shop #bolt-support-dialog[open],
+  .delivery-shop #bolt-support-dialog[open]::backdrop {
+    animation: none;
+  }
+}
