@@ -2,6 +2,7 @@ const barberIntegration = (() => {
   const params = new URLSearchParams(location.search);
   const studioPreview = params.get('studioVisual') === '1' && window.parent !== window;
   const slug = params.get('tenant') || '';
+  let entitlements = null;
   let client, revision, committed, publicData, inAdmin = false;
 
   const supabase = () => {
@@ -33,6 +34,7 @@ const barberIntegration = (() => {
   }
 
   function applyAdmin(result) {
+    entitlements = result.entitlements || null;
     revision = result.revision;
     committed = structuredClone(result.state);
     db = result.state;
@@ -66,6 +68,7 @@ const barberIntegration = (() => {
 
   function closeAdmin() {
     inAdmin = false;
+    entitlements = null;
     committed = null;
     revision = null;
     db = structuredClone(publicData);
@@ -120,5 +123,5 @@ const barberIntegration = (() => {
     }
   }
 
-  return { slug, start, request, reload, login, closeAdmin, save, refreshAfterBooking };
+  return { can: feature => !entitlements || entitlements.features.includes(feature), slug, start, request, reload, login, closeAdmin, save, refreshAfterBooking };
 })();

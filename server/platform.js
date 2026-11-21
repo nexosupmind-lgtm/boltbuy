@@ -1,9 +1,10 @@
+import { readBarberTerms } from './barber-plans.js';
 // BOLT control plane. Service credentials never leave this module.
 export const MODULES={
  buy:{pdv:'PDV e caixa',products:'Produtos e fotos',orders:'Pedidos',ifood:'iFood',reports:'Relatórios',banners:'Promoções',delivery:'Entrega e frete',assistant:'Bolt',customers:'Clientes',stock:'Estoque'},
  class:{students:'Alunos',enrollments:'Matrículas',classes:'Turmas',subjects:'Disciplinas',schedule:'Horários',attendance:'Chamada',grades:'Notas',assessments:'Avaliações',documents:'Documentos',staff:'Equipe',family:'Portal da família',finance:'Mensalidades',contracts:'Contratos',expenses:'Despesas',inventory:'Patrimônio',library:'Biblioteca',transport:'Transporte',messages:'Comunicados',calendar:'Calendário',tasks:'Tarefas',incidents:'Ocorrências',meetings:'Conselho',reports:'Relatórios'},
  church:{reports:'Relatórios',members:'Membros',ministries:'Ministérios',events:'Eventos',notices:'Comunicados',courses:'Cursos',enrollments:'Inscrições',attendance:'Presenças',devotionals:'Devocionais'},
- barber:{bookings:'Agendamentos',customers:'Clientes',reports:'Relatórios',ledger:'Contas a pagar e a receber',catalog:'Catálogo e equipe'}
+ barber:{bookings:'Agendamentos',customers:'Clientes',reports:'Relatórios básicos',ranking:'Ranking de barbeiros',advanced_reports:'Relatórios avançados',ledger:'Contas a pagar e a receber',catalog:'Catálogo e equipe',finance:'Dashboard financeiro'}
 };
 const json=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json','cache-control':'no-store'}});
 const fail=(status,message)=>{throw Object.assign(Error(message),{status})};
@@ -20,7 +21,7 @@ export async function onRequest({request,env}){
   if(!['GET','POST'].includes(request.method))return json(405,{error:'Método não permitido.'});
   const base=(env.SUPABASE_URL||'').replace(/\/$/,''),key=env.SUPABASE_SERVICE_ROLE_KEY;if(!/^https:\/\/[^/]+\.supabase\.co$/.test(base)||!key)fail(503,'Servidor não configurado.');
   const h={apikey:key,authorization:'Bearer '+key,'content-type':'application/json'};
-  async function rest(path,options={}){const r=await fetch(base+'/rest/v1/'+path,{...options,headers:{...h,...options.headers}});if(!r.ok){if(r.status===409)fail(409,'Registro já cadastrado ou em uso.');fail(503,'Estrutura indisponível. Confira a instalação V35.')}const result=await r.text();return result?JSON.parse(result):null}
+  async function rest(path,options={}){const r=await fetch(base+'/rest/v1/'+path,{...options,headers:{...h,...options.headers}});if(!r.ok){if(r.status===409)fail(409,'Registro já cadastrado ou em uso.');if(r.status===400){const detail=await r.json().catch(()=>null);if(detail?.code==='23514')fail(409,'A alteração viola as condições do plano ou o limite de barbeiros.');}fail(503,'Estrutura indisponível. Confira a instalação V35.')}const result=await r.text();return result?JSON.parse(result):null}
   async function all(path){let out=[];for(let offset=0;offset<100000;offset+=1000){const rows=await rest(path+(path.includes('?')?'&':'?')+'limit=1000&offset='+offset);out.push(...rows);if(rows.length<1000)return out}fail(503,'Volume acima do limite desta consulta.');}
   const q=new URL(request.url).searchParams,action=q.get('action')||'overview';
   let body={};if(request.method==='POST'){const raw=await request.text();if(new TextEncoder().encode(raw).length>10000)fail(413,'Solicitação muito grande.');try{body=JSON.parse(raw)}catch{fail(400,'Solicitação inválida.')}}
@@ -78,15 +79,27 @@ export async function onRequest({request,env}){
   }
   if(action==='plan'){
    const {product,name,features}=body;if(!MODULES[product]||typeof name!=='string'||!name.trim()||name.length>60||!Array.isArray(features)||features.some(f=>!Object.hasOwn(MODULES[product],f)))fail(400,'Plano ou módulos inválidos.');
-   await rest('bolt_platform_plans?on_conflict=product,name',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({product,name:name.trim(),monthly_fee:amount(body.monthly_fee),features:[...new Set(features)],updated_at:new Date().toISOString()})});
+   let terms;
+   if(product==='barber'&&body.barber_terms!=null){
+    try{terms=readBarberTerms(body.barber_terms,amount)}catch(err){fail(400,err.message)}
+    if(!['bookings','customers','catalog','finance'].every(feature=>features.includes(feature)))fail(400,'Selecione os módulos básicos do Barber.');
+   }
+   await rest('bolt_platform_plans?on_conflict=product,name',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({product,name:name.trim(),monthly_fee:amount(body.monthly_fee),features:[...new Set(features)],...(terms?{barber_terms:terms}:{}),updated_at:new Date().toISOString()})});
   }else if(action==='subscription'){
    const c=await clientFor(body.product,body.slug);if(!['active','trial','paused','cancelled'].includes(body.status))fail(400,'Situação inválida.');
-   if(body.plan_id){if(!uuid.test(body.plan_id))fail(400,'Plano inválido.');const p=await rest('bolt_platform_plans?id=eq.'+body.plan_id+'&product=eq.'+body.product+'&select=id');if(p.length!==1)fail(400,'O plano pertence a outra plataforma.');}
-   const col=body.product==='buy'?'tenant_id':'client_id';await rest('bolt_client_subscriptions?on_conflict='+col,{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({[col]:c.id,plan_id:body.plan_id||null,monthly_fee:amount(body.monthly_fee),status:body.status,updated_at:new Date().toISOString()})});
+   let barberAddons;
+   if(body.plan_id){if(!uuid.test(body.plan_id))fail(400,'Plano inválido.');const p=await rest('bolt_platform_plans?id=eq.'+body.plan_id+'&product=eq.'+body.product+'&select=*');if(p.length!==1)fail(400,'O plano pertence a outra plataforma.');
+    if(body.product==='barber'&&body.barber_addons!==undefined){
+     barberAddons=body.barber_addons;
+     if(!Number.isInteger(barberAddons)||barberAddons<0||barberAddons>(p[0].barber_terms?.max_addons??0))
+      fail(400,'A quantidade de barbeiros adicionais excede o plano.');
+    }
+   }else if(body.product==='barber')fail(400,'Escolha um plano BOLT Barber.');
+   const col=body.product==='buy'?'tenant_id':'client_id';await rest('bolt_client_subscriptions?on_conflict='+col,{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({[col]:c.id,plan_id:body.plan_id||null,monthly_fee:amount(body.monthly_fee),...(barberAddons===undefined?{}:{barber_addons:barberAddons}),status:body.status,updated_at:new Date().toISOString()})});
   }else if(action==='invoice'){
    if(!uuid.test(body.subscription_id)||!date(body.due_date))fail(400,'Assinatura ou vencimento inválido.');
    const rows=await rest('bolt_client_subscriptions?id=eq.'+body.subscription_id+'&select=id');if(rows.length!==1)fail(404,'Assinatura não encontrada.');
-   await rest('bolt_client_invoices',{method:'POST',body:JSON.stringify({subscription_id:body.subscription_id,due_date:body.due_date,amount:amount(body.amount)})});
+   await rest('bolt_client_invoices',{method:'POST',body:JSON.stringify({subscription_id:body.subscription_id,due_date:body.due_date,amount:amount(body.amount),...(['implementation','monthly'].includes(body.billing_kind)?{billing_kind:body.billing_kind}:{})})});
   }else if(action==='payment'){
    if(!uuid.test(body.id))fail(400,'Cobrança inválida.');const rows=await rest('bolt_client_invoices?id=eq.'+body.id+'&paid_at=is.null',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({paid_at:new Date().toISOString()})});if(rows.length!==1)fail(409,'Pagamento já registrado ou cobrança não encontrada.');
   }else if(action==='ticket'){

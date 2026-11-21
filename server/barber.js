@@ -111,8 +111,11 @@ export async function onRequest({ request, env }) {
       const name = typeof input?.name === 'string' ? input.name.trim() : '', tenant = input?.slug;
       if (!text(name, 120) || !name || !text(tenant, 80) || !slugPattern.test(tenant) || tenant === 'boltbarber-demo')
         return answer(400, { error: 'Informe o nome e um identificador exclusivo.' });
-      const [plan] = await rest('bolt_platform_plans?select=id,monthly_fee&product=eq.barber&name=eq.Pro');
-      if (!plan) return answer(503, { error: 'Plano Pro do Barber indisponível.' });
+      if (input.plan_id !== undefined && !uuid.test(input.plan_id || ''))
+        return answer(400, { error: 'Plano inválido.' });
+      const lookup = input.plan_id ? 'id=eq.' + input.plan_id : 'name=eq.Pro';
+      const [plan] = await rest('bolt_platform_plans?select=id,monthly_fee&product=eq.barber&' + lookup);
+      if (!plan) return answer(409, { error: 'Plano do BOLT Barber indisponível.' });
 
       // Each step is retryable. The company stays out of the public API until all steps complete.
       const organization = 'bolt_commercial_clients?product=eq.barber&slug=eq.' + encodeURIComponent(tenant);
@@ -121,11 +124,11 @@ export async function onRequest({ request, env }) {
       const [created] = await rest(organization + '&select=id,name,status');
       if (!created || created.status !== 'prospect' || created.name !== name)
         return answer(409, { error: 'Este identificador já está em uso.' });
-      await mutate('bolt_barber_workspaces?on_conflict=client_id', 'POST',
-        { client_id: created.id, state: { ...initialState(), barbers: [] } }, 'resolution=ignore-duplicates,return=minimal');
       await mutate('bolt_client_subscriptions?on_conflict=client_id', 'POST',
         { client_id: created.id, plan_id: plan.id, monthly_fee: plan.monthly_fee, status: 'active' },
         'resolution=ignore-duplicates,return=minimal');
+      await mutate('bolt_barber_workspaces?on_conflict=client_id', 'POST',
+        { client_id: created.id, state: { ...initialState(), barbers: [] } }, 'resolution=ignore-duplicates,return=minimal');
       await mutate(organization + '&status=eq.prospect', 'PATCH', { status: 'active' }, 'return=minimal');
       return answer(201, { slug: tenant });
     }
@@ -137,12 +140,14 @@ export async function onRequest({ request, env }) {
         '&user_id=eq.' + encodeURIComponent(user));
       if (!roles.some(row => row.role === 'owner')) return answer(403, { error: 'Conta sem acesso a esta empresa.' });
     }
-    const [contract] = await rest('bolt_client_subscriptions?select=status,plan_id&client_id=eq.' + client.id);
+    const [contract] = await rest('bolt_client_subscriptions?select=*&client_id=eq.' + client.id);
     if (!['active', 'trial'].includes(contract?.status) || !uuid.test(contract.plan_id || ''))
       return answer(403, { error: 'Empresa com assinatura indisponível.' });
 
-    const [plan] = await rest('bolt_platform_plans?product=eq.barber&select=features&id=eq.' + contract.plan_id);
-    if (!Array.isArray(plan?.features) || !proFeatures.every(feature => plan.features.includes(feature)))
+    const [plan] = await rest('bolt_platform_plans?product=eq.barber&select=*&id=eq.' + contract.plan_id);
+    const terms = plan?.barber_terms;
+    const required = terms ? ['bookings', 'customers', 'catalog', 'finance'] : proFeatures;
+    if (!Array.isArray(plan?.features) || !required.every(feature => plan.features.includes(feature)))
       return answer(403, { error: 'Os módulos do BOLT Barber não estão habilitados nesta assinatura.' });
 
     const scope = 'bolt_barber_workspaces?client_id=eq.' + client.id;
@@ -150,7 +155,13 @@ export async function onRequest({ request, env }) {
     if (!row) return answer(404, { error: 'Barbearia ainda não configurada.' });
     const { state, revision } = row;
     if (action === 'public') return answer(200, { state: publicState(state) });
-    if (action === 'admin') return answer(200, row);
+    const entitlements = terms ? {
+      features: plan.features,
+      limit: terms.included_barbers + (contract.barber_addons || 0)
+    } : null;
+    if (action === 'admin') return answer(200, { ...row, entitlements,
+      state: entitlements && !entitlements.features.includes('ledger') ? { ...state, ledger: [] } : state });
+
     const raw = await request.text();
     if (raw.length > (action === 'save' ? 4000000 : 4096))
       return answer(413, { error: 'Limite de dados excedido.' });
@@ -165,6 +176,12 @@ export async function onRequest({ request, env }) {
       const settings = body.state;
       if (!validateSettings(settings) || !Array.isArray(settings.bookings) || settings.bookings.length !== state.bookings.length)
         return answer(400, { error: 'Configuração inválida.' });
+      if (entitlements && settings.barbers.filter(person => person.active).length > entitlements.limit)
+        return answer(409, { error: 'O limite de barbeiros ativos do plano foi atingido.' });
+      if (entitlements && !entitlements.features.includes('ledger')) {
+        if (settings.ledger.length) return answer(403, { error: 'Contas a pagar e receber não fazem parte deste plano.' });
+        settings.ledger = state.ledger;
+      }
       const byId = new Map(settings.bookings.map(b => [b?.id, b?.status]));
       if (state.bookings.some(b => !statuses.includes(byId.get(b.id)) ||
         !settings.services.some(s => s.id === b.serviceId) || !settings.barbers.some(p => p.id === b.barberId)))
@@ -223,7 +240,10 @@ export async function onRequest({ request, env }) {
     if (!saved.length) return answer(409, { error: 'A agenda mudou. Tente novamente.' });
     if (booking) return answer(201, { booking, state: publicState(next) });
     if (profile) return answer(201, { profile });
-    return answer(200, saved[0]);
+    const result = saved[0];
+    return answer(200, { ...result, entitlements,
+      state: entitlements && !entitlements.features.includes('ledger') ? { ...result.state, ledger: [] } : result.state });
+
   } catch {
     return answer(503, { error: 'BOLT Barber indisponível. Confira a instalação e tente novamente.' });
   }

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BOLT · Parceiros</title>
+<link rel="stylesheet" href="/bolt-master-v35.css">
+<style>
+body{font:16px system-ui;background:#140d1e;color:#f3eafa;margin:auto;max-width:1000px;padding:24px}
+form{display:grid;gap:12px;margin:16px 0}label{display:grid;gap:5px}button{cursor:pointer;min-height:36px}
+#partner-login{max-width:390px}a{color:#d7b2ff}meter{display:block;width:100%;margin-bottom:8px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+<script src="/bolt-config.js" defer></script>
+<script src="/bolt-commercial-finance.js" defer></script>
+<script src="/bolt-partners.js" defer></script>
+<body>
+<header><h1>BOLT · Portal de parceiros</h1><a href="/">BOLT Master</a></header>
+<form id="partner-login">
+<label>E-mail<input name="email" type="email" required autocomplete="username"></label>
+<label>Senha<input name="password" type="password" required autocomplete="current-password"></label>
+<button type="submit">Entrar</button>
+</form>
+<p id="partner-message" role="status"></p>
+<button id="partner-signout" type="button" hidden>Sair</button>
+<main id="partner-finance" class="v35-root" hidden></main>
+</body>
+</html>
