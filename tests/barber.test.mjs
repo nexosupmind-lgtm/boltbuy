@@ -132,3 +132,40 @@ test('Master provisions one demo, isolates it, registers customers and serialize
   assert.match(sections.financeiro.output, /<strong>0\.00<\/strong>/);
   assert.equal(sections.financeiro.output.match(/data-insights/g).length, 1);
 });
+
+test('A Master can create a Pro barbershop and retry after partial provisioning', async t => {
+  let company, workspace, contract, failOnce = true;
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    const resource = new URL(url).pathname;
+    const method = options.method || 'GET';
+    const noContent = () => new Response(null, { status: 204 });
+    const body = () => JSON.parse(options.body);
+    if (resource.endsWith('/auth/v1/user') || resource.endsWith('/bolt_master_admins') ||
+        resource.endsWith('/bolt_platform_plans')) return mockedFetch(url, options);
+    if (resource.endsWith('/bolt_commercial_clients')) {
+      if (method === 'POST') { company ??= { id, ...body() }; return noContent(); }
+      if (method === 'PATCH') { Object.assign(company, body()); return noContent(); }
+      return Response.json(company ? [company] : []);
+    }
+    if (resource.endsWith('/bolt_barber_workspaces')) {
+      workspace ??= body();
+      return noContent();
+    }
+    if (resource.endsWith('/bolt_client_subscriptions')) {
+      if (failOnce) { failOnce = false; return Response.json({}, { status: 503 }); }
+      contract ??= body();
+      return noContent();
+    }
+    throw Error(resource);
+  });
+  const business = { name: 'Barbearia Centro', slug: 'barbearia-centro' };
+  assert.equal((await request('create', 'other', business)).status, 403);
+  assert.equal((await request('create', 'master', business)).status, 503);
+  assert.equal(company.status, 'prospect');
+  assert.equal((await request('create', 'master', business)).status, 201);
+  assert.equal(company.status, 'active');
+  assert.equal(contract.plan_id, plan.id);
+  assert.deepEqual(workspace.state.customers, []);
+  assert.deepEqual(workspace.state.bookings, []);
+  assert.equal((await request('create', 'master', business)).status, 409);
+});

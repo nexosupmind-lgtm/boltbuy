@@ -1,5 +1,6 @@
 const barberIntegration = (() => {
   const params = new URLSearchParams(location.search);
+  const studioPreview = params.get('studioVisual') === '1' && window.parent !== window;
   const slug = params.get('tenant') || '';
   let client, revision, committed, publicData, inAdmin = false;
 
@@ -14,6 +15,7 @@ const barberIntegration = (() => {
   };
 
   async function request(action, body) {
+    if (studioPreview && body) throw Error('Alterações operacionais estão desativadas na prévia do Studio.');
     const headers = {};
     if (['admin', 'save'].includes(action)) {
       const { data } = await supabase().auth.getSession();
@@ -104,6 +106,7 @@ const barberIntegration = (() => {
     try {
       await reload();
       $('confirmBooking').disabled = false;
+      if (params.get('view') === 'login') openLogin();
       if (params.get('view') === 'admin') {
         try { await enterAdmin(); }
         catch (error) {

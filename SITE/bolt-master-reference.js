@@ -345,7 +345,7 @@
         (b.onclick = () => {
           dialog.close();
           if (b.dataset.product === "buy") navigate("create");
-          else if (b.dataset.product === "barber") navigate("barberClients");
+          else if (b.dataset.product === "barber") { navigate("barberClients"); window.boltNewBarberClient?.(); }
           else window.boltEditCommercial(b.dataset.product);
         }),
     );

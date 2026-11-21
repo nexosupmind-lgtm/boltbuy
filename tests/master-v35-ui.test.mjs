@@ -16,6 +16,8 @@ test('Barber lists the demo and opens the original site and administrative view 
   await settle();
   const panel=h.get('v35-barberClients').innerHTML;
   assert.match(panel,/BOLTBARBER DEMO/);
+  assert.match(panel,/data-new-client="barber"/);
+  assert.match(panel,/data-studio="barber"/);
   assert.match(panel,/href="\/Boltbarber\/\?tenant=boltbarber-demo"/);
   assert.match(panel,/href="\/Boltbarber\/\?tenant=boltbarber-demo&amp;view=admin"/);
 });

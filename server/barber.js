@@ -1,4 +1,4 @@
-import { demoState } from './barber-demo.js';
+import { demoState, initialState } from './barber-demo.js';
 
 const answer = (status, body) => Response.json(body, {
   status, headers: { 'cache-control': 'no-store' }
@@ -67,10 +67,10 @@ export async function onRequest({ request, env }) {
   const url = new URL(request.url);
   const action = url.searchParams.get('action');
   const slug = url.searchParams.get('slug') || '';
-  const routes = { public: 'GET', admin: 'GET', save: 'PUT', profile: 'POST', book: 'POST', demo: 'POST' };
+  const routes = { public: 'GET', admin: 'GET', save: 'PUT', profile: 'POST', book: 'POST', demo: 'POST', create: 'POST' };
   if (!Object.hasOwn(routes, action) || routes[action] !== request.method)
     return answer(405, { error: 'Operação inválida.' });
-  if (action !== 'demo' && (slug.length > 80 || !slugPattern.test(slug)))
+  if (!['demo', 'create'].includes(action) && (slug.length > 80 || !slugPattern.test(slug)))
     return answer(400, { error: 'Empresa inválida.' });
 
   const headers = { apikey: key, authorization: 'Bearer ' + key, 'content-type': 'application/json' };
@@ -86,7 +86,7 @@ export async function onRequest({ request, env }) {
 
   try {
     let admin = false, user;
-    if (['admin', 'save', 'demo'].includes(action)) {
+    if (['admin', 'save', 'demo', 'create'].includes(action)) {
       const token = request.headers.get('authorization');
       if (!/^Bearer \S+$/.test(token || '')) return answer(401, { error: 'Entre com sua conta BOLT.' });
       const auth = await fetch(base + '/auth/v1/user', { headers: { apikey: key, authorization: token } });
@@ -99,6 +99,34 @@ export async function onRequest({ request, env }) {
       if (!admin) return answer(403, { error: 'Ação exclusiva do Master.' });
       await rest('rpc/bolt_barber_install_demo', { method: 'POST', body: JSON.stringify({ p_state: demoState() }) });
       return answer(200, { slug: 'boltbarber-demo' });
+    }
+
+    if (action === 'create') {
+      if (!admin) return answer(403, { error: 'Ação exclusiva do Master.' });
+      const raw = await request.text();
+      if (raw.length > 4096) return answer(413, { error: 'Limite de dados excedido.' });
+      let input;
+      try { input = JSON.parse(raw); } catch { return answer(400, { error: 'Dados inválidos.' }); }
+      const name = typeof input?.name === 'string' ? input.name.trim() : '', tenant = input?.slug;
+      if (!text(name, 120) || !name || !text(tenant, 80) || !slugPattern.test(tenant) || tenant === 'boltbarber-demo')
+        return answer(400, { error: 'Informe o nome e um identificador exclusivo.' });
+      const [plan] = await rest('bolt_platform_plans?select=id,monthly_fee&product=eq.barber&name=eq.Pro');
+      if (!plan) return answer(503, { error: 'Plano Pro do Barber indisponível.' });
+
+      // Each step is retryable. The company stays out of the public API until all steps complete.
+      const organization = 'bolt_commercial_clients?product=eq.barber&slug=eq.' + encodeURIComponent(tenant);
+      await mutate('bolt_commercial_clients?on_conflict=product,slug', 'POST',
+        { product: 'barber', name, slug: tenant, status: 'prospect' }, 'resolution=ignore-duplicates,return=minimal');
+      const [created] = await rest(organization + '&select=id,name,status');
+      if (!created || created.status !== 'prospect' || created.name !== name)
+        return answer(409, { error: 'Este identificador já está em uso.' });
+      await mutate('bolt_barber_workspaces?on_conflict=client_id', 'POST',
+        { client_id: created.id, state: { ...initialState(), barbers: [] } }, 'resolution=ignore-duplicates,return=minimal');
+      await mutate('bolt_client_subscriptions?on_conflict=client_id', 'POST',
+        { client_id: created.id, plan_id: plan.id, monthly_fee: plan.monthly_fee, status: 'active' },
+        'resolution=ignore-duplicates,return=minimal');
+      await mutate(organization + '&status=eq.prospect', 'PATCH', { status: 'active' }, 'return=minimal');
+      return answer(201, { slug: tenant });
     }
 
     const [client] = await rest('bolt_commercial_clients?product=eq.barber&select=id,status&slug=eq.' + encodeURIComponent(slug));

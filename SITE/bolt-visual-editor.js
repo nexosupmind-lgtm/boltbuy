@@ -3,6 +3,7 @@
   const routes = {
     buy: [['Shop','shop','/Salgaditos/cliente.html'],['Admin','delivery-admin','/Salgaditos/admin.html']],
     class: [['Login','login','/portal.html'],['Admin da escola','class-admin','/Boltclass/index.html'],['Professor','teacher','/teacher.html'],['Portal da família','family','/family.html']],
+    barber: [['Site','barber-site','/Boltbarber/'],['Login','barber-login','/Boltbarber/'],['Administrativo','barber-admin','/Boltbarber/']],
     church: [['Login','login','/portal.html'],['Admin da igreja','church-admin','/Boltchurch/index.html'],['Portal do membro','member','/member.html']]
   };
   const properties = [['color','Texto'],['backgroundColor','Fundo'],['borderColor','Borda'],['borderRadius','Arredondamento'],['fontSize','Tamanho da fonte'],['fontWeight','Peso da fonte'],['padding','Espaçamento interno'],['gap','Distância entre itens'],['maxWidth','Largura máxima']];
@@ -75,8 +76,10 @@
       clearSelection();
       surface=route[1];
       const url=new URL(route[2],location.origin);
-      url.searchParams.set(context.product==='buy'?'tenant':'slug',context.slug);
+      url.searchParams.set(['buy','barber'].includes(context.product)?'tenant':'slug',context.slug);
       url.searchParams.set('product',context.product);
+      if (route[1] === 'barber-admin') url.searchParams.set('view','admin');
+      if (route[1] === 'barber-login') url.searchParams.set('view','login');
       el('visual-open').href=url.href;
       url.searchParams.set('studioVisual','1');
       if(route[1]==='family')url.searchParams.set('preview','1');
