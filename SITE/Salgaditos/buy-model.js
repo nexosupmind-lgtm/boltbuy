@@ -52,7 +52,8 @@ export function normalizeConfig(input = {}, legacy = false) {
       id: c.id,
       name: clean(c.name, 100),
       description: clean(c.description, 600),
-      price: moneyValue(c.price),
+      pricing: c.pricing === "unit" ? "unit" : "fixed",
+      price: c.pricing === "unit" ? 0 : moneyValue(c.price),
       units: integer(c.units, 1, 1000),
       mode: c.mode === "mixed" ? "mixed" : "single",
       maxFlavors: integer(c.maxFlavors || c.units, 1, 100),
@@ -125,6 +126,15 @@ export function availability(config, now = new Date()) {
         : "Fechado · fora do horário de atendimento",
   };
 }
+export function comboPrice(combo, selections, products) {
+  if (combo.pricing !== "unit") return moneyValue(combo.price);
+  return selections.reduce((total, selection) => {
+    const product = products.find((item) => item.id === selection.productId);
+    if (!product) throw Error("Sabor indisponível neste combo.");
+    return total + Math.round(moneyValue(product.price) * 100) * selection.quantity;
+  }, 0) / 100;
+}
+
 export function pricedItems(config, products, lines) {
   if (!Array.isArray(lines) || !lines.length || lines.length > 100)
     throw Error("Confira os itens do pedido.");
@@ -167,7 +177,7 @@ export function pricedItems(config, products, lines) {
           combo.name +
           " · " +
           flavors.map((f) => `${f.quantity}× ${f.name}`).join(", "),
-        price: combo.price,
+        price: comboPrice(combo, flavors, [...byId.values()]),
         qty,
         selections: flavors,
       };

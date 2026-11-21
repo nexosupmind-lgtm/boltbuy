@@ -1,6 +1,6 @@
-import { normalizeConfig, availability, subtotalOf } from "./buy-model.js";
+import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js";
 import { quotePDF } from "./buy-quote-pdf.js";
-const admin = location.pathname.endsWith("admin.html"),
+const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
 const esc = (v) =>
   String(v ?? "").replace(
@@ -93,6 +93,13 @@ function mergeOrders(orders) {
   }
   if (changed) save(d);
 }
+function comboPriceLabel(combo) {
+  if (combo.pricing !== "unit") return amount(combo.price);
+  const prices = catalog().filter((p) => p.active && combo.productIds.includes(p.id))
+    .map((p) => comboPrice(combo, [{ productId: p.id, quantity: combo.units }], [p]));
+  return prices.length ? "A partir de " + amount(Math.min(...prices)) : "Preço conforme os sabores";
+}
+
 function pickCombo(combo, done) {
   const products = catalog().filter(
     (p) => p.active && combo.productIds.includes(p.id),
@@ -105,7 +112,7 @@ function pickCombo(combo, done) {
   const dialog = document.createElement("dialog");
   dialog.id = "buy-combo-picker";
   dialog.className = admin ? "buy-dialog" : "buy-dialog delivery-detail";
-  dialog.innerHTML = `<form><header><div><small>MONTE DO SEU JEITO</small><h2>${esc(combo.name)}</h2></div><button type="button" data-close aria-label="Fechar">×</button></header>${admin ? "" : '<div class="delivery-photo">' + photo(products[0]) + "</div>"}<p>${esc(combo.description)}</p><p>${combo.mode === "single" ? `Escolha um sabor para as ${combo.units} unidades.` : `Distribua ${combo.units} unidades entre até ${combo.maxFlavors} sabores.`}</p><div class="buy-flavors">${products.map((p) => `<label class="buy-flavor">${photo(p)}<strong>${esc(p.name)}</strong>${combo.mode === "single" ? `<input type="radio" name="flavor" value="${esc(p.id)}" required>` : `<input type="number" min="0" max="${combo.units}" step="1" value="0" data-flavor="${esc(p.id)}" aria-label="Quantidade de ${esc(p.name)}">`}</label>`).join("")}</div><p data-count role="status"></p><button class="btn red full" type="submit" disabled>Adicionar · ${amount(combo.price)}</button></form>`;
+  dialog.innerHTML = `<form><header><div><small>MONTE DO SEU JEITO</small><h2>${esc(combo.name)}</h2></div><button type="button" data-close aria-label="Fechar">×</button></header>${admin ? "" : '<div class="delivery-photo">' + photo(products[0]) + "</div>"}<p>${esc(combo.description)}</p><p>${combo.mode === "single" ? `Escolha um sabor para as ${combo.units} unidades.` : `Distribua ${combo.units} unidades entre até ${combo.maxFlavors} sabores.`}</p><div class="buy-flavors">${products.map((p) => `<label class="buy-flavor">${photo(p)}<strong>${esc(p.name)}</strong>${combo.pricing === "unit" ? `<small>${amount(p.price)} por unidade</small>` : ""}${combo.mode === "single" ? `<input type="radio" name="flavor" value="${esc(p.id)}" required>` : `<input type="number" min="0" max="${combo.units}" step="1" value="0" data-flavor="${esc(p.id)}" aria-label="Quantidade de ${esc(p.name)}">`}</label>`).join("")}</div><p data-count role="status"></p><button class="btn red full" type="submit" disabled>Adicionar ao carrinho</button></form>`;
   document.body.append(dialog);
   const form = dialog.querySelector("form"),
     submit = form.querySelector("[type=submit]");
@@ -133,8 +140,10 @@ function pickCombo(combo, done) {
       !choices.length ||
       choices.length > combo.maxFlavors ||
       choices.some((x) => !Number.isInteger(x.quantity));
+    const total = comboPrice(combo, choices, products);
+    submit.textContent = submit.disabled ? "Adicionar combo" : `Adicionar · ${amount(total)}`;
     dialog.querySelector("[data-count]").textContent =
-      `${count} de ${combo.units} unidades selecionadas` +
+      `${count} de ${combo.units} unidades selecionadas${combo.pricing === "unit" ? ` · Total: ${amount(total)}` : ` · ${amount(combo.price)}`}` +
       (choices.length > combo.maxFlavors
         ? " · reduza a quantidade de sabores"
         : "");
@@ -165,7 +174,7 @@ function comboProduct(c, selections, products) {
             `${s.quantity}× ${products.find((p) => p.id === s.productId)?.name || ""}`,
         )
         .join(", "),
-    price: c.price,
+    price: comboPrice(c, selections, products),
     emoji: "◇",
     photo: image(products.find((p) => p.id === selections[0]?.productId) || {}),
     active: true,
@@ -211,7 +220,7 @@ function configSections() {
 }
 function renderAdmin() {
   const combos = document.getElementById("buy-combos");
-  combos.innerHTML = `<section class="panel"><h2>Combos com escolha de sabores</h2><p class="hint">Defina o preço do pacote. O cliente vê as fotos e escolhe um sabor ou distribui as unidades.</p><form id="buy-combo-form" class="formgrid"><input name="id" type="hidden"><label class="field">Nome<input name="name" required maxlength="100" placeholder="Combo de 15 mini salgados"></label><label class="field">Preço do combo<input name="price" type="number" min="0" step=".01" required></label><label class="field">Unidades por combo<input name="units" type="number" min="1" max="1000" value="15" required></label><label class="field">Escolha dos sabores<select name="mode"><option value="single">Um sabor para o pacote inteiro</option><option value="mixed">Misturar sabores</option></select></label><label class="field">Máximo de sabores diferentes<input name="maxFlavors" type="number" min="1" max="100" value="1" required></label><label class="field">Descrição<input name="description" maxlength="600"></label><fieldset class="buy-span"><legend>Produtos / sabores disponíveis no combo</legend><div class="buy-product-checks">${
+  combos.innerHTML = `<section class="panel"><h2>Combos com escolha de sabores</h2><p class="hint">Escolha os sabores e como cobrar. No modo por unidade, o total usa os preços cadastrados nos produtos.</p><form id="buy-combo-form" class="formgrid"><input name="id" type="hidden"><label class="field">Nome<input name="name" required maxlength="100" placeholder="Combo de 15 mini salgados"></label><label class="field">Como calcular o preço<select name="pricing"><option value="fixed">Preço fixo do pacote</option><option value="unit">Somar o preço por unidade de cada sabor</option></select></label><label class="field" data-fixed-price>Preço fixo do pacote<input name="price" type="number" min="0" step=".01" required></label><label class="field">Unidades por combo<input name="units" type="number" min="1" max="1000" value="15" required></label><label class="field">Escolha dos sabores<select name="mode"><option value="single">Um sabor para o pacote inteiro</option><option value="mixed">Misturar sabores</option></select></label><label class="field">Máximo de sabores diferentes<input name="maxFlavors" type="number" min="1" max="100" value="1" required></label><label class="field">Descrição<input name="description" maxlength="600"></label><fieldset class="buy-span"><legend>Produtos / sabores disponíveis no combo</legend><div class="buy-product-checks">${
     catalog()
       .map(
         (p) =>
@@ -222,6 +231,13 @@ function renderAdmin() {
   }</div></fieldset><label class="buy-span"><input name="active" type="checkbox" checked> Disponível no shop</label><div class="buy-span actions"><button class="btn red" type="submit">Salvar combo</button><button class="btn" type="reset">Novo / limpar</button></div><p id="buy-combo-message" class="buy-span" role="status"></p></form></section><section class="panel"><h3>Combos cadastrados</h3><div id="buy-combo-list"></div></section>`;
   renderComboList();
   const form = document.getElementById("buy-combo-form");
+  const syncPricing = () => {
+    const fixed = form.elements.pricing.value === "fixed";
+    form.querySelector("[data-fixed-price]").style.display = fixed ? "" : "none";
+    form.elements.price.disabled = !fixed;
+  };
+  form.elements.pricing.onchange = syncPricing;
+  form.addEventListener("reset", () => queueMicrotask(syncPricing));
   form.elements.mode.onchange = () => {
     form.elements.maxFlavors.value =
       form.elements.mode.value === "single"
@@ -312,7 +328,7 @@ function refreshQuoteCatalog() {
         .filter((c) => c.active)
         .map(
           (c) =>
-            `<option value="combo:${c.id}">${esc(c.name)} · ${amount(c.price)}</option>`,
+            `<option value="combo:${c.id}">${esc(c.name)} · ${comboPriceLabel(c)}</option>`,
         )
         .join("");
 }
@@ -322,7 +338,7 @@ function renderComboList() {
     config.combos
       .map(
         (c) =>
-          `<article class="buy-admin-combo"><div><strong>${esc(c.name)}</strong><p>${c.units} unidades · ${amount(c.price)} · ${c.mode === "mixed" ? "Misturar sabores" : "Um sabor"} · ${c.active ? "Ativo" : "Oculto"}</p></div><button class="btn small" data-edit-combo="${c.id}">Editar</button></article>`,
+          `<article class="buy-admin-combo"><div><strong>${esc(c.name)}</strong><p>${c.units} unidades · ${comboPriceLabel(c)} · ${c.mode === "mixed" ? "Misturar sabores" : "Um sabor"} · ${c.active ? "Ativo" : "Oculto"}</p></div><button class="btn small" data-edit-combo="${c.id}">Editar</button></article>`,
       )
       .join("") || "<p>Nenhum combo cadastrado.</p>";
   document.querySelectorAll("[data-edit-combo]").forEach(
@@ -334,12 +350,14 @@ function renderComboList() {
           "id",
           "name",
           "price",
+          "pricing",
           "units",
           "mode",
           "maxFlavors",
           "description",
         ])
           f.elements[key].value = c[key];
+        f.elements.pricing.dispatchEvent(new Event("change"));
         f.elements.active.checked = c.active;
         f.querySelectorAll("[name=productIds]").forEach(
           (i) => (i.checked = c.productIds.includes(i.value)),
@@ -360,7 +378,7 @@ function renderQuotes() {
       .filter((c) => c.active)
       .map(
         (c) =>
-          `<option value="combo:${c.id}">${esc(c.name)} · ${amount(c.price)}</option>`,
+          `<option value="combo:${c.id}">${esc(c.name)} · ${comboPriceLabel(c)}</option>`,
       )
       .join(
         "",
@@ -957,7 +975,7 @@ function renderCommerceShop() {
     );
     const signature = JSON.stringify([
       combos,
-      catalog().map((p) => [p.id, p.photo, p.active]),
+      catalog().map((p) => [p.id, p.photo, p.active, p.price]),
     ]);
     if (host.dataset.signature !== signature) {
       host.dataset.signature = signature;
@@ -968,7 +986,7 @@ function renderCommerceShop() {
               const p = catalog().find(
                 (p) => p.active && c.productIds.includes(p.id),
               );
-              return `<article>${photo(p)}<div><small>${c.units} unidades</small><h3>${esc(c.name)}</h3><p>${esc(c.description)}</p><strong>${amount(c.price)}</strong><button class="btn red" type="button" data-open-combo="${c.id}">Escolher sabores</button></div></article>`;
+              return `<article>${photo(p)}<div><small>${c.units} unidades</small><h3>${esc(c.name)}</h3><p>${esc(c.description)}</p><strong>${comboPriceLabel(c)}</strong><button class="btn red" type="button" data-open-combo="${c.id}">Escolher sabores</button></div></article>`;
             })
             .join("") +
           "</div>"
