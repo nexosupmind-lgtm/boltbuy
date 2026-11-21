@@ -241,3 +241,76 @@
     animation: none;
   }
 }
+
+/* Compact iOS-inspired navigation and tactile, tenant-scoped storefront. */
+.delivery-shop .bottomnav {
+  width: min(560px, calc(100% - 24px));
+  left: 50%; right: auto; bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%); border: 1px solid #e5e6ec;
+  border-radius: 26px; padding: 8px 6px; gap: 2px;
+  background: rgba(255,255,255,.96) !important;
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px #18203914, 0 1px 4px #18203908;
+}
+.delivery-shop .bottomnav > button {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 5px; min-height: 56px; padding: 5px 2px;
+  border: 0; border-radius: 18px; background: transparent;
+  font: 600 12px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color: #515565; box-shadow: none; -webkit-tap-highlight-color: transparent;
+  transition: transform .24s cubic-bezier(.2,.8,.2,1), background .24s, color .24s;
+}
+.delivery-shop .bottomnav > button.active {
+  background: #f0f1f5; color: #151824; box-shadow: none;
+}
+.delivery-shop .bottomnav .buy-nav-icon { display: block; width: 26px; height: 26px; font-size: inherit; }
+.delivery-shop .buy-nav-icon svg { display: block; width: 100%; height: 100%; }
+.delivery-shop .bottomnav button.active .buy-nav-icon { animation: buy-icon-pop .38s ease-out; }
+.delivery-shop .bottomnav button.active svg { stroke-width: 2.4; }
+.delivery-shop .bottomnav .badge {
+  position: absolute; top: 0; left: calc(50% + 7px); min-width: 17px; height: 17px;
+  padding: 0 4px; border-radius: 20px; background: #bc1734; color: #fff;
+  border: 2px solid #fff; font: 700 10px/13px system-ui;
+}
+.delivery-shop .bottomnav .buy-bolt-support .bolt-shared-face {
+  box-sizing: content-box; width: 28px; height: 22px; padding: 3px 5px;
+  background: #182039; border-radius: 10px;
+}
+.delivery-shop .shop { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+.delivery-shop .floating-cart { bottom: calc(94px + env(safe-area-inset-bottom)); }
+.delivery-shop :is(button,.btn,.chip) {
+  touch-action: manipulation;
+  transition: transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s, background-color .22s;
+}
+.delivery-shop :is(button,.btn,.chip):not(:disabled):active { transform: scale(.95); }
+.delivery-shop :is(.btn,.delivery-menu-link) { border-radius: 14px; min-height: 44px; }
+.delivery-shop #checkout > button {
+  min-height: 52px; border: 0; border-radius: 16px;
+  background: var(--market-action); color: var(--market-on-action);
+  box-shadow: 0 5px 14px #18203918; font-size: 16px; font-weight: 700;
+}
+.delivery-shop #cartView > .panel { border-radius: 22px; padding: clamp(16px,3vw,26px); }
+.delivery-shop .field { gap: 8px; font-size: 14px; font-weight: 500; }
+.delivery-shop .field :is(input,select,textarea) {
+  border: 1px solid #d5d8e1; border-radius: 14px; padding: 14px;
+  font: 400 16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background: #fff; transition: border-color .2s, box-shadow .2s;
+}
+.delivery-shop .field :is(input,select,textarea):focus { border-color: #53617c; box-shadow: 0 0 0 4px #53617c12; }
+.delivery-shop #checkout .totals { padding: 14px; background: #f5f6f8; }
+.delivery-shop #checkout .totals:first-child { border-radius: 16px 16px 0 0; }
+.delivery-shop #checkout .totals:last-child { border-radius: 0 0 16px 16px; }
+.delivery-shop #cartTotal { font-size: 26px; letter-spacing: -.8px; }
+.delivery-shop .shopbody > section:not(.hide) { animation: buy-page-enter .32s ease-out both; }
+.delivery-shop :is(.product,.featured-card,.buy-combo-grid article) { transition: transform .25s, box-shadow .25s; }
+.delivery-shop .delivery-detail[open] { animation: buy-page-enter .3s ease-out both; }
+@media (hover:hover) {
+  .delivery-shop :is(.product,.featured-card,.buy-combo-grid article):hover { transform: translateY(-3px); box-shadow: 0 8px 24px #18203912; }
+  .delivery-shop .btn:not(:disabled):hover { box-shadow: 0 5px 16px #18203920; }
+  .delivery-shop .bottomnav > button:hover { background: #f0f1f5; }
+}
+@keyframes buy-icon-pop { 0% { transform: scale(.85); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes buy-page-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .delivery-shop *, .delivery-shop *::before, .delivery-shop *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
