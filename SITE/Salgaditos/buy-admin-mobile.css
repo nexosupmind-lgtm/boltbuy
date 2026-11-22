@@ -43,3 +43,31 @@
 }
 @keyframes buy-admin-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @media(prefers-reduced-motion:reduce) { .buy-admin-app .page,.buy-admin-menu,.buy-admin-dock button { animation: none !important; transition: none; } }
+
+/* Clear hierarchy for daily operations, with compact, neutral action tiles. */
+.buy-admin-app .main { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+.buy-admin-app .main :is(h1,h2,h3,.metric strong,.btn) { font-family: inherit; }
+.buy-admin-app .buy-combo-shortcut { margin-bottom: 12px; min-height: 48px; }
+@media(max-width:760px) {
+  .buy-admin-app { background: #f3f5f9 !important; }
+  .buy-admin-app .main { padding-inline: 16px; }
+  .buy-admin-app .topbar { background: transparent !important; box-shadow: none; border: 0; padding: 12px 0 18px; border-radius: 0; }
+  .buy-admin-app #pageTitle { font-size: 25px; font-weight: 750; letter-spacing: -.9px; }
+  .buy-admin-app .topbar p { display: none; }
+  .buy-admin-app .top-actions { margin-top: 4px; }
+  .buy-admin-app .top-actions :is(.btn,.bolt-logout) { border: 1px solid #dce1ea; border-radius: 12px; box-shadow: none; font-size: 12px; }
+  .buy-admin-app .main .metric { background: #fff; border: 1px solid #e6eaf1; padding: 15px; box-shadow: 0 3px 14px #18203904; border-radius: 18px; }
+  .buy-admin-app .metric:first-child { background: #19243b; color: #fff; border-color: #19243b; }
+  .buy-admin-app .metric:first-child :is(small,strong,em) { color: #fff !important; }
+  .buy-admin-app .metric strong { font-size: 27px; letter-spacing: -1px; font-weight: 700; margin: 12px 0 6px; }
+  .buy-admin-app .metric em { color: #596579 !important; font-style: normal; font-size: 11px; }
+  .buy-admin-app .quick { gap: 8px; margin: 18px 0; }
+  .buy-admin-app .main .quick .btn { background: #fff !important; color: #26334b !important; border: 1px solid #e1e6ef; border-radius: 15px; box-shadow: none; min-height: 56px; text-align: left; justify-content: flex-start; font-size: 13px; font-weight: 600; padding: 14px; }
+  .buy-admin-app .main .quick .buy-combo-shortcut { grid-column: 1/-1; background: #e9eef9 !important; border: 1px solid #cad5eb; margin: 0; }
+  .buy-admin-app .main .panel { border: 1px solid #e6eaf1; box-shadow: 0 3px 14px #18203904; }
+  .buy-admin-app .panel h3 { font-size: 18px; font-weight: 700; letter-spacing: -.4px; }
+  .buy-admin-app .main .panel-head .btn { background: #f0f3f8 !important; color: #26334b !important; border: 0; min-height: 36px; font-size: 12px; }
+  .buy-admin-app .buy-product-checks { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .buy-admin-app .buy-product-checks label { padding: 12px; border: 1px solid #e1e6ef; border-radius: 14px; background: #fff; color: #26334b; }
+  .buy-admin-app .buy-product-checks img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; }
+}
