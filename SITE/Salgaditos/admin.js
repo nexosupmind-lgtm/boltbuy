@@ -14,7 +14,7 @@ function render(){const d=load();if(page==='dashboard')renderDashboard(d);if(pag
 el('notifBtn').onclick=askNotifications;el('posSearch').oninput=()=>renderPOS(load());el('posReceived').oninput=()=>renderPOS(load());el('posForm').onsubmit=e=>{e.preventDefault();const d=load(),items=Object.entries(posCart).filter(([,q])=>q>0).map(([id,qty])=>{const p=d.products.find(x=>x.id===id);return p?{id,name:p.name,price:p.price,qty}:null}).filter(Boolean),subtotal=items.reduce((s,i)=>s+i.price*i.qty,0);if(!items.length)return notify('Adicione produtos primeiro.');if(el('posPayment').value==='Dinheiro'&&Number(el('posReceived').value||0)<subtotal)return notify('Valor recebido insuficiente.');d.orders.push({id:'B'+Date.now(),date:stamp(),customer:el('posCustomer').value||'Consumidor',channel:'Balcão',mode:'retirada',items,subtotal,fee:0,status:'concluido',payment:el('posPayment').value});save(d);posCart={};el('posForm').reset();notify('Venda registrada com sucesso!')};
 el('productForm').onsubmit=async e=>{
  e.preventDefault();const btn=el('productForm').querySelector('button[type=submit],button.btn.red');if(btn?.disabled)return;
- if(btn)btn.disabled=true;
+ const originalLabel=btn?.textContent;if(btn){btn.disabled=true;btn.textContent='Salvando…';btn.setAttribute('aria-busy','true');}
  try{
   const d=load(),id=el('productId').value,p={name:el('productName').value.trim(),price:Number(el('productPrice').value),category:el('productCategory').value,emoji:el('productEmoji').value||'🥟',featured:el('productFeatured').checked};
   if(!p.name||!Number.isFinite(p.price)||p.price<=0)throw Error('Informe nome e preço válido.');
@@ -22,10 +22,10 @@ el('productForm').onsubmit=async e=>{
   if(file)p.photo=await window.boltUploadProductPhoto(file);else if(old)p.photo=old.photo||'';
   if(!window.BOLT_CATALOG)throw Error('Catálogo Cloud indisponível.');
   await window.BOLT_CATALOG.upsert({...p,id:old?.id||id||undefined,active:old?.active!==false});
-  clearProduct();notify('Produto confirmado no Supabase!');
+  clearProduct();notify('✓ Produto salvo com sucesso!');window.dispatchEvent(new Event('buy-product-saved'));
 
  }catch(err){console.error('BOLT: falha ao salvar produto',err);notify('Não foi possível salvar: '+(err.message||'erro desconhecido'));}
- finally{if(btn)btn.disabled=false}
+ finally{if(btn){btn.disabled=false;btn.textContent=originalLabel;btn.removeAttribute('aria-busy');}}
 };
 el('platformForm').onsubmit=e=>{e.preventDefault();const d=load(),value=Number(el('platformValue').value);if(value<=0)return notify('Informe o valor da venda.');d.orders.push({id:'F'+Date.now(),date:stamp(),customer:el('platformCustomer').value||'Cliente plataforma',channel:el('platformName').value,mode:'delivery',items:[{name:'Venda registrada manualmente '+(el('platformId').value||''),qty:1,price:value}],subtotal:value,fee:0,platformTax:Number(el('platformTax').value)||0,status:'concluido',payment:el('platformPayment').value});save(d);el('platformForm').reset();notify('Venda de plataforma registrada!')};
 el('feeForm').onsubmit=e=>{e.preventDefault();const d=load();d.fee=Math.max(0,Number(el('fee').value)||0);save(d);notify('Frete atualizado para '+money(d.fee))};
