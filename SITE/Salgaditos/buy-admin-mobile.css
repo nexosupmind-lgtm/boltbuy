@@ -1,0 +1,45 @@
+.buy-admin-dock { display: none; }
+.buy-admin-menu { width: min(480px,calc(100% - 20px)); max-height: 80dvh; box-sizing: border-box; border: 1px solid #e1e5ed; border-radius: 26px; padding: 20px; background: #fff; color: #202532; box-shadow: 0 20px 70px #11182740; }
+.buy-admin-menu::backdrop { background: #10182880; backdrop-filter: blur(5px); }
+.buy-admin-menu header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.buy-admin-menu h2 { margin: 4px 0; font: 700 24px system-ui; }
+.buy-admin-menu small { font: 600 11px system-ui; letter-spacing: 1px; color: #596273; }
+.buy-admin-menu header button { width: 40px; height: 40px; border: 0; border-radius: 50%; font-size: 24px; background: #f0f2f6; color: #202532; }
+.buy-admin-menu-items { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.buy-admin-menu-items button { min-height: 64px; padding: 12px; background: #f5f6f9; border: 1px solid #e6e9ef; border-radius: 16px; text-align: left; color: #202532; font: 600 14px/1.4 system-ui; }
+.buy-admin-menu :focus-visible,.buy-admin-dock :focus-visible { outline: 3px solid #245ad0; outline-offset: 2px; }
+@media(max-width:760px) {
+  .buy-admin-app.buy-mobile-ready :is(.sidebar,#mobileNav) { display: none !important; }
+  .buy-admin-app .shell { display: block; }
+  .buy-admin-app .main { margin: 0; min-width: 0; width: 100%; box-sizing: border-box; padding: 14px 12px calc(108px + env(safe-area-inset-bottom)); }
+  .buy-admin-app .topbar { padding: 18px; gap: 12px; border-radius: 22px; align-items: stretch; flex-direction: column; }
+  .buy-admin-app #pageTitle { font-size: 25px; line-height: 1.2; }
+  .buy-admin-app .topbar p { font-size: 13px; margin-top: 6px; }
+  .buy-admin-app .top-actions { justify-content: flex-start; gap: 8px; }
+  .buy-admin-app .top-actions .btn { min-height: 40px; font-size: 12px; padding: 9px 12px; }
+  .buy-admin-app #dashboard > .hero { display: none; }
+  .buy-admin-app .metrics { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .buy-admin-app .main .metric { padding: 16px 12px; border-radius: 18px; border-top-width: 2px; min-width: 0; }
+  .buy-admin-app .metric strong { font-size: clamp(22px,6vw,30px); overflow-wrap: anywhere; }
+  .buy-admin-app .metric small { font-size: 12px; }
+  .buy-admin-app .metric em { font-size: 11px; }
+  .buy-admin-app .quick { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-block: 16px; }
+  .buy-admin-app .quick .btn { min-height: 56px; border-radius: 16px; font-size: 13px; white-space: normal; }
+  .buy-admin-app .main .twocol { grid-template-columns: minmax(0,1fr); }
+  .buy-admin-app .main .panel { padding: 16px; border-radius: 20px; min-width: 0; }
+  .buy-admin-app .tablewrap { max-width: 100%; overflow-x: auto; }
+  .buy-admin-app .field :is(input,select,textarea),.buy-admin-app input.search { font-size: 16px; }
+  .buy-admin-app .buy-admin-dock { display: flex; position: fixed; z-index: 130; bottom: max(10px,env(safe-area-inset-bottom)); left: 12px; right: 12px; padding: 7px; gap: 2px; border: 1px solid #e3e6ed; border-radius: 24px; background: #fffffff5; backdrop-filter: blur(18px); box-shadow: 0 8px 32px #17203920; }
+  .buy-admin-dock button { flex: 1; min-width: 0; min-height: 56px; border: 0; border-radius: 17px; padding: 6px 2px; background: transparent; color: #535c6e; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font: 600 11px system-ui; transition: background .2s,transform .2s; }
+  .buy-admin-dock button[hidden] { display: none; }
+  .buy-admin-dock button.active { background: #eceef5; color: #182039; }
+  .buy-admin-dock svg { width: 24px; height: 24px; }
+  .buy-admin-dock button:active,.buy-admin-menu-items button:active { transform: scale(.95); }
+  .buy-admin-menu { margin: auto auto 0; width: 100%; border-radius: 26px 26px 0 0; padding-bottom: max(20px,env(safe-area-inset-bottom)); }
+  .buy-admin-app .bolt-universal-assistant { bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .buy-admin-app .bolt-help-trigger { bottom: calc(172px + env(safe-area-inset-bottom)); }
+  .buy-admin-app .page:not(.hide) { animation: buy-admin-enter .2s ease-out; }
+  .buy-admin-menu[open] { animation: buy-admin-enter .2s ease-out; }
+}
+@keyframes buy-admin-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .buy-admin-app .page,.buy-admin-menu,.buy-admin-dock button { animation: none !important; transition: none; } }
