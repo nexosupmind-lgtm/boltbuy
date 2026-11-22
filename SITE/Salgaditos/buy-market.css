@@ -416,3 +416,62 @@
 @media(max-width:600px) {
   .delivery-shop dialog.delivery-detail:not(.buy-dialog) { margin: auto auto 0; width: 100%; max-width: 100%; max-height: 88dvh; border-radius: 28px 28px 0 0; border-bottom: 0; }
 }
+
+/* Photo-led storefront: compact promotions, repeat orders and clear catalog. */
+.delivery-shop .shop { max-width: 1100px; }
+.delivery-shop .shophead { padding: 0 0 14px; border: 0; border-radius: 0 0 24px 24px; box-shadow: 0 4px 20px #18203905; overflow: hidden; }
+.delivery-shop .buy-store-cover { height: clamp(132px,24vw,240px); position: relative; overflow: hidden; background: #e9ebef; }
+.delivery-shop .buy-store-cover[hidden] { display: none; }
+.delivery-shop .buy-store-cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 52%; }
+.delivery-shop .buy-store-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg,#141a2530,transparent 65%); pointer-events: none; }
+.delivery-shop .shopbar { padding: 16px 20px 6px; align-items: center; gap: 10px; }
+.delivery-shop .brand-identity { gap: 12px; min-width: 0; }
+.delivery-shop .brand-avatar { width: 54px; height: 54px; flex: 0 0 54px; border-radius: 16px; border: 1px solid #e8eaf0; }
+.delivery-shop .brand-text strong { font-size: clamp(18px,3vw,23px); letter-spacing: -.6px; }
+.delivery-shop .brand-text small { font-size: 12px; color: #555d6e; }
+.delivery-shop .shopbar > div:last-child { display: flex; align-items: center; gap: 6px; flex: none; }
+.delivery-shop .shopbar .pill.live { border: 0; background: #edf7f0; color: #25633c; padding: 7px 9px; font-size: 11px; max-width: 94px; text-align: center; }
+.delivery-shop .shopbar .btn { width: 36px; min-height: 36px; padding: 4px; border-radius: 50%; background: #f3f4f7; color: #20222a; border: 1px solid #e7e9ef; }
+.delivery-shop #delivery-location { width: calc(100% - 40px); margin: 10px 20px 0; min-height: 40px; padding: 10px 12px; font-size: 13px; border-radius: 12px; }
+.delivery-shop .shopbody { padding-inline: 20px; }
+.delivery-shop .promo-slider-section { margin: 16px 0 18px; }
+.delivery-shop .promo-slider-section .panel-head { margin: 0 0 8px; }
+.delivery-shop .promo-slider-section h3 { font-size: 17px; }
+.delivery-shop .promo-counter { font-size: 12px; color: #555d6e; }
+.delivery-shop .promo-slide { min-height: 112px; box-sizing: border-box; padding: 16px 18px; flex-basis: min(90%,440px); border-radius: 18px; box-shadow: 0 4px 12px #1820390a; }
+.delivery-shop .promo-slide h4 { font-size: 20px; margin: 6px 0; letter-spacing: -.4px; }
+.delivery-shop .promo-slide p { font-size: 13px; line-height: 1.35; margin: 4px 0; }
+.delivery-shop .promo-slide .promo-label { font-size: 9px; letter-spacing: 1px; }
+.delivery-shop .promo-slide .promo-icon { font-size: 40px; }
+.delivery-shop .promo-dots { padding-top: 2px; }
+.delivery-shop .reorder-section { margin: 16px 0; }
+.delivery-shop .reorder-section:has(.reorder-empty) { display: none; }
+.delivery-shop .reorder-card { flex-basis: 240px; padding: 14px; border-radius: 18px; }
+.delivery-shop .reorder-card h4 { color: #20222a; font-size: 14px; }
+.delivery-shop .reorder-card p { color: #555d6e; }
+.delivery-shop .reorder-section .panel-head { margin: 0 0 10px; }
+.delivery-shop .featured-section .panel-head { margin-top: 18px; margin-bottom: 4px; }
+.delivery-shop .featured-frame { background: transparent; }
+.delivery-shop .featured-horizontal { gap: 12px; padding-bottom: 12px; }
+.delivery-shop .featured-horizontal .product { flex-basis: 160px; }
+.delivery-shop .featured-horizontal .foodpic { aspect-ratio: 1; }
+.delivery-shop .featured-tag { background: #f2f3f6; color: #3a4152; font-size: 10px; letter-spacing: .5px; border: 0; }
+.delivery-shop .chiprow { position: sticky; top: 0; z-index: 20; background: #f8f9fbf5; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); margin: 0 -4px; padding: 12px 4px; }
+.delivery-shop .chip { border: 0; border-radius: 10px; min-height: 40px; padding: 9px 14px; background: transparent !important; box-shadow: none; }
+.delivery-shop .chip.active { background: #20222a !important; color: #fff !important; box-shadow: none; }
+.delivery-shop .category-sections { gap: 16px; }
+.delivery-shop .category-block .panel-head { margin-top: 14px; }
+.delivery-shop .product { border-radius: 17px; }
+.delivery-shop .category-block .foodpic { aspect-ratio: 1.15; }
+.delivery-shop .product h4 { margin-top: 10px; margin-bottom: 5px; }
+.delivery-shop .product p { margin-block: 5px; }
+@media(max-width:600px) {
+  .delivery-shop .shopbody { padding-inline: 14px; }
+  .delivery-shop .shopbar { padding-inline: 14px; }
+  .delivery-shop #delivery-location { width: calc(100% - 28px); margin-inline: 14px; }
+  .delivery-shop .buy-store-cover { height: 138px; }
+  .delivery-shop .featured-frame .slide-arrow { display: none; }
+  .delivery-shop .featured-horizontal .product { flex-basis: 148px; }
+  .delivery-shop .brand-avatar { width: 46px; height: 46px; flex-basis: 46px; }
+  .delivery-shop .brand-text strong { font-size: 18px; }
+}
