@@ -1,0 +1,40 @@
+/* Frosted surfaces, restrained merchant accents and responsive motion. */
+body.buy-admin-app,body.delivery-shop{--buy-type:'Helvetica Neue',Helvetica,Arial,sans-serif;font-family:var(--buy-type)!important;-webkit-font-smoothing:antialiased}
+body.buy-admin-app :is(.main,.brand,strong,h1,h2,h3,h4,button,input,select,textarea,.btn),body.delivery-shop :is(strong,h1,h2,h3,h4,button,input,select,textarea,.btn){font-family:var(--buy-type)!important}
+:is(.buy-admin-app,.delivery-shop) :is(h1,h2,h3){font-weight:750;letter-spacing:-.045em;line-height:1.15}
+:is(.buy-admin-app,.delivery-shop) :is(button,.btn){font-weight:650;letter-spacing:-.015em;transition:transform .18s ease,box-shadow .22s ease,background-color .22s ease}
+:is(.buy-admin-app,.delivery-shop) :is(button,.btn):active{transform:scale(.965)}
+:is(.buy-admin-app,.delivery-shop) :is(button,.btn):disabled{opacity:.6;cursor:wait}
+:is(.buy-admin-app,.delivery-shop) :is(button,a,input,select,textarea):focus-visible{outline:3px solid #4263c7;outline-offset:3px}
+.buy-admin-app{background:radial-gradient(ellipse at 95% 0%,#e7244620,transparent 45%),radial-gradient(ellipse at 0% 75%,#446ecb16,transparent 45%),#f3f5f9!important;color:#19243b;color-scheme:light}
+.buy-admin-app .main{color:#19243b}
+.buy-admin-app .main :is(.panel,.metric,.order-card,.topbar){background:linear-gradient(135deg,#ffffffdc,#ffffffa8)!important;color:#19243b;border:1px solid #ffffffed;border-radius:22px;box-shadow:0 8px 30px #25365a09,inset 0 1px 0 #fff;backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%)}
+.buy-admin-app .main .topbar{padding:22px;margin-bottom:20px}
+.buy-admin-app .main :is(h1,h2,h3,h4,.metric strong){color:#19243b}
+.buy-admin-app .main :is(.hint,.muted,.metric small,.metric em,.topbar p){color:#526078!important}
+.buy-admin-app .main .metric{border-top:1px solid #fff;position:relative;overflow:hidden}
+.buy-admin-app .main .metric::before{content:'';position:absolute;top:18px;left:0;width:3px;height:25px;border-radius:0 3px 3px 0;background:var(--brand-primary,#e92343)}
+.buy-admin-app .main .metric strong{font-weight:750;letter-spacing:-.055em;font-variant-numeric:tabular-nums}
+.buy-admin-app .main .metric:first-child :is(small,strong,em){color:#19243b!important}
+.buy-admin-app .main .field :is(input,select,textarea),.buy-admin-app .main .search{background:#ffffffc9;color:#19243b;border:1px solid #d9dfea;border-radius:12px;font-size:16px}
+.buy-admin-app .main .field{color:#44516a}
+.buy-admin-app .main :is(input,textarea)::placeholder{color:#68738a}
+.buy-admin-app .main .quick .btn{background:linear-gradient(130deg,#fffffff0,#ffffffa8)!important;color:#24324a!important;border:1px solid #fff;box-shadow:0 5px 18px #17203909;border-radius:17px}
+.buy-admin-app .main .quick .btn.red{border-left:3px solid var(--brand-primary,#e92343)}
+.buy-admin-app .main .quick .buy-combo-shortcut{background:linear-gradient(120deg,#fce9ee,#f2f4fb)!important}
+.buy-admin-app .sidebar{background:linear-gradient(155deg,#132038ee,#071321f5)!important;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.buy-admin-app .buy-admin-dock,.delivery-shop .bottomnav{background:linear-gradient(125deg,#ffffffdb,#ffffffad)!important;border:1px solid #fffffff2;box-shadow:0 12px 40px #1720391c,inset 0 1px 0 #fff;backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}
+.buy-admin-app .buy-admin-dock button,.delivery-shop .bottomnav button{color:#505b70!important}
+.buy-admin-app .buy-admin-dock button.active,.delivery-shop .bottomnav button.active{background:linear-gradient(135deg,#e7eaf3e0,#f2e7edb0)!important;color:#17233d!important;box-shadow:inset 0 1px 0 #fff}
+.delivery-shop .shophead{background:linear-gradient(125deg,#ffffffce,#ffffffa8)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#19243b!important}
+.delivery-shop .shophead :is(h1,p,small,strong){color:#19243b!important}
+.delivery-shop .delivery-address{background:#ffffffb8;color:#34415a;border:1px solid #e1e5ee}
+.delivery-shop .product,.delivery-shop .buy-combo-grid article{box-shadow:0 6px 22px #1720390b;border-radius:20px}
+.delivery-shop :is(.product h4,.buy-combo-grid h3){font-weight:700;letter-spacing:-.025em}
+.buy-admin-app .buy-admin-menu{background:#ffffffe8;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.buy-admin-app #toast{background:#19243bef;color:#fff;border:1px solid #ffffff30;border-radius:16px;padding:16px 22px;box-shadow:0 12px 40px #17203925;backdrop-filter:blur(18px);z-index:100000;max-width:calc(100vw - 32px);box-sizing:border-box;bottom:calc(102px + env(safe-area-inset-bottom));font:600 15px/1.4 var(--buy-type)}
+.buy-save-success{animation:buy-save-glow .65s ease-out}
+@keyframes buy-save-glow{0%{box-shadow:0 0 0 0 #23976b50}100%{box-shadow:0 0 0 15px #23976b00}}
+@media(hover:hover){:is(.buy-admin-app,.delivery-shop) :is(.btn,button):not(:disabled):hover{transform:translateY(-2px);box-shadow:0 7px 20px #17203918}}
+@media(max-width:760px){.buy-admin-app .main .topbar{padding:18px;border-radius:22px}.buy-admin-app #pageTitle{font-size:26px}.buy-admin-app .main .metric strong{font-size:28px}.buy-admin-app .main .metric small{font-size:14px}.buy-admin-app .main .quick .btn{font-size:14px}.buy-admin-app .buy-admin-dock button{font-size:12px}.buy-admin-app .main .panel{border-radius:22px}}
+@media(prefers-reduced-motion:reduce){:is(.buy-admin-app,.delivery-shop) *{animation:none!important;transition:none!important;scroll-behavior:auto!important}:is(.buy-admin-app,.delivery-shop) :is(button,.btn):active,:is(.buy-admin-app,.delivery-shop) :is(button,.btn):hover{transform:none!important}}
