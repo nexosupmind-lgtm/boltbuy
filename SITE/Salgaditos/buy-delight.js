@@ -38,4 +38,27 @@
     // Web Animations does not leave transient nodes in rerendered product cards.
     button.animate([{scale:'1'},{scale:'.94'},{scale:'1'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
   });
+  // Use the tenant's real catalog photography; no fabricated products or offers.
+  const header = document.querySelector('.shophead');
+  const catalogRoot = document.getElementById('categorySections');
+  if (header && catalogRoot) {
+    const cover = document.createElement('div');
+    cover.className = 'buy-store-cover';
+    cover.hidden = true;
+    cover.setAttribute('aria-hidden', 'true');
+    const image = document.createElement('img');
+    image.alt = '';
+    image.decoding = 'async';
+    cover.append(image);
+    header.prepend(cover);
+    image.onload = () => { cover.hidden = false; };
+    image.onerror = () => { cover.hidden = true; };
+    const refreshCover = () => {
+      const source = typeof load === 'function' ? load().products?.find(product => product.active && product.photo)?.photo : null;
+      if (!source) { cover.hidden = true; image.removeAttribute('src'); return; }
+      if (image.getAttribute('src') !== source) { cover.hidden = true; image.src = source; }
+    };
+    new MutationObserver(refreshCover).observe(catalogRoot, {childList:true,subtree:true});
+    refreshCover();
+  }
 })();
