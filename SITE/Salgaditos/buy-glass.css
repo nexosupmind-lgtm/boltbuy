@@ -38,3 +38,62 @@ body.buy-admin-app :is(.main,.brand,strong,h1,h2,h3,h4,button,input,select,texta
 @media(hover:hover){:is(.buy-admin-app,.delivery-shop) :is(.btn,button):not(:disabled):hover{transform:translateY(-2px);box-shadow:0 7px 20px #17203918}}
 @media(max-width:760px){.buy-admin-app .main .topbar{padding:18px;border-radius:22px}.buy-admin-app #pageTitle{font-size:26px}.buy-admin-app .main .metric strong{font-size:28px}.buy-admin-app .main .metric small{font-size:14px}.buy-admin-app .main .quick .btn{font-size:14px}.buy-admin-app .buy-admin-dock button{font-size:12px}.buy-admin-app .main .panel{border-radius:22px}}
 @media(prefers-reduced-motion:reduce){:is(.buy-admin-app,.delivery-shop) *{animation:none!important;transition:none!important;scroll-behavior:auto!important}:is(.buy-admin-app,.delivery-shop) :is(button,.btn):active,:is(.buy-admin-app,.delivery-shop) :is(button,.btn):hover{transform:none!important}}
+
+/* Glass v2: a visible canvas behind the translucent surfaces. */
+body.buy-admin-app,body.delivery-shop{
+ background:radial-gradient(ellipse at 8% 5%,#f1b9c9 0,transparent 40%),radial-gradient(ellipse at 96% 42%,#c5d6ec 0,transparent 42%),radial-gradient(ellipse at 25% 95%,#e0d6ef 0,transparent 38%),#edf0f6!important;
+ background-attachment:fixed!important;
+}
+body.buy-admin-app .shell,body.buy-admin-app .main,body.delivery-shop .shop,body.delivery-shop .shopbody{background:transparent!important}
+body.buy-admin-app :is(.main,.buy-admin-dock,.buy-admin-menu) *,body.delivery-shop :is(.shop,.bottomnav,dialog) *{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif!important}
+body.buy-admin-app .main :is(.panel,.metric,.topbar,.order-card){
+ background:linear-gradient(130deg,#ffffffc9,#ffffff70)!important;
+ border:1px solid #ffffffef!important;
+ box-shadow:0 10px 30px #30435e0d,inset 0 1px 0 #fff!important;
+ backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%);
+}
+body.buy-admin-app .main .metric:first-child{
+ background:linear-gradient(130deg,#23354def,#101e34e6)!important;
+ border-color:#ffffff55!important;box-shadow:0 12px 28px #172d4929,inset 0 1px 0 #ffffff40!important;
+}
+body.buy-admin-app .main .metric:first-child :is(small,strong,em){color:#fff!important}
+body.buy-admin-app .main .metric:first-child::before{background:#ff7790}
+body.buy-admin-app .main .metric strong{font-size:32px;font-weight:700;line-height:1.2}
+body.buy-admin-app .main .metric em{font-size:12px;font-style:normal}
+body.buy-admin-app .main .quick .btn{
+ min-height:64px;background:linear-gradient(120deg,#ffffffe0,#ffffff80)!important;
+ border:1px solid #ffffffef!important;box-shadow:0 5px 20px #23334d0c,inset 0 1px 0 #fff!important;
+ backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);font-weight:600;
+}
+body.buy-admin-app .main .quick .btn.red{background:linear-gradient(125deg,#fbe2e8de,#ffffffa0)!important;color:#9a1836!important}
+body.buy-admin-app .main .quick .buy-combo-shortcut{background:linear-gradient(125deg,#dce8f7ee,#f3ecf5c9)!important;color:#233650!important}
+body.buy-admin-app .buy-admin-dock,body.delivery-shop .bottomnav{
+ background:linear-gradient(125deg,#ffffffc9,#ffffff85)!important;
+ border:1px solid #fff!important;box-shadow:0 12px 38px #20385926,inset 0 1px 0 #fff!important;
+ backdrop-filter:blur(30px) saturate(170%);-webkit-backdrop-filter:blur(30px) saturate(170%);
+}
+body.buy-admin-app .buy-admin-dock button.active,body.delivery-shop .bottomnav button.active{
+ background:linear-gradient(140deg,#23354d,#121e33)!important;color:#fff!important;
+ box-shadow:0 4px 12px #14233b25,inset 0 1px 0 #ffffff35!important;
+}
+body.delivery-shop .shophead{background:linear-gradient(125deg,#ffffffc9,#ffffff80)!important;border:1px solid #ffffffd9!important}
+body.delivery-shop :is(.product,.featured-card,.buy-combo-grid article){
+ background:linear-gradient(140deg,#ffffffe8,#ffffffb0)!important;border:1px solid #fff!important;
+ box-shadow:0 7px 24px #25365012!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+body.delivery-shop .chiprow{background:#edf0f6c7!important;border-radius:16px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+body.delivery-shop .product .btn{background:linear-gradient(125deg,#273b56,#17243b)!important;color:#fff!important;min-height:42px}
+body.delivery-shop .product h4{color:#17243b!important;font-weight:700}
+@media(max-width:760px){
+ body.buy-admin-app .main{padding-top:18px}
+ body.buy-admin-app .main .topbar{padding:20px!important;border-radius:24px!important}
+ body.buy-admin-app #pageTitle{font-size:27px!important;letter-spacing:-1px}
+ body.buy-admin-app .main .metrics{gap:12px}
+ body.buy-admin-app .main .metric{padding:19px 16px!important;border-radius:22px!important}
+ body.buy-admin-app .main .quick{gap:10px}
+ body.buy-admin-app .buy-admin-dock,body.delivery-shop .bottomnav{border-radius:28px!important}
+}
+@supports not (backdrop-filter:blur(1px)){
+ body.buy-admin-app .main :is(.panel,.metric,.topbar),body.delivery-shop .product{background:#f8f9fc!important}
+ body.buy-admin-app .main .metric:first-child{background:#1c2b42!important}
+}
