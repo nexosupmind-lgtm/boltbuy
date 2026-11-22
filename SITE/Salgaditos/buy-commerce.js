@@ -1,4 +1,4 @@
-import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js";
+import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=package-options-1";
 import { quotePDF } from "./buy-quote-pdf.js";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
@@ -94,7 +94,7 @@ function mergeOrders(orders) {
   if (changed) save(d);
 }
 function comboPriceLabel(combo) {
-  if (combo.pricing !== "unit") return amount(combo.price);
+  if (!["unit", "option"].includes(combo.pricing)) return amount(combo.price);
   const prices = catalog().filter((p) => p.active && combo.productIds.includes(p.id))
     .map((p) => comboPrice(combo, [{ productId: p.id, quantity: combo.units }], [p]));
   return prices.length ? "A partir de " + amount(Math.min(...prices)) : "Preço conforme os sabores";
@@ -112,7 +112,7 @@ function pickCombo(combo, done) {
   const dialog = document.createElement("dialog");
   dialog.id = "buy-combo-picker";
   dialog.className = admin ? "buy-dialog" : "buy-dialog delivery-detail";
-  dialog.innerHTML = `<form><header><div><small>MONTE DO SEU JEITO</small><h2>${esc(combo.name)}</h2></div><button type="button" data-close aria-label="Fechar">×</button></header>${admin ? "" : '<div class="delivery-photo">' + photo(products[0]) + "</div>"}<p>${esc(combo.description)}</p><p>${combo.mode === "single" ? `Escolha um sabor para as ${combo.units} unidades.` : `Distribua ${combo.units} unidades entre até ${combo.maxFlavors} sabores.`}</p><div class="buy-flavors">${products.map((p) => `<label class="buy-flavor">${photo(p)}<strong>${esc(p.name)}</strong>${combo.pricing === "unit" ? `<small>${amount(p.price)} por unidade</small>` : ""}${combo.mode === "single" ? `<input type="radio" name="flavor" value="${esc(p.id)}" required>` : `<input type="number" min="0" max="${combo.units}" step="1" value="0" data-flavor="${esc(p.id)}" aria-label="Quantidade de ${esc(p.name)}">`}</label>`).join("")}</div><p data-count role="status"></p><button class="btn red full" type="submit" disabled>Adicionar ao carrinho</button></form>`;
+  dialog.innerHTML = `<form><header><div><small>MONTE DO SEU JEITO</small><h2>${esc(combo.name)}</h2></div><button type="button" data-close aria-label="Fechar">×</button></header>${admin ? "" : '<div class="delivery-photo">' + photo(products[0]) + "</div>"}<p>${esc(combo.description)}</p><p>${combo.mode === "single" ? `Escolha um sabor para as ${combo.units} unidades.` : `Distribua ${combo.units} unidades entre até ${combo.maxFlavors} sabores.`}</p><div class="buy-flavors">${products.map((p) => `<label class="buy-flavor">${photo(p)}<strong>${esc(p.name)}</strong>${combo.pricing === "unit" ? `<small>${amount(p.price)} por unidade</small>` : `<small>${amount(combo.pricing === "option" ? p.price : combo.price)} · pacote de ${combo.units}</small>`}${combo.mode === "single" ? `<input type="radio" name="flavor" value="${esc(p.id)}" required>` : `<input type="number" min="0" max="${combo.units}" step="1" value="0" data-flavor="${esc(p.id)}" aria-label="Quantidade de ${esc(p.name)}">`}</label>`).join("")}</div><p data-count role="status"></p><button class="btn red full" type="submit" disabled>Adicionar ao carrinho</button></form>`;
   document.body.append(dialog);
   const form = dialog.querySelector("form"),
     submit = form.querySelector("[type=submit]");
@@ -143,7 +143,7 @@ function pickCombo(combo, done) {
     const total = comboPrice(combo, choices, products);
     submit.textContent = submit.disabled ? "Adicionar combo" : `Adicionar · ${amount(total)}`;
     dialog.querySelector("[data-count]").textContent =
-      `${count} de ${combo.units} unidades selecionadas${combo.pricing === "unit" ? ` · Total: ${amount(total)}` : ` · ${amount(combo.price)}`}` +
+      `${count} de ${combo.units} unidades selecionadas${combo.pricing !== "fixed" ? ` · Total: ${amount(total)}` : ` · ${amount(combo.price)}`}` +
       (choices.length > combo.maxFlavors
         ? " · reduza a quantidade de sabores"
         : "");
@@ -207,6 +207,18 @@ function configSections() {
       node.append(button);
     }
   }
+  const shortcuts = document.querySelector('#dashboard .quick');
+  const comboShortcut = document.createElement('button');
+  comboShortcut.type = 'button'; comboShortcut.className = 'btn buy-combo-shortcut';
+  comboShortcut.textContent = 'Combos · criar e editar';
+  comboShortcut.onclick = () => window.showPage('buy-combos');
+  shortcuts?.prepend(comboShortcut);
+  const productsPage = document.getElementById('products');
+  if (productsPage) {
+    const entry = comboShortcut.cloneNode(true);
+    entry.onclick = comboShortcut.onclick;
+    productsPage.prepend(entry);
+  }
   const ordersStatus = document.createElement("p");
   ordersStatus.id = "buy-orders-status";
   ordersStatus.setAttribute("role", "status");
@@ -220,11 +232,11 @@ function configSections() {
 }
 function renderAdmin() {
   const combos = document.getElementById("buy-combos");
-  combos.innerHTML = `<section class="panel"><h2>Combos com escolha de sabores</h2><p class="hint">Escolha os sabores e como cobrar. No modo por unidade, o total usa os preços cadastrados nos produtos.</p><form id="buy-combo-form" class="formgrid"><input name="id" type="hidden"><label class="field">Nome<input name="name" required maxlength="100" placeholder="Combo de 15 mini salgados"></label><label class="field">Como calcular o preço<select name="pricing"><option value="fixed">Preço fixo do pacote</option><option value="unit">Somar o preço por unidade de cada sabor</option></select></label><label class="field" data-fixed-price>Preço fixo do pacote<input name="price" type="number" min="0" step=".01" required></label><label class="field">Unidades por combo<input name="units" type="number" min="1" max="1000" value="15" required></label><label class="field">Escolha dos sabores<select name="mode"><option value="single">Um sabor para o pacote inteiro</option><option value="mixed">Misturar sabores</option></select></label><label class="field">Máximo de sabores diferentes<input name="maxFlavors" type="number" min="1" max="100" value="1" required></label><label class="field">Descrição<input name="description" maxlength="600"></label><fieldset class="buy-span"><legend>Produtos / sabores disponíveis no combo</legend><div class="buy-product-checks">${
+  combos.innerHTML = `<section class="panel"><h2>Combos com escolha de sabores</h2><p class="hint">Crie “Combo 15” e selecione produtos como “15 coxinhas” e “15 mini churros”, cada um com seu preço de pacote cadastrado em Produtos. O cliente escolhe uma opção e vê o valor correspondente.</p><form id="buy-combo-form" class="formgrid"><input name="id" type="hidden"><label class="field">Nome<input name="name" required maxlength="100" placeholder="Combo de 15 mini salgados"></label><label class="field">Como calcular o preço<select name="pricing"><option value="option">Preço do pacote conforme a opção escolhida</option><option value="fixed">Preço fixo do pacote</option><option value="unit">Somar o preço por unidade de cada sabor</option></select></label><label class="field" data-fixed-price>Preço fixo do pacote<input name="price" type="number" min="0" step=".01" required></label><label class="field">Unidades por combo<input name="units" type="number" min="1" max="1000" value="15" required></label><label class="field">Escolha dos sabores<select name="mode"><option value="single">Um sabor para o pacote inteiro</option><option value="mixed">Misturar sabores</option></select></label><label class="field">Máximo de sabores diferentes<input name="maxFlavors" type="number" min="1" max="100" value="1" required></label><label class="field">Descrição<input name="description" maxlength="600"></label><fieldset class="buy-span"><legend>Produtos / sabores disponíveis no combo</legend><div class="buy-product-checks">${
     catalog()
       .map(
         (p) =>
-          `<label>${photo(p)}<span>${esc(p.name)}</span><input name="productIds" type="checkbox" value="${esc(p.id)}"></label>`,
+          `<label>${photo(p)}<span>${esc(p.name)} · ${amount(p.price)}</span><input name="productIds" type="checkbox" value="${esc(p.id)}"></label>`,
       )
       .join("") ||
     "<p>Cadastre os produtos e suas fotos primeiro na aba Produtos.</p>"
@@ -235,8 +247,13 @@ function renderAdmin() {
     const fixed = form.elements.pricing.value === "fixed";
     form.querySelector("[data-fixed-price]").style.display = fixed ? "" : "none";
     form.elements.price.disabled = !fixed;
+    const option = form.elements.pricing.value === "option";
+    if (option) { form.elements.mode.value = "single"; form.elements.maxFlavors.value = 1; }
+    form.elements.mode.disabled = option;
+    form.elements.maxFlavors.readOnly = option;
   };
   form.elements.pricing.onchange = syncPricing;
+  syncPricing();
   form.addEventListener("reset", () => queueMicrotask(syncPricing));
   form.elements.mode.onchange = () => {
     form.elements.maxFlavors.value =
@@ -1085,7 +1102,7 @@ if (admin) {
     box.innerHTML = catalog()
       .map(
         (p) =>
-          `<label>${photo(p)}<span>${esc(p.name)}</span><input name="productIds" type="checkbox" value="${esc(p.id)}" ${selected.has(p.id) ? "checked" : ""}></label>`,
+          `<label>${photo(p)}<span>${esc(p.name)} · ${amount(p.price)}</span><input name="productIds" type="checkbox" value="${esc(p.id)}" ${selected.has(p.id) ? "checked" : ""}></label>`,
       )
       .join("");
   });
