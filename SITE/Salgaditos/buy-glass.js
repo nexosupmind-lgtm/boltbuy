@@ -12,7 +12,7 @@
     if (!button || button.disabled) return;
     animate(button, [{scale:1},{scale:.95},{scale:1}], 240);
   });
-  const root = document.querySelector(admin ? '.main' : '.shopmain');
+  const root = document.querySelector(admin ? '.main' : '.shopbody');
   if (root) new MutationObserver(records => {
     for (const record of records) {
       const target = record.target;
