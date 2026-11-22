@@ -52,11 +52,11 @@ export function normalizeConfig(input = {}, legacy = false) {
       id: c.id,
       name: clean(c.name, 100),
       description: clean(c.description, 600),
-      pricing: c.pricing === "unit" ? "unit" : "fixed",
-      price: c.pricing === "unit" ? 0 : moneyValue(c.price),
+      pricing: ["unit", "option"].includes(c.pricing) ? c.pricing : "fixed",
+      price: ["unit", "option"].includes(c.pricing) ? 0 : moneyValue(c.price),
       units: integer(c.units, 1, 1000),
-      mode: c.mode === "mixed" ? "mixed" : "single",
-      maxFlavors: integer(c.maxFlavors || c.units, 1, 100),
+      mode: c.pricing !== "option" && c.mode === "mixed" ? "mixed" : "single",
+      maxFlavors: c.pricing === "option" ? 1 : integer(c.maxFlavors || c.units, 1, 100),
       productIds,
       active: c.active !== false,
     };
@@ -127,6 +127,14 @@ export function availability(config, now = new Date()) {
   };
 }
 export function comboPrice(combo, selections, products) {
+  if (combo.pricing === "option") {
+    if (!selections.length) return 0;
+    if (selections.length !== 1 || selections[0].quantity !== combo.units)
+      throw Error("Escolha uma opção para o combo inteiro.");
+    const product = products.find(p => p.id === selections[0].productId && p.active !== false && combo.productIds.includes(p.id));
+    if (!product) throw Error("Opção indisponível neste combo.");
+    return moneyValue(product.price);
+  }
   if (combo.pricing !== "unit") return moneyValue(combo.price);
   return selections.reduce((total, selection) => {
     const product = products.find((item) => item.id === selection.productId);
