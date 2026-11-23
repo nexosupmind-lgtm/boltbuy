@@ -45,3 +45,37 @@
     });
   }
 })();
+
+/* Customer details are local to this storefront, never a substitute for authentication. */
+(() => {
+ if(!document.body.classList.contains('delivery-shop'))return;
+ const dialog=document.getElementById('buy-profile'),form=document.getElementById('buy-profile-form'),open=document.getElementById('buy-profile-open');
+ if(!dialog||!form||!open)return;
+ const key='buy_customer_profile_'+(new URLSearchParams(location.search).get('tenant')||'salgaditos');
+ const fields=['customer','phone','address'],status=document.getElementById('buy-profile-status');
+ let remembered=false;
+ try{
+  const saved=JSON.parse(localStorage.getItem(key)||'null');
+  if(saved&&typeof saved==='object'){
+   for(const name of fields){const target=document.getElementById(name);if(target&&!target.value&&typeof saved[name]==='string')target.value=saved[name].slice(0,name==='address'?500:name==='phone'?30:120);}
+   remembered=true;
+  }
+ }catch{}
+ open.addEventListener('click',()=>{
+  for(const name of fields)form.elements[name].value=document.getElementById(name)?.value||'';
+  form.elements.remember.checked=remembered;status.textContent='';dialog.showModal();
+ });
+ dialog.querySelector('[data-close]').onclick=()=>dialog.close();
+ dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
+ form.addEventListener('submit',e=>{
+  e.preventDefault();
+  const values=Object.fromEntries(fields.map(name=>[name,form.elements[name].value.trim()]));
+  if(!values.customer||values.phone.replace(/\D/g,'').length<10){status.textContent='Informe seu nome e um WhatsApp com DDD.';return;}
+  for(const name of fields){const target=document.getElementById(name);if(target){target.value=values[name];target.dispatchEvent(new Event('input',{bubbles:true}));}}
+  try{
+   if(form.elements.remember.checked)localStorage.setItem(key,JSON.stringify(values));else localStorage.removeItem(key);
+   remembered=form.elements.remember.checked;
+   status.textContent=remembered?'Dados salvos neste aparelho.':'Dados atualizados para seu pedido.';
+  }catch{status.textContent='Dados aplicados ao pedido, mas não foi possível lembrá-los neste aparelho.';}
+ });
+})();
