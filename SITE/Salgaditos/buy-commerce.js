@@ -363,7 +363,8 @@ function renderComboList() {
     if(!c||!confirm('Excluir o combo "'+c.name+'" do cardápio? Os pedidos já feitos serão preservados.'))return;
     b.disabled=true;
     try{
-      await saveConfig({...config,combos:config.combos.filter(c=>c.id!==id)});
+      const result=await api("combo-delete",{id,version},true);
+      config=result.config;version=result.version;
       const form=document.getElementById('buy-combo-form');
       if(form.elements.id.value===id){form.reset();form.elements.id.value='';}
       renderComboList();notify('Combo excluído do cardápio.');

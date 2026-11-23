@@ -633,3 +633,17 @@ test('A partial conversion remains claimed, preventing duplicate retries',async(
  assert.equal(h.tables.bolt_orders.length,1);assert.equal(h.tables.bolt_orders[0].status,'criando');
 });
 test('Pickup address survives normalization without HTML interpretation',()=>{assert.equal(normalizeConfig({pickupAddress:' Rua A, 10 '}).pickupAddress,'Rua A, 10');});
+
+test('Combo deletion ignores orphan flavors in other combos and preserves configuration',async()=>{
+ const h=harness(),snapshot=h.tables.bolt_delivery_storefronts[0];
+ const orphan={...snapshot.settings.commerce.combos[0],id:other,name:'Old combo',productIds:[other]};snapshot.settings.commerce.combos.push(orphan);
+ const result=await h.request('combo-delete',{id:cid,version:snapshot.updated_at,config:{combos:[]}},'owner');assert.equal(result.status,200);
+ const data=await result.json();assert.deepEqual(data.config.combos,[orphan]);assert.equal(snapshot.settings.bannerTitle,'Preservar banner');assert.equal(data.config.deliveryFee,7);assert.equal(h.tables.bolt_orders.length,0);
+});
+test('Combo deletion still enforces permission, target existence and optimistic concurrency',async()=>{
+ const h=harness(),version=h.tables.bolt_delivery_storefronts[0].updated_at;
+ assert.equal((await h.request('combo-delete',{id:cid,version},'staff')).status,403);
+ assert.equal((await h.request('combo-delete',{id:cid,version:'stale'},'owner')).status,409);
+ assert.equal((await h.request('combo-delete',{id:other,version},'owner')).status,404);
+ assert.equal(h.tables.bolt_delivery_storefronts[0].settings.commerce.combos.length,1);
+});
