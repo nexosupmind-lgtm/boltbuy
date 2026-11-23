@@ -34,9 +34,9 @@
   sync();
   document.addEventListener('click', event => {
     const button = event.target.closest('button');
-    if (!button || button.disabled || !button.closest('.shop,.delivery-detail') || reduced.matches) return;
+    if (!button || button.disabled || !button.closest('.shop,.delivery-detail,.buy-dialog,#buy-profile') || reduced.matches || !button.animate) return;
     // Web Animations does not leave transient nodes in rerendered product cards.
-    button.animate([{scale:'1'},{scale:'.94'},{scale:'1'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'});
+    button.animate([{scale:'1'},{scale:'.95',offset:.35},{scale:'1.025',offset:.7},{scale:'1'}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});
   });
   // Use the tenant's real catalog photography; no fabricated products or offers.
   const header = document.querySelector('.shophead');
