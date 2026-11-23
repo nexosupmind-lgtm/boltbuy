@@ -73,6 +73,7 @@ export function normalizeConfig(input = {}, legacy = false) {
       "Para habilitar Pix, informe recebedor, cidade e WhatsApp da loja.",
     );
   return {
+    pickupAddress: clean(input.pickupAddress, 400),
     deliveryFee: moneyValue(input.deliveryFee ?? (legacy ? 5 : 0)),
     whatsapp,
     pixKey,

@@ -164,3 +164,19 @@ body.delivery-shop .bottomnav{width:calc(100% - 24px);box-sizing:border-box;max-
  @keyframes buy-chip-in{from{transform:scale(.94)}to{transform:scale(1)}}
  @keyframes buy-sheet-in{from{opacity:0;translate:0 14px}to{opacity:1;translate:0 0}}
 }
+/* Native option popups need explicit light colors, including Android. */
+body.buy-admin-app select,body.buy-admin-app select option,body.buy-admin-app select optgroup,body.delivery-shop select,body.delivery-shop select option{color-scheme:light;background:#fff!important;color:#182438!important}
+body.buy-admin-app #buy-quotes .buy-quote-line{display:grid;grid-template-columns:28px minmax(0,1fr) 80px 120px 44px;gap:12px;align-items:end;padding:16px;margin:12px 0;background:#fff;border:1px solid #dce2eb;border-radius:16px}
+body.buy-admin-app #buy-quotes .buy-quote-line label{display:grid;gap:6px;font-size:13px;color:#526078;min-width:0}
+body.buy-admin-app #buy-quotes .buy-quote-line input{width:100%;min-width:0;border:1px solid #dce2eb;border-radius:10px;padding:12px;background:#fff;color:#182438;font-size:16px}
+.buy-quote-item-number{align-self:center;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#edf1f7;color:#24354d;font-size:13px;font-weight:700}
+body.buy-admin-app .buy-quote-total{display:flex;justify-content:space-between;align-items:center;padding:20px;border-radius:16px;background:#1b2b42;color:#fff;font-size:16px}
+body.buy-admin-app .buy-quote-total strong{color:#fff!important;font-size:26px}
+.buy-quote-actions{display:flex;flex-wrap:wrap;gap:8px}.buy-admin-combo{flex-wrap:wrap;gap:12px}
+.buy-quote-convert{background:#fff;color:#182438;border:1px solid #dce2eb;border-radius:24px;padding:24px;max-width:calc(100% - 24px);width:440px}
+.buy-quote-convert select{background:#fff!important;color:#182438!important;padding:12px;width:100%;font-size:16px}
+.buy-quote-convert::backdrop{background:#15223880}
+.buy-pickup-address{border:1px solid #dce2eb!important;background:#fff!important;color:#182438!important;margin-top:14px}
+.buy-pickup-address[hidden]{display:none!important}.buy-pickup-address p{overflow-wrap:anywhere;color:#44536a}
+@media(max-width:650px){body.buy-admin-app #buy-quotes .buy-quote-line{grid-template-columns:28px minmax(0,1fr) 44px;gap:10px}body.buy-admin-app #buy-quotes .buy-quote-line label:first-of-type{grid-column:2/4}body.buy-admin-app #buy-quotes .buy-quote-line label:nth-of-type(2){grid-column:1/3}body.buy-admin-app #buy-quotes .buy-quote-line label:nth-of-type(3){grid-column:1/3}body.buy-admin-app #buy-quotes .buy-quote-line button{grid-column:3;grid-row:2/4}}
+@media(prefers-reduced-motion:no-preference){.buy-quote-line{animation:buy-sheet-in .22s ease-out}}

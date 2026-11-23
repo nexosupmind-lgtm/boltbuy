@@ -201,7 +201,7 @@ export async function onRequest({ request, env, waitUntil }) {
               order.id +
               "&tenant_id=eq." +
               tenant.id +
-              "&event_type=eq.buy_order&select=details",
+              "&event_type=in.(buy_order,buy_quote_converted)&select=details",
           ),
         ]));
       const details = meta[0]?.details || {};
@@ -213,7 +213,7 @@ export async function onRequest({ request, env, waitUntil }) {
         address: order.delivery_address,
         mode: details.mode || "delivery",
         payment: details.payment || "Não informado",
-        channel: "Site",
+        channel: details.channel || "Site",
         status: order.status,
         subtotal: Number(order.subtotal),
         fee: Number(order.delivery_fee),
@@ -342,6 +342,7 @@ export async function onRequest({ request, env, waitUntil }) {
             (old.length ? "?id=eq." + id + "&tenant_id=eq." + tenant.id : ""),
           {
             method: old.length ? "PATCH" : "POST",
+          headers:{Prefer:"return=representation"},
             body: JSON.stringify(
               old.length
                 ? { details: { phone } }
@@ -737,7 +738,7 @@ export async function onRequest({ request, env, waitUntil }) {
           tenant.id +
           "&id=in.(" +
           ids +
-          ")&event_type=eq.buy_order&select=id,details",
+          ")&event_type=in.(buy_order,buy_quote_converted)&select=id,details",
       );
       return json(200, {
         ok: true,
@@ -787,6 +788,32 @@ export async function onRequest({ request, env, waitUntil }) {
       await push.notify(rows[0],false);
       return json(200, { ok: true, order: await orderProjection(rows[0]) });
     }
+    if (["quote-delete","quote-convert"].includes(action) && request.method === "POST") {
+      await member("pdv",true);
+      if(!UUID.test(body.id))fail(400,"Orçamento inválido.");
+      const path="bolt_audit_events?id=eq."+body.id+"&tenant_id=eq."+tenant.id;
+      const rows=await db(path+"&event_type=in.(buy_quote,buy_quote_converting,buy_quote_converted)&select=*");
+      if(!rows.length)fail(404,"Orçamento não encontrado.");
+      const row=rows[0],q=row.details;
+      if(row.event_type!=="buy_quote")fail(409,"Este orçamento já foi convertido ou está em conversão. Confira as vendas antes de tentar novamente.");
+      if(action==="quote-delete"){
+        const removed=await db(path+"&event_type=eq.buy_quote",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({event_type:"buy_quote_deleted"})});
+        if(!removed.length)fail(409,"Orçamento alterado em outra sessão.");
+        return json(200,{ok:true});
+      }
+      if(!["PIX","Dinheiro","Cartão","Não informado"].includes(body.payment))fail(400,"Informe a forma de pagamento.");
+      const total=subtotalOf(q.items);
+      const details={...q,total,channel:"Orçamento",mode:"retirada",payment:body.payment,convertedAt:new Date().toISOString(),convertedBy:actor.id};
+      const claimed=await db(path+"&event_type=eq.buy_quote",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({event_type:"buy_quote_converting",details})});
+      if(!claimed.length)fail(409,"Conversão já iniciada.");
+      // A durable claim and unique order ID prevent duplicate sales and unsafe retries.
+      await db("bolt_orders",{method:"POST",body:JSON.stringify({id:q.id,tenant_id:tenant.id,customer_name:q.customer,customer_phone:q.phone,delivery_address:q.event||"",status:"criando",subtotal:total,delivery_fee:0,discount:0,total})});
+      await db("bolt_order_items",{method:"POST",body:JSON.stringify(q.items.map(i=>({order_id:q.id,product_id:null,product_name:i.name,quantity:i.qty,unit_price:i.price})))});
+      await db(path+"&event_type=eq.buy_quote_converting",{method:"PATCH",body:JSON.stringify({event_type:"buy_quote_converted"})});
+      const orders=await db("bolt_orders?id=eq."+q.id+"&tenant_id=eq."+tenant.id+"&status=eq.criando",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({status:"confirmado"})});
+      if(!orders.length)fail(409,"Confira a conversão nas vendas.");
+      return json(200,{ok:true,order:await orderProjection(orders[0])});
+    }
     if (action === "quotes" && request.method === "GET") {
       await member("pdv");
       return json(200, {
@@ -794,7 +821,7 @@ export async function onRequest({ request, env, waitUntil }) {
         quotes: await db(
           "bolt_audit_events?tenant_id=eq." +
             tenant.id +
-            "&event_type=eq.buy_quote&select=id,details,created_at&order=created_at.desc&limit=100",
+            "&event_type=in.(buy_quote,buy_quote_converting,buy_quote_converted)&select=id,details,event_type,created_at&order=created_at.desc&limit=100",
         ),
       });
     }
@@ -840,11 +867,12 @@ export async function onRequest({ request, env, waitUntil }) {
         (old[0].tenant_id !== tenant.id || old[0].event_type !== "buy_quote")
       )
         fail(403, "Orçamento não autorizado.");
-      await db(
+      const savedQuote = await db(
         "bolt_audit_events" +
-          (old.length ? "?id=eq." + v.id + "&tenant_id=eq." + tenant.id : ""),
+          (old.length ? "?id=eq." + v.id + "&tenant_id=eq." + tenant.id + "&event_type=eq.buy_quote" : ""),
         {
           method: old.length ? "PATCH" : "POST",
+          headers:{Prefer:"return=representation"},
           body: JSON.stringify(
             old.length
               ? { details: quote }
@@ -858,6 +886,7 @@ export async function onRequest({ request, env, waitUntil }) {
           ),
         },
       );
+      if(!savedQuote.length)fail(409,"Orçamento alterado em outra sessão.");
       return json(200, { ok: true, quote });
     }
     fail(400, "Ação inválida.");

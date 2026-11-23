@@ -109,23 +109,25 @@ export function quotePDF(quote, store, logo) {
   function begin() {
     finish();
     page++;
-    rect(0, 0, W, 106, color);
-    text("ORÇAMENTO", margin, 44, 22, true, [1, 1, 1]);
-    text((store.name || "").slice(0, 48), margin, 68, 12, true, [1, 1, 1]);
+    rect(0, 0, W, 8, color);
+    rect(margin, 112, 523, 1, [0.85,0.88,0.92]);
+    text("PROPOSTA COMERCIAL", margin, 38, 9, true, color);
+    text("Orçamento", margin, 66, 26, true);
+    text((store.name || "").slice(0, 42), margin, 86, 11, true);
     text(
       "Nº " +
         quote.id.slice(0, 8).toUpperCase() +
         "  |  " +
         new Date(quote.date).toLocaleDateString("pt-BR"),
       margin,
-      90,
-      9,
+      103,
+      8,
       false,
-      [1, 1, 1],
+      [0.4, 0.45, 0.53],
     );
     if (logoId) {
-      const scale = Math.min(125 / logo.width, 70 / logo.height);
-      commands += `q ${logo.width * scale} 0 0 ${logo.height * scale} ${W - margin - logo.width * scale} ${H - 20 - logo.height * scale} cm /Logo Do Q\n`;
+      const scale = Math.min(100 / logo.width, 76 / logo.height);
+      commands += `q ${logo.width * scale} 0 0 ${logo.height * scale} ${W - margin - logo.width * scale} ${H - 22 - logo.height * scale} cm /Logo Do Q\n`;
     }
     y = 135;
   }
@@ -180,8 +182,8 @@ export function quotePDF(quote, store, logo) {
       if (i === 0) {
         text(String(item.qty), quote.showPrices ? 376 : 509, y + 12, 11, true);
         if (quote.showPrices) {
-          text(currency(item.price), 416, y + 12, 9);
-          text(currency(item.price * item.qty), 491, y + 12, 9, true);
+          text(currency(item.price), 414, y + 12, Math.min(9, 70/(currency(item.price).length*.56)));
+          text(currency(item.price * item.qty), 491, y + 12, Math.min(9, 68/(currency(item.price * item.qty).length*.56)), true);
         }
       }
       y += 16;
@@ -193,10 +195,12 @@ export function quotePDF(quote, store, logo) {
   ensure(96);
   y += 12;
   rect(margin, y, 523, 73, [0.95, 0.96, 0.98]);
-  text("INVESTIMENTO TOTAL", margin + 16, y + 25, 10, true);
+  rect(margin, y, 4, 73, color);
+  text("TOTAL DO ORÇAMENTO", margin + 16, y + 25, 10, true);
   text(currency(quote.total), margin + 16, y + 54, 24, true, color);
   y += 100;
   paragraph("OBSERVAÇÕES E CONDIÇÕES", quote.notes);
+  paragraph("RETIRADA NA LOJA", store.address);
   paragraph("FALE COM A LOJA", store.phone);
   finish();
   objects[catalog - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;

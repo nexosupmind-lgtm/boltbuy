@@ -1,5 +1,5 @@
-import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=unit-combo-2";
-import { quotePDF } from "./buy-quote-pdf.js";
+import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=quotes-3";
+import { quotePDF } from "./buy-quote-pdf.js?v=quotes-3";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
 const esc = (v) =>
@@ -292,7 +292,7 @@ function renderAdmin() {
     }
   };
   document.getElementById("buy-service").innerHTML =
-    `<section class="panel"><h2>Atendimento da loja</h2><form id="buy-service-form" class="formgrid"><label class="buy-span"><input name="hoursEnabled" type="checkbox" ${config.hours.enabled ? "checked" : ""}> Usar dias e horários abaixo para aceitar pedidos</label><label class="buy-span"><input name="paused" type="checkbox" ${config.hours.paused ? "checked" : ""}> Pausar pedidos agora (loja fechada)</label><label class="field">Fuso horário<select name="timeZone">${["America/Sao_Paulo", "America/Manaus", "America/Cuiaba", "America/Rio_Branco", "America/Noronha"].map((zone) => `<option ${config.hours.timeZone === zone ? "selected" : ""}>${zone}</option>`).join("")}</select></label><div class="buy-hours buy-span">${["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"].map((name, i) => `<div><label><input name="day${i}" type="checkbox" ${config.hours.days[i].enabled ? "checked" : ""}> ${name}</label><input name="open${i}" type="time" value="${config.hours.days[i].open}" aria-label="Abertura ${name}"><span>até</span><input name="close${i}" type="time" value="${config.hours.days[i].close}" aria-label="Fechamento ${name}"></div>`).join("")}</div><p class="hint buy-span">Se o fechamento for antes da abertura, o atendimento termina no dia seguinte. Sem a opção de horários marcada, a loja aceita pedidos a qualquer hora, exceto quando pausada.</p><label class="field">Frete padrão (R$)<input name="deliveryFee" type="number" min="0" step=".01" value="${config.deliveryFee}" required></label><label class="field">WhatsApp da loja com DDD<input name="whatsapp" value="${esc(config.whatsapp)}" placeholder="62999999999"></label><h3 class="buy-span">Pix da loja</h3><label class="field">Chave Pix<input name="pixKey" value="${esc(config.pixKey)}" maxlength="77"></label><label class="field">Nome do recebedor<input name="pixName" value="${esc(config.pixName)}" maxlength="100"></label><label class="field">Cidade do recebedor<input name="pixCity" value="${esc(config.pixCity)}" maxlength="60"></label><button class="btn red" type="submit">Salvar atendimento e Pix</button><p id="buy-service-message" class="buy-span" role="status"></p></form></section>`;
+    `<section class="panel"><h2>Atendimento da loja</h2><form id="buy-service-form" class="formgrid"><label class="buy-span"><input name="hoursEnabled" type="checkbox" ${config.hours.enabled ? "checked" : ""}> Usar dias e horários abaixo para aceitar pedidos</label><label class="buy-span"><input name="paused" type="checkbox" ${config.hours.paused ? "checked" : ""}> Pausar pedidos agora (loja fechada)</label><label class="field">Fuso horário<select name="timeZone">${["America/Sao_Paulo", "America/Manaus", "America/Cuiaba", "America/Rio_Branco", "America/Noronha"].map((zone) => `<option ${config.hours.timeZone === zone ? "selected" : ""}>${zone}</option>`).join("")}</select></label><div class="buy-hours buy-span">${["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"].map((name, i) => `<div><label><input name="day${i}" type="checkbox" ${config.hours.days[i].enabled ? "checked" : ""}> ${name}</label><input name="open${i}" type="time" value="${config.hours.days[i].open}" aria-label="Abertura ${name}"><span>até</span><input name="close${i}" type="time" value="${config.hours.days[i].close}" aria-label="Fechamento ${name}"></div>`).join("")}</div><p class="hint buy-span">Se o fechamento for antes da abertura, o atendimento termina no dia seguinte. Sem a opção de horários marcada, a loja aceita pedidos a qualquer hora, exceto quando pausada.</p><label class="field">Frete padrão (R$)<input name="deliveryFee" type="number" min="0" step=".01" value="${config.deliveryFee}" required></label><label class="field">WhatsApp da loja com DDD<input name="whatsapp" value="${esc(config.whatsapp)}" placeholder="62999999999"></label><label class="field buy-span">Endereço de retirada<textarea name="pickupAddress" maxlength="400" placeholder="Rua, número, bairro, cidade e referência">${esc(config.pickupAddress||'')}</textarea></label><h3 class="buy-span">Pix da loja</h3><label class="field">Chave Pix<input name="pixKey" value="${esc(config.pixKey)}" maxlength="77"></label><label class="field">Nome do recebedor<input name="pixName" value="${esc(config.pixName)}" maxlength="100"></label><label class="field">Cidade do recebedor<input name="pixCity" value="${esc(config.pixCity)}" maxlength="60"></label><button class="btn red" type="submit">Salvar atendimento e Pix</button><p id="buy-service-message" class="buy-span" role="status"></p></form></section>`;
   document.getElementById("buy-service-form").onsubmit = async (e) => {
     e.preventDefault();
     e.submitter.disabled = true;
@@ -385,7 +385,7 @@ function renderComboList() {
 }
 function renderQuotes() {
   document.getElementById("buy-quotes").innerHTML =
-    `<section class="panel"><h2>Montar orçamento</h2><p class="hint">Selecione produtos e combos ou inclua itens personalizados. O orçamento é salvo antes da exportação em PDF A4.</p><form id="buy-quote-form" class="formgrid"><label class="field">Cliente<input name="customer" required maxlength="120"></label><label class="field">Contato<input name="phone" maxlength="30"></label><label class="field">Evento / data / local<input name="event" maxlength="160"></label><label class="field">Validade<input name="validUntil" type="date"></label><label class="field buy-span">Produto ou combo<select id="buy-quote-product"><option value="">Escolha para adicionar</option>${catalog()
+    `<section class="panel"><h2>Montar orçamento</h2><p class="hint">Selecione produtos e combos ou inclua itens personalizados. O orçamento é salvo antes da exportação em PDF A4.</p><form id="buy-quote-form" class="formgrid"><label class="field">Cliente<input name="customer" required maxlength="120"></label><label class="field">Contato<input name="phone" maxlength="30"></label><label class="field">Evento / data / local<input name="event" maxlength="160"></label><label class="field">Validade<input name="validUntil" type="date"></label><label class="field buy-span">Buscar no catálogo<input id="buy-quote-search" type="search" placeholder="Digite o nome do produto ou combo"></label><label class="field buy-span">Produto ou combo<select id="buy-quote-product"><option value="">Escolha para adicionar</option>${catalog()
       .filter((p) => p.active)
       .map(
         (p) =>
@@ -401,6 +401,7 @@ function renderQuotes() {
         "",
       )}</select></label><div id="buy-quote-items" class="buy-span"></div><button type="button" class="btn" id="buy-quote-custom">Adicionar item personalizado</button><label class="buy-span"><input name="showPrices" type="checkbox"> Mostrar preço unitário e valor de cada item no PDF</label><label class="field buy-span">Observações e condições<textarea name="notes" maxlength="2000" placeholder="Condições de pagamento, entrega e demais informações."></textarea></label><div class="buy-span actions"><button class="btn red" type="submit">Salvar e exportar PDF</button><button class="btn" type="button" id="buy-quote-new">Novo orçamento</button></div><p id="buy-quote-message" class="buy-span" role="status"></p></form></section><section class="panel"><h3>Orçamentos salvos</h3><button class="btn small" id="buy-refresh-quotes">Atualizar lista</button><div id="buy-quote-history"></div></section>`;
   renderQuoteItems();
+  document.getElementById('buy-quote-search').oninput=e=>{const q=e.target.value.toLocaleLowerCase('pt-BR');document.querySelectorAll('#buy-quote-product option').forEach(o=>{o.hidden=!!o.value&&!o.textContent.toLocaleLowerCase('pt-BR').includes(q);});};
   document.getElementById("buy-quote-product").onchange = (e) => {
     const value = e.target.value;
     if (!value) return;
@@ -465,7 +466,7 @@ function renderQuoteItems() {
     quoteItems
       .map(
         (i, n) =>
-          `<div class="buy-quote-line"><label>Descrição<input data-qi="${n}" data-field="name" value="${esc(i.name)}" required maxlength="300"></label><label>Qtd.<input data-qi="${n}" data-field="qty" type="number" min="1" max="10000" value="${i.qty}" required></label><label>Preço unitário<input data-qi="${n}" data-field="price" type="number" min="0" step=".01" value="${i.price}" required></label><button type="button" class="btn small" data-remove-qi="${n}" aria-label="Remover item ${n + 1}">×</button></div>`,
+          `<div class="buy-quote-line"><span class="buy-quote-item-number">${n+1}</span><label>Descrição<input data-qi="${n}" data-field="name" value="${esc(i.name)}" required maxlength="300"></label><label>Qtd.<input data-qi="${n}" data-field="qty" type="number" min="1" max="10000" value="${i.qty}" required></label><label>Preço unitário<input data-qi="${n}" data-field="price" type="number" min="0" step=".01" value="${i.price}" required></label><button type="button" class="btn small" data-remove-qi="${n}" aria-label="Remover item ${n + 1}">×</button></div>`,
       )
       .join("") +
     '<p class="buy-quote-total">Total: <strong id="buy-quote-total">' +
@@ -490,7 +491,7 @@ function renderQuoteItems() {
   );
 }
 async function logoJPEG() {
-  const url = window.BOLT_TENANT?.logo;
+  const url = window.BOLT_TENANT?.logo || document.querySelector('.brand img,.brand-avatar img')?.src;
   if (!url) return null;
   try {
     const img = new Image();
@@ -512,7 +513,7 @@ async function logoJPEG() {
     canvas.width = Math.round(img.width * scale);
     canvas.height = Math.round(img.height * scale);
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = window.BOLT_TENANT.primary || "#475569";
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     const raw = atob(canvas.toDataURL("image/jpeg", 0.9).split(",")[1]);
@@ -533,6 +534,7 @@ async function exportQuote(quote) {
         name: window.BOLT_TENANT?.name || "Loja",
         color: window.BOLT_TENANT?.primary,
         phone: config.whatsapp,
+        address: config.pickupAddress,
       },
       logo,
     ),
@@ -556,9 +558,19 @@ async function refreshQuotes() {
       result.quotes
         .map(
           (row) =>
-            `<article class="buy-admin-combo"><div><strong>${esc(row.details.customer)}</strong><p>${amount(row.details.total)} · ${new Date(row.details.date).toLocaleDateString("pt-BR")}</p></div><button class="btn small" data-export-quote="${row.id}">Baixar PDF</button></article>`,
+            `<article class="buy-admin-combo"><div><strong>${esc(row.details.customer)}</strong><p>${amount(row.details.total)} · ${new Date(row.details.date).toLocaleDateString("pt-BR")}</p></div><div class="buy-quote-actions"><button class="btn small" data-export-quote="${row.id}">Baixar PDF</button>${row.event_type==='buy_quote'?`<button class="btn small" data-convert-quote="${row.id}">Mandar para venda</button><button class="btn small" data-delete-quote="${row.id}">Excluir</button>`:`<span class="pill">${row.event_type==='buy_quote_converted'?'Convertido em venda':'Conversão em andamento'}</span>`}</div></article>`,
         )
         .join("") || "<p>Nenhum orçamento salvo.</p>";
+    host.querySelectorAll('[data-delete-quote]').forEach(b=>b.onclick=async()=>{
+      if(!confirm('Excluir este orçamento?'))return;b.disabled=true;
+      try{await api('quote-delete',{id:b.dataset.deleteQuote},true);await refreshQuotes();}catch(e){notify(e.message);b.disabled=false;}
+    });
+    host.querySelectorAll('[data-convert-quote]').forEach(b=>b.onclick=()=>{
+      const dialog=document.createElement('dialog');dialog.className='buy-dialog buy-quote-convert';
+      dialog.innerHTML='<form><h2>Converter em venda</h2><p>Os itens e valores salvos serão usados na venda. Isso não confirma o recebimento do pagamento.</p><label class="field">Forma de pagamento<select name="payment"><option>Não informado</option><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></label><p role="status"></p><div class="actions"><button class="btn red" type="submit">Confirmar venda</button><button class="btn" type="button" data-close>Voltar</button></div></form>';
+      document.body.append(dialog);dialog.querySelector('[data-close]').onclick=()=>dialog.close();dialog.onclose=()=>dialog.remove();dialog.showModal();
+      dialog.querySelector('form').onsubmit=async e=>{e.preventDefault();e.submitter.disabled=true;try{const r=await api('quote-convert',{id:b.dataset.convertQuote,payment:dialog.querySelector('select').value},true);mergeOrders([r.order]);dialog.close();await refreshQuotes();notify('Venda criada. Consulte os relatórios.');}catch(err){dialog.querySelector('[role=status]').textContent=err.message;e.submitter.disabled=false;}};
+    });
     host.querySelectorAll("[data-export-quote]").forEach(
       (b) =>
         (b.onclick = async () => {
@@ -1031,6 +1043,12 @@ function renderCommerceShop() {
     }
   }
 }
+function renderPickupAddress(){
+ if(admin)return;const mode=document.getElementById('mode');if(!mode)return;
+ let box=document.getElementById('buy-pickup-address');if(!box){box=document.createElement('div');box.id='buy-pickup-address';box.className='panel buy-pickup-address';box.setAttribute('role','status');mode.closest('.split').after(box);mode.addEventListener('change',renderPickupAddress);}
+ box.hidden=mode.value!=='retirada';const address=config?.pickupAddress;
+ box.innerHTML=address?'<strong>Retire seu pedido aqui</strong><p>'+esc(address)+'</p><a class="btn small" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(address)+'">Abrir no mapa</a>':'<strong>Retirada na loja</strong><p>Confirme o endereço com a loja antes de buscar seu pedido.</p>';
+}
 async function refreshShopConfig() {
   try {
     const result = await api("public");
@@ -1038,6 +1056,7 @@ async function refreshShopConfig() {
     config = result.config;
     serverOffset = new Date(result.serverTime).getTime() - Date.now();
     renderShop();
+    renderPickupAddress();
   } catch {
     config = null;
     configError =
