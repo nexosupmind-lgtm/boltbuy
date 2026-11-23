@@ -38,7 +38,7 @@ function setup(){
  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;install.hidden=false});window.addEventListener('appinstalled',()=>{install.hidden=true;deferred=null});install.onclick=async()=>{if(deferred){await deferred.prompt();await deferred.userChoice;install.hidden=true;deferred=null}};
  const online=document.createElement('div');online.className='bolt-connection';online.setAttribute('role','status');online.textContent='Sem conexão · Aguarde para salvar alterações.';document.body.append(online);const update=()=>online.hidden=navigator.onLine;window.addEventListener('online',update);window.addEventListener('offline',update);update();
  let help=null;
- if(!shopDock&&!master&&slug&&!q.has('preview')){help=document.createElement('button');help.type='button';help.className='bolt-help-trigger';help.textContent='Suporte';help.onclick=support;document.body.append(help);}
+ if(surface!=='consumer'&&!master&&slug&&!q.has('preview')){help=document.createElement('button');help.type='button';help.className='bolt-help-trigger';help.textContent='Suporte';help.onclick=support;document.body.append(help);}
  function placeSupport(){
   if(!help)return;
   const locked=document.documentElement.classList.contains('bolt-locked');
@@ -65,9 +65,7 @@ function setup(){
  applyFace();new MutationObserver(()=>{applyFace();placeSupport()}).observe(document.body,{childList:true,subtree:true});
  new MutationObserver(placeSupport).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
  if(shopDock){
-  const b=document.createElement('button');b.type='button';b.className='buy-bolt-support';
-  b.innerHTML=face()+'<span>Bolt</span>';b.setAttribute('aria-label','Bolt · ajuda e suporte');b.setAttribute('aria-haspopup','dialog');b.onclick=support;
-  shopDock.append(b);
+  // Consumer navigation belongs to the delivery, including its customer profile.
  }else if(!master&&product!=='class'&&!document.getElementById('mascotToggle')&&path!=='/portal'){const b=document.createElement('button');b.className='bolt-universal-assistant bolt-face-button';b.type='button';b.innerHTML=face()+'<span>Bolt</span>';b.setAttribute('aria-label','Bolt · ajuda e suporte');b.onclick=support;document.body.append(b)}
  placeSupport();
 }
