@@ -355,9 +355,20 @@ function renderComboList() {
     config.combos
       .map(
         (c) =>
-          `<article class="buy-admin-combo"><div><strong>${esc(c.name)}</strong><p>${c.units} unidades · ${comboPriceLabel(c)} · ${c.mode === "mixed" ? "Misturar sabores" : "Um sabor"} · ${c.active ? "Ativo" : "Oculto"}</p></div><button class="btn small" data-edit-combo="${c.id}">Editar</button></article>`,
+          `<article class="buy-admin-combo"><div><strong>${esc(c.name)}</strong><p>${c.units} unidades · ${comboPriceLabel(c)} · ${c.mode === "mixed" ? "Misturar sabores" : "Um sabor"} · ${c.active ? "Ativo" : "Oculto"}</p></div><div class="actions"><button class="btn small" data-edit-combo="${c.id}">Editar</button><button class="btn small" data-delete-combo="${c.id}">Excluir combo</button></div></article>`,
       )
       .join("") || "<p>Nenhum combo cadastrado.</p>";
+  document.querySelectorAll('[data-delete-combo]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.deleteCombo,c=config.combos.find(c=>c.id===id);
+    if(!c||!confirm('Excluir o combo "'+c.name+'" do cardápio? Os pedidos já feitos serão preservados.'))return;
+    b.disabled=true;
+    try{
+      await saveConfig({...config,combos:config.combos.filter(c=>c.id!==id)});
+      const form=document.getElementById('buy-combo-form');
+      if(form.elements.id.value===id){form.reset();form.elements.id.value='';}
+      renderComboList();notify('Combo excluído do cardápio.');
+    }catch(e){notify(e.message);b.disabled=false;}
+  });
   document.querySelectorAll("[data-edit-combo]").forEach(
     (b) =>
       (b.onclick = () => {
