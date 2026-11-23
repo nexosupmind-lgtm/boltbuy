@@ -134,11 +134,14 @@ export async function sendPush(
   payload,
 ) {
   if (!validSubscription(subscription)) return { status: 400 };
+  let stage = "decrypt_key";
+  try {
   const privateKey = await unseal(
     config.privateKey,
     secret,
     "push:" + clientId,
   );
+  stage = "import_key";
   const signingKey = await crypto.subtle.importKey(
     "pkcs8",
     decode(privateKey),
@@ -159,6 +162,7 @@ export async function sendPush(
     ),
   );
   const input = header + "." + claims;
+  stage = "sign";
   const signature = encode(
     await crypto.subtle.sign(
       { name: "ECDSA", hash: "SHA-256" },
@@ -166,7 +170,9 @@ export async function sendPush(
       encoder.encode(input),
     ),
   );
+  stage = "encrypt_payload";
   const body = await encryptPush(subscription, payload);
+  stage = "network";
   const response = await fetch(subscription.endpoint, {
     method: "POST",
     redirect: "error",
@@ -191,6 +197,16 @@ export async function sendPush(
     } catch {}
   }
   return { status: response.status, reason };
+  } catch (error) {
+    const names = ['TypeError','OperationError','DataError','NotSupportedError','InvalidAccessError','TimeoutError','AbortError','Error'];
+    const name = names.includes(error?.name) ? error.name : 'Error';
+    let detail = String(error?.message || 'Falha sem descrição.');
+    for (const value of [secret,config?.privateKey,config?.publicKey,subscription?.endpoint,subscription?.keys?.auth,subscription?.keys?.p256dh]) {
+      if (typeof value === 'string' && value) detail = detail.split(value).join('[redacted]');
+    }
+    detail = detail.replace(/https?:[^\s]+/g,'[endpoint]').replace(/[A-Za-z0-9_+/=-]{40,}/g,'[redacted]').slice(0,180);
+    return {status:0,reason:stage+'_'+name,detail};
+  }
 }
 export async function deliverSchoolPush(
   s,

@@ -65,9 +65,10 @@ export function buyPush({db, secret, tenant, slug, origin, member, actor, fail, 
       const config=await keys();if(!config)fail(503,'Configuração de avisos indisponível.');
       let result;
       try{result=await sendPush(saved.subscription,config,secret,config.id,{product:'buy',title:'Teste · '+tenant.name,body:'Os avisos deste administrativo estão chegando neste aparelho.',tag:'buy-test-'+id,url:origin+'/Salgaditos/admin?tenant='+encodeURIComponent(slug)});}catch{result={status:0,reason:'TransportError'};}
-      await db(eventPath(testId,'buy_push_test')+'&tenant_id=eq.'+tenant.id,{method:'PATCH',body:JSON.stringify({details:{state:result.status>=200&&result.status<300?'accepted':'failed',status:result.status,reason:result.reason||''}})});
+      await db(eventPath(testId,'buy_push_test')+'&tenant_id=eq.'+tenant.id,{method:'PATCH',body:JSON.stringify({details:{state:result.status>=200&&result.status<300?'accepted':'failed',status:result.status,reason:result.reason||'',detail:result.detail||''}})});
       if(result.status>=200&&result.status<300)return {ok:true,accepted:true,message:'O serviço push aceitou o teste. Confira a Central de Notificações; isso ainda não confirma a entrega no aparelho.'};
       if([404,410].includes(result.status))fail(409,'O serviço push informou que esta inscrição expirou. Desative e ative novamente.');
+      if(!result.status)fail(502,'Falha antes do envio: '+(result.reason||'UnknownError')+(result.detail?' · '+result.detail:'')+'.');
       fail(502,'O serviço push recusou o teste: '+(result.reason||('HTTP '+result.status))+'.');
     }
     if(name==='push-unsubscribe'){
