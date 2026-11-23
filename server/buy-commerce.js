@@ -10,6 +10,7 @@ import {
 } from "../SITE/Salgaditos/buy-model.js";
 import { seal, unseal, normalizePhone } from "./family.js";
 import { pixPayload } from "./school-life-model.js";
+import { buyPush } from "./buy-push.js";
 const json = (status, data) =>
   new Response(JSON.stringify(data), {
     status,
@@ -21,7 +22,7 @@ const json = (status, data) =>
 const fail = (status, message) => {
   throw Object.assign(Error(message), { status });
 };
-export async function onRequest({ request, env }) {
+export async function onRequest({ request, env, waitUntil }) {
   try {
     const base = (env.SUPABASE_URL || "").replace(/\/$/, ""),
       secret = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -151,6 +152,11 @@ export async function onRequest({ request, env }) {
             fail(403, "Recurso não incluído no plano.");
         }
       }
+    }
+    const push = buyPush({db,secret,tenant,slug,origin:new URL(request.url).origin,member,actor:()=>actor,fail,waitUntil});
+    if (['push-key','push-subscribe','push-unsubscribe'].includes(action)) {
+      if (request.method !== 'POST') fail(405,'Use POST para configurar notificações.');
+      return json(200,await push.action(action,body));
     }
     const products = () =>
       db(
@@ -622,6 +628,7 @@ export async function onRequest({ request, env }) {
             body: JSON.stringify({ status: "recebido" }),
           },
         );
+        await push.notify(saved[0],true);
         return json(200, {
           ok: true,
           receipt: await receipt(saved[0]),
@@ -732,19 +739,23 @@ export async function onRequest({ request, env }) {
         ].includes(body.status)
       )
         fail(400, "Situação inválida.");
+      const previous = await db("bolt_orders?id=eq."+body.id+"&tenant_id=eq."+tenant.id+"&status=neq.criando&select=*");
+      if(!previous.length) fail(404,"Pedido não encontrado.");
+      if(previous[0].status===body.status) return json(200,{ok:true,order:await orderProjection(previous[0])});
       const rows = await db(
         "bolt_orders?id=eq." +
           body.id +
           "&tenant_id=eq." +
           tenant.id +
-          "&status=neq.criando",
+          "&status=eq." + encodeURIComponent(previous[0].status),
         {
           method: "PATCH",
           headers: { Prefer: "return=representation" },
           body: JSON.stringify({ status: body.status }),
         },
       );
-      if (!rows.length) fail(404, "Pedido não encontrado.");
+      if (!rows.length) fail(409, "O pedido mudou em outra sessão. Recarregue.");
+      await push.notify(rows[0],false);
       return json(200, { ok: true, order: await orderProjection(rows[0]) });
     }
     if (action === "quotes" && request.method === "GET") {

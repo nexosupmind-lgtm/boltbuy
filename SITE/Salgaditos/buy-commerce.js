@@ -865,6 +865,7 @@ function installShop() {
       receipts[result.order.id] = result.receipt;
       localStorage.setItem(receiptsKey, JSON.stringify(receipts));
       lastReceipt = result.receipt;
+      window.dispatchEvent(new CustomEvent("buy-order-confirmed",{detail:{receipt:result.receipt}}));
       seenStatus[result.order.id] = result.order.status;
       mergeOrders([result.order]);
       saveIds([...new Set([...myIds(), result.order.id])]);
