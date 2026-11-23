@@ -45,7 +45,11 @@ export async function onRequest({ request, env, waitUntil }) {
             ? "Este registro já foi atualizado. Recarregue antes de tentar novamente."
             : "Não foi possível confirmar os dados da loja.",
         );
-      return r.status === 204 ? null : r.json();
+      // PostgREST returns an empty HTTP 201 on inserts with return=minimal.
+      // A successful write must not become an error while decoding that empty body.
+      if (r.status === 204) return null;
+      const text = await r.text();
+      return text.trim() ? JSON.parse(text) : null;
     }
     const q = new URL(request.url).searchParams,
       slug = q.get("tenant");
