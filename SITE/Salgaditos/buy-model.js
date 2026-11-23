@@ -133,7 +133,7 @@ export function comboPrice(combo, selections, products) {
       throw Error("Escolha uma opção para o combo inteiro.");
     const product = products.find(p => p.id === selections[0].productId && p.active !== false && combo.productIds.includes(p.id));
     if (!product) throw Error("Opção indisponível neste combo.");
-    return moneyValue(product.price);
+    return Math.round(moneyValue(product.price) * 100) * combo.units / 100;
   }
   if (combo.pricing !== "unit") return moneyValue(combo.price);
   return selections.reduce((total, selection) => {

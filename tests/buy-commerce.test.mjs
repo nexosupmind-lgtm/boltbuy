@@ -468,9 +468,9 @@ test("Admin saves a variable-price bundle and checkout sums the selected quantit
   assert.equal(Number(record.quantity), 2);
 });
 
-test('Package option combos charge the chosen package price, not fifteen times it', () => {
+test('Single-flavor combos multiply unit price by package units', () => {
   const c = normalizeConfig({combos:[{id:cid,name:'Combo 15',pricing:'option',units:15,mode:'mixed',maxFlavors:2,productIds:[p1,p2],active:true}]});
-  const products = [{id:p1,name:'15 coxinhas',price:7.5,active:true},{id:p2,name:'15 mini churros',price:12,active:true}];
+  const products = [{id:p1,name:'Coxinha',price:0.5,active:true},{id:p2,name:'Mini churros',price:0.8,active:true}];
   assert.equal(c.combos[0].mode,'single');
   const line = productId => ({comboId:cid,qty:2,price:0.01,selections:[{productId,quantity:15}]});
   assert.equal(pricedItems(c,products,[line(p1)])[0].price,7.5);
