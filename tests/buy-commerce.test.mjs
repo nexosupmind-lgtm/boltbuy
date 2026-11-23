@@ -608,3 +608,28 @@ test('Deletion stops if the audit write fails',async()=>{
  assert.notEqual((await h.request('product-delete',{id:p1},'owner')).status,200);
  assert(h.tables.bolt_products.some(p=>p.id===p1));
 });
+
+test('Quote conversion creates one tenant sale and protects converted quotes',async()=>{
+ const h=harness(),quote={id:cid,customer:'Cliente',items:[{name:'Coxinha',qty:15,price:.5}],showPrices:true};
+ assert.equal((await h.request('quote-save',{quote},'owner')).status,200);
+ assert.equal((await h.request('quote-convert',{id:cid,payment:'PIX'},'staff')).status,403);
+ assert.equal((await h.request('quote-convert',{id:cid,payment:'PIX'},'owner','loja-b')).status,403);
+ const r=await h.request('quote-convert',{id:cid,payment:'PIX'},'owner');assert.equal(r.status,200);const o=(await r.json()).order;assert.equal(o.channel,'Orçamento');assert.equal(o.payment,'PIX');assert.equal(o.subtotal,7.5);
+ assert.equal((await h.request('quote-convert',{id:cid,payment:'PIX'},'owner')).status,409);
+ assert.equal((await h.request('quote-save',{quote},'owner')).status,403);
+ assert.equal((await h.request('quote-delete',{id:cid},'owner')).status,409);
+ assert.equal(h.tables.bolt_orders.length,1);
+});
+test('Quote removal is scoped and removes only unconverted quotes from history',async()=>{
+ const h=harness(),quote={id:cid,customer:'Cliente',items:[{name:'Item',qty:1,price:10}]};
+ await h.request('quote-save',{quote},'owner');assert.equal((await h.request('quote-delete',{id:cid},'owner')).status,200);
+ assert.equal((await (await h.request('quotes',null,'owner')).json()).quotes.length,0);
+ assert.equal(h.tables.bolt_orders.length,0);
+});
+test('A partial conversion remains claimed, preventing duplicate retries',async()=>{
+ const h=harness();await h.request('quote-save',{quote:{id:cid,customer:'Cliente',items:[{name:'Item',qty:1,price:10}]}},'owner');h.failTable('bolt_order_items');
+ assert.equal((await h.request('quote-convert',{id:cid,payment:'PIX'},'owner')).status,503);
+ assert.equal((await h.request('quote-convert',{id:cid,payment:'PIX'},'owner')).status,409);
+ assert.equal(h.tables.bolt_orders.length,1);assert.equal(h.tables.bolt_orders[0].status,'criando');
+});
+test('Pickup address survives normalization without HTML interpretation',()=>{assert.equal(normalizeConfig({pickupAddress:' Rua A, 10 '}).pickupAddress,'Rua A, 10');});
