@@ -702,6 +702,7 @@ async function refreshOrders() {
         o.status === "recebido" &&
         !load().orders.some((old) => old.id === o.id),
     );
+    if(result.deletedIds?.length){const d=load();d.orders=d.orders.filter(o=>!result.deletedIds.includes(o.id));save(d);}
     mergeOrders(result.orders);
     if (newOrders.length)
       notify(newOrders.length + " novo(s) pedido(s) online para atender.");
@@ -1067,6 +1068,21 @@ async function trackOrders() {
   }
 }
 if (admin) {
+  const deleting=new Set();
+  window.buyDeleteRecord=async(kind,id)=>{
+    if(deleting.has(id))return;
+    const item=kind==='order'?load().orders.find(o=>o.id===id):load().products.find(p=>p.id===id);
+    if(!item)return;
+    const text=kind==='order'?'Excluir o pedido #'+id.slice(-6)+'? Ele será removido dos pedidos e relatórios. Esta ação não pode ser desfeita.':'Excluir o produto "'+item.name+'" do catálogo? Os pedidos anteriores manterão os itens e valores. Esta ação não pode ser desfeita.';
+    if(!confirm(text))return;
+    deleting.add(id);
+    try{
+      if(kind==='product'||item.cloud)await api(kind+'-delete',{id},true);
+      const d=load();if(kind==='order')d.orders=d.orders.filter(o=>o.id!==id);else d.products=d.products.filter(p=>p.id!==id);
+      save(d);render();notify(kind==='order'?'Pedido excluído.':'Produto excluído.');
+      if(kind==='product')await window.BOLT_CATALOG?.refresh();
+    }catch(e){notify('Não foi possível concluir: '+e.message);}finally{deleting.delete(id);}
+  };
   configSections();
   const oldStatus = window.changeStatus;
   window.changeStatus = async (id, status) => {
