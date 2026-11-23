@@ -175,7 +175,7 @@ export async function sendPush(
   stage = "network";
   const response = await fetch(subscription.endpoint, {
     method: "POST",
-    redirect: "error",
+    redirect: "manual",
     signal: AbortSignal.timeout(10000),
     headers: {
       Authorization:
@@ -187,6 +187,8 @@ export async function sendPush(
     },
     body,
   });
+  // Workers does not support redirect:error. Do not follow redirects or forward VAPID credentials.
+  if (response.status >= 300 && response.status < 400) return {status:response.status,reason:'RedirectBlocked'};
   let reason = '';
   if (!response.ok) {
     // Only provider error codes are retained; never retain endpoints or response bodies.

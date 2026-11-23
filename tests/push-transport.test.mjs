@@ -13,3 +13,15 @@ test('Key decryption failures are distinguished from transport failures',async()
  const result=await sendPush(subscription,config,'different','client',{title:'test'});
  assert.equal(result.status,0);assert.match(result.reason,/^decrypt_key_/);
 });
+
+test('Push uses the Workers-compatible manual redirect mode and rejects redirects without following them',async()=>{
+ const subscription=await fixture(),secret='test-secret',config=await createPushKeys(secret,'client','test@example.test'),old=fetch;
+ let calls=0;
+ globalThis.fetch=async(url,options)=>{
+  calls++;assert.equal(options.redirect,'manual');
+  if(!['follow','manual'].includes(options.redirect))throw new TypeError('Invalid redirect value');
+  return new Response(null,{status:302,headers:{Location:'https://untrusted.example/collect'}});
+ };
+ try{const result=await sendPush(subscription,config,secret,'client',{title:'test'});assert.equal(result.status,302);assert.equal(result.reason,'RedirectBlocked');assert.equal(calls,1);}
+ finally{globalThis.fetch=old;}
+});
