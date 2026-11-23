@@ -30,7 +30,28 @@
   if(ios&&!standalone())status.textContent='Primeiro adicione à Tela de Início e abra o app pelo ícone.';
   else if(!supported())status.textContent='Este navegador não oferece notificações push. Abra em um navegador compatível e atualizado.';
  }
- function openGuide(){update();if(!dialog.open)dialog.showModal();}
+ const diagnostic=document.createElement('p');diagnostic.setAttribute('role','status');
+ const testButton=document.createElement('button');testButton.type='button';testButton.textContent='Testar neste aparelho';testButton.className='buy-push-test';
+ if(admin){status.after(diagnostic);diagnostic.after(testButton);}
+ async function inspect(){
+  if(!admin||!supported())return;
+  try{
+   const reg=await navigator.serviceWorker.getRegistration('/'),sub=await reg?.pushManager.getSubscription();
+   const data=await api('push-status',{endpoint:sub?.endpoint||''});
+   const permission=Notification.permission==='granted';
+   let text=permission&&data.thisDevice?'Este aparelho está inscrito e tem permissão para avisos.':'Este aparelho não está pronto para receber avisos. Toque em Ativar notificações.';
+   if(data.last){const last=data.last;text+=' Último envio: '+last.accepted+' aceito(s), '+last.failed+' falha(s).';if(last.state==='no_recipients'||!last.accepted&&!last.failed)text+=' Nenhum aparelho elegível foi encontrado.';const reasons=Object.keys(last.reasons||{});if(reasons.length)text+=' Motivo: '+reasons.join(', ')+'.';}
+   diagnostic.textContent=text;testButton.disabled=!permission||!data.thisDevice;
+  }catch(e){diagnostic.textContent=e.message;testButton.disabled=true;}
+ }
+ testButton.onclick=async()=>{
+  testButton.disabled=true;diagnostic.textContent='Enviando teste somente para este aparelho…';
+  try{const reg=await navigator.serviceWorker.getRegistration('/'),sub=await reg?.pushManager.getSubscription();if(!sub)throw Error('Ative as notificações neste aparelho primeiro.');const result=await api('push-test',{subscription:sub.toJSON()});diagnostic.textContent=result.message;}
+  catch(e){diagnostic.textContent=e.message;}
+  finally{testButton.disabled=false;}
+ };
+ function openGuide(){update();if(!dialog.open)dialog.showModal();void inspect();}
+
  banner.querySelector('button').onclick=openGuide;
  dialog.querySelector('[data-close]').onclick=()=>dialog.close();
  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();prompt=e;update();});
@@ -67,7 +88,7 @@
    // Permission is requested directly from this user gesture (required by iOS).
    const permission=await Notification.requestPermission();
    if(permission!=='granted')throw Error('Permissão não concedida. Ative as notificações deste app nas configurações do celular ou navegador.');
-   const count=await bind();setEnabled(true);
+   const count=await bind();setEnabled(true);void inspect();
    status.textContent=admin?'Pronto! Este aparelho receberá novos pedidos.':count?'Pronto! Você receberá as atualizações dos seus pedidos neste aparelho.':'Permissão ativada. Os próximos pedidos feitos aqui serão vinculados automaticamente aos avisos.';
   }catch(e){status.textContent=e.message;}finally{busy=false;update();}
  };
