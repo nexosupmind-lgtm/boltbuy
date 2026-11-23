@@ -62,11 +62,14 @@ function harness() {
   };
   let failTable = "",
     loseCoupon = false;
-  const calls = [];
+  const calls = [], pushes = [];
+  let pushStatus = 201;
   async function mock(input, options = {}) {
     const url = new URL(input),
       method = options.method || "GET";
     calls.push({ url, method });
+    if(url.hostname==='web.push.apple.com') {pushes.push({url,options});return new Response(null,{status:pushStatus});}
+
     if (url.pathname === "/auth/v1/user")
       return Response.json({
         id: (options.headers.authorization || "").replace("Bearer ", ""),
@@ -131,6 +134,8 @@ function harness() {
   return {
     tables,
     calls,
+    pushes,
+    pushStatus: value => pushStatus=value,
     failTable: (value) => (failTable = value),
     loseCoupon: () => (loseCoupon = true),
     async request(action, body, token = "", slug = "loja-a") {
@@ -471,4 +476,71 @@ test('Package option combos charge the chosen package price, not fifteen times i
   assert.equal(pricedItems(c,products,[line(p2)])[0].price,12);
   assert.throws(()=>pricedItems(c,products,[{comboId:cid,qty:1,selections:[{productId:p1,quantity:7},{productId:p2,quantity:8}]}]));
   assert.throws(()=>pricedItems(c,[{...products[0],active:false},products[1]],[line(p1)]));
+});
+
+async function device(endpoint='https://web.push.apple.com/device-a') {
+  const pair=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveBits']);
+  const b64=b=>Buffer.from(b).toString('base64url');
+  return {endpoint,keys:{p256dh:b64(await crypto.subtle.exportKey('raw',pair.publicKey)),auth:b64(crypto.getRandomValues(new Uint8Array(16)))}};
+}
+async function pushKey(h){const r=await h.request('push-key',{});assert.equal(r.status,200);return (await r.json()).publicKey;}
+
+test('Push keys are stable across stores and private keys/subscriptions are encrypted',async()=>{
+ const h=harness(),key=await pushKey(h),subscription=await device();
+ assert.equal((await (await h.request('push-key',{},'', 'loja-b')).json()).publicKey,key);
+ assert.equal((await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner')).status,200);
+ const serialized=JSON.stringify(h.tables.bolt_audit_events);
+ assert(!serialized.includes(subscription.endpoint));assert(!serialized.includes(subscription.keys.auth));assert(!serialized.includes('privateKey'));
+ assert.equal((await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner')).status,200);
+ assert.equal(h.tables.bolt_audit_events.filter(x=>x.event_type==='buy_push_subscription').length,1);
+});
+test('Merchant push requires authentication, tenant membership and order feature',async()=>{
+ const h=harness(),key=await pushKey(h),subscription=await device(),body={audience:'admin',subscription,publicKey:key};
+ assert.equal((await h.request('push-subscribe',body)).status,401);
+ assert.equal((await h.request('push-subscribe',body,'stranger')).status,403);
+ assert.equal((await h.request('push-subscribe',body,'owner','loja-b')).status,403);
+ h.tables.bolt_client_subscriptions.push({tenant_id:tid,plan_id:cid});h.tables.bolt_platform_plans.push({id:cid,product:'buy',features:['products']});
+ assert.equal((await h.request('push-subscribe',body,'owner')).status,403);
+});
+test('Customer push requires a valid receipt from the same tenant and rejects unsafe endpoints',async()=>{
+ const h=harness(),key=await pushKey(h),subscription=await device();
+ const bought=await (await h.request('order',order())).json();
+ const body={audience:'customer',subscription,publicKey:key,token:bought.receipt.token};
+ assert.equal((await h.request('push-subscribe',{...body,token:'forged'})).status,403);
+ assert.equal((await h.request('push-subscribe',body,'','loja-b')).status,403);
+ assert.equal((await h.request('push-subscribe',{...body,subscription:{...subscription,endpoint:'https://127.0.0.1/private'}})).status,400);
+ assert.equal((await h.request('push-subscribe',body)).status,200);
+ assert.equal((await h.request('push-unsubscribe',body)).status,200);
+ assert.equal(h.tables.bolt_audit_events.filter(x=>x.event_type==='buy_push_subscription').length,0);
+});
+test('Confirmed order notifies merchant once; status update notifies only its customer and duplicate saves do not resend',async()=>{
+ const h=harness(),key=await pushKey(h),merchant=await device(),customer=await device('https://web.push.apple.com/customer'),otherCustomer=await device('https://web.push.apple.com/other-customer');
+ await h.request('push-subscribe',{audience:'admin',subscription:merchant,publicKey:key},'owner');
+ const request=order(),bought=await (await h.request('order',request)).json();
+ assert.equal(h.pushes.length,1);assert.equal(h.pushes[0].url.href,merchant.endpoint);
+ assert.match(h.pushes[0].options.headers.Authorization,/^vapid t=/);assert.equal(h.pushes[0].options.headers['Content-Encoding'],'aes128gcm');
+ await h.request('order',request);assert.equal(h.pushes.length,1);
+ await h.request('push-subscribe',{audience:'customer',subscription:customer,publicKey:key,token:bought.receipt.token});
+ const second=await (await h.request('order',order())).json();
+ await h.request('push-subscribe',{audience:'customer',subscription:otherCustomer,publicKey:key,token:second.receipt.token});
+ const before=h.pushes.length;
+ assert.equal((await h.request('status',{id:bought.order.id,status:'preparo'},'owner')).status,200);
+ assert.equal(h.pushes.length,before+1);assert.equal(h.pushes.at(-1).url.href,customer.endpoint);
+ await h.request('status',{id:bought.order.id,status:'preparo'},'owner');assert.equal(h.pushes.length,before+1);
+});
+test('Expired push subscriptions and transport failures do not roll back a confirmed order',async()=>{
+ const h=harness(),key=await pushKey(h),subscription=await device();
+ await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner');
+ h.pushStatus(410);const r=await h.request('order',order());assert.equal(r.status,200);
+ assert.equal(h.tables.bolt_orders[0].status,'recebido');
+ assert(h.tables.bolt_audit_events.some(x=>x.event_type==='buy_push_subscription'&&x.details.expired));
+ await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner');
+ h.pushStatus(500);assert.equal((await h.request('order',order())).status,200);
+ assert(h.tables.bolt_audit_events.some(x=>x.event_type==='buy_push_delivery'&&x.details.failed===1));
+});
+test('Revoked merchant membership prevents delivery to a previously authorized device',async()=>{
+ const h=harness(),key=await pushKey(h),subscription=await device();
+ await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner');
+ h.tables.bolt_memberships.length=0;
+ assert.equal((await h.request('order',order())).status,200);assert.equal(h.pushes.length,0);
 });
