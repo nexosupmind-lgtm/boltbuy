@@ -181,7 +181,16 @@ export async function sendPush(
     },
     body,
   });
-  return { status: response.status };
+  let reason = '';
+  if (!response.ok) {
+    // Only provider error codes are retained; never retain endpoints or response bodies.
+    try {
+      const text = await response.text();
+      const known = ['BadJwtToken','BadAuthorizationHeader','BadTtl','BadUrgency','BadTopic','BadWebPushRequest','BadEncryption','VapidPkHashMismatch','ExpiredToken','Unregistered','TooManyRequests'];
+      reason = known.find(code => text.includes(code)) || '';
+    } catch {}
+  }
+  return { status: response.status, reason };
 }
 export async function deliverSchoolPush(
   s,

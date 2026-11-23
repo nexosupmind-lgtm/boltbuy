@@ -36,10 +36,40 @@ export function buyPush({db, secret, tenant, slug, origin, member, actor, fail, 
   }
   async function action(name,body) {
     if(name==='push-key')return {ok:true,publicKey:(await keys(true)).publicKey};
+    if(name==='push-status') {
+      await member('orders');
+      const subscriptions=await db(tenantPath('buy_push_subscription')+'&select=id,details');
+      let devices=0,thisDevice=false;
+      for(const row of subscriptions){try{
+        const item=JSON.parse(await unseal(row.details.sealed,secret,'buy-push-sub:'+tenant.id+':'+row.id));
+        if(item.audience==='admin'&&item.userId===actor().id&&item.expires>Date.now()){
+          devices++;if(body.endpoint===item.subscription.endpoint)thisDevice=true;
+        }
+      }catch{}}
+      const attempts=await db(tenantPath('buy_push_delivery')+'&select=details,created_at&order=created_at.desc&limit=1');
+      const last=attempts[0];
+      return {ok:true,devices,thisDevice,last:last?{at:last.created_at,state:last.details.state,accepted:last.details.accepted||0,failed:last.details.failed||0,expired:last.details.expired||0,reasons:last.details.reasons||{}}:null};
+    }
     const owner=await authorize(body);
     if(!validSubscription(body.subscription))fail(400,'Este navegador não forneceu uma inscrição válida.');
     const id=await pushId(['buy-push-sub',tenant.id,owner.audience,owner.userId||owner.orderId,body.subscription.endpoint].join('|'));
     const path=eventPath(id,'buy_push_subscription')+'&tenant_id=eq.'+tenant.id;
+    if(name==='push-test') {
+      if(owner.audience!=='admin')fail(403,'Teste disponível no administrativo.');
+      const row=(await db(path+'&select=details'))[0];
+      let saved;
+      try{saved=JSON.parse(await unseal(row?.details?.sealed||'',secret,'buy-push-sub:'+tenant.id+':'+id));}catch{fail(409,'Este aparelho ainda não está inscrito. Toque em Ativar notificações.');}
+      if(saved.expires<Date.now())fail(409,'Inscrição expirada. Ative novamente.');
+      const testId=await pushId('buy-push-test|'+id+'|'+Math.floor(Date.now()/30000));
+      try{await db('bolt_audit_events',{method:'POST',body:JSON.stringify({id:testId,tenant_id:tenant.id,event_type:'buy_push_test',details:{state:'sending'}})});}catch(e){if(e.status===409)fail(429,'Aguarde 30 segundos antes de testar novamente.');throw e;}
+      const config=await keys();if(!config)fail(503,'Configuração de avisos indisponível.');
+      let result;
+      try{result=await sendPush(saved.subscription,config,secret,config.id,{product:'buy',title:'Teste · '+tenant.name,body:'Os avisos deste administrativo estão chegando neste aparelho.',tag:'buy-test-'+id,url:origin+'/Salgaditos/admin?tenant='+encodeURIComponent(slug)});}catch{result={status:0,reason:'TransportError'};}
+      await db(eventPath(testId,'buy_push_test')+'&tenant_id=eq.'+tenant.id,{method:'PATCH',body:JSON.stringify({details:{state:result.status>=200&&result.status<300?'accepted':'failed',status:result.status,reason:result.reason||''}})});
+      if(result.status>=200&&result.status<300)return {ok:true,accepted:true,message:'O serviço push aceitou o teste. Confira a Central de Notificações; isso ainda não confirma a entrega no aparelho.'};
+      if([404,410].includes(result.status))fail(409,'O serviço push informou que esta inscrição expirou. Desative e ative novamente.');
+      fail(502,'O serviço push recusou o teste: '+(result.reason||('HTTP '+result.status))+'.');
+    }
     if(name==='push-unsubscribe'){
       await db(path,{method:'DELETE'});
       return {ok:true};
@@ -61,7 +91,7 @@ export function buyPush({db, secret, tenant, slug, origin, member, actor, fail, 
     // Unique event claim prevents duplicate pushes on repeated requests/status saves.
     try{await db('bolt_audit_events',{method:'POST',body:JSON.stringify({id:deliveryId,tenant_id:tenant.id,event_type:'buy_push_delivery',details:{orderId:order.id,event:type,state:'sending'}})});}
     catch(e){if(e.status===409)return;throw e;}
-    let accepted=0,failed=0,expired=0;
+    let accepted=0,failed=0,expired=0;const reasons={};
     try{
       const memberships=isNew?await db('bolt_memberships?tenant_id=eq.'+tenant.id+'&select=user_id,role'):[];
       const masters=isNew?await db('bolt_master_admins?select=user_id'):[];
@@ -83,12 +113,12 @@ export function buyPush({db, secret, tenant, slug, origin, member, actor, fail, 
             if(result.status>=200&&result.status<300)accepted++;
             else if([404,410].includes(result.status)){
               expired++;await db(eventPath(row.id,'buy_push_subscription')+'&tenant_id=eq.'+tenant.id,{method:'PATCH',body:JSON.stringify({details:{expired:true}})});
-            }else failed++;
-          }catch{failed++;}
+            }else {failed++;const reason=result.reason||("HTTP_"+result.status);reasons[reason]=(reasons[reason]||0)+1;}
+          }catch{failed++;reasons.TransportError=(reasons.TransportError||0)+1;}
         }));
         if(rows.length<500)break;
       }
-      await db(eventPath(deliveryId,'buy_push_delivery')+'&tenant_id=eq.'+tenant.id,{method:'PATCH',body:JSON.stringify({details:{orderId:order.id,event:type,state:failed?'partial':'done',accepted,failed,expired}})});
+      await db(eventPath(deliveryId,'buy_push_delivery')+'&tenant_id=eq.'+tenant.id,{method:'PATCH',body:JSON.stringify({details:{orderId:order.id,event:type,state:failed?'partial':accepted?'done':'no_recipients',accepted,failed,expired,reasons}})});
     }catch{
       await db(eventPath(deliveryId,'buy_push_delivery')+'&tenant_id=eq.'+tenant.id,{method:'PATCH',body:JSON.stringify({details:{orderId:order.id,event:type,state:'failed',accepted,failed:failed+1,expired}})}).catch(()=>{});
     }

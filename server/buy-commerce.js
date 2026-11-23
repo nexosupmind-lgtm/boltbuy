@@ -158,7 +158,7 @@ export async function onRequest({ request, env, waitUntil }) {
       }
     }
     const push = buyPush({db,secret,tenant,slug,origin:new URL(request.url).origin,member,actor:()=>actor,fail,waitUntil});
-    if (['push-key','push-subscribe','push-unsubscribe'].includes(action)) {
+    if (['push-key','push-subscribe','push-unsubscribe','push-status','push-test'].includes(action)) {
       if (request.method !== 'POST') fail(405,'Use POST para configurar notificações.');
       return json(200,await push.action(action,body));
     }

@@ -557,3 +557,27 @@ test('Real PostgREST empty HTTP 201 writes do not break first push activation or
  assert.equal((await h.request('status',{id:bought.order.id,status:'preparo'},'owner')).status,200);
  assert.equal(h.pushes.length,2);
 });
+
+test('Push diagnostic is private, identifies the exact device and never exposes endpoints or keys',async()=>{
+ const h=harness(),key=await pushKey(h),subscription=await device();
+ assert.equal((await h.request('push-status',{})).status,401);
+ assert.equal((await h.request('push-status',{},'stranger')).status,403);
+ await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner');
+ const status=await (await h.request('push-status',{endpoint:subscription.endpoint},'owner')).json();
+ assert.equal(status.thisDevice,true);assert.equal(status.devices,1);assert(!JSON.stringify(status).includes(subscription.endpoint));
+ const different=await (await h.request('push-status',{endpoint:'https://web.push.apple.com/different'},'owner')).json();assert.equal(different.thisDevice,false);
+});
+test('Test push targets only the authenticated saved device and is rate limited',async()=>{
+ const h=harness(),key=await pushKey(h),subscription=await device();
+ await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner');
+ const body={audience:'admin',subscription};
+ assert.equal((await h.request('push-test',body,'staff')).status,409);
+ const result=await h.request('push-test',body,'owner');assert.equal(result.status,200);assert.equal(h.pushes.length,1);
+ assert.equal((await result.json()).accepted,true);
+ assert.equal((await h.request('push-test',body,'owner')).status,429);assert.equal(h.pushes.length,1);
+});
+test('Test push surfaces provider refusal instead of claiming activation means delivery',async()=>{
+ const h=harness(),key=await pushKey(h),subscription=await device();
+ await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner');h.pushStatus(403);
+ const r=await h.request('push-test',{audience:'admin',subscription},'owner');assert.equal(r.status,502);assert.match((await r.json()).error,/HTTP 403/);
+});
