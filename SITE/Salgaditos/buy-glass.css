@@ -97,3 +97,35 @@ body.delivery-shop .product h4{color:#17243b!important;font-weight:700}
  body.buy-admin-app .main :is(.panel,.metric,.topbar),body.delivery-shop .product{background:#f8f9fc!important}
  body.buy-admin-app .main .metric:first-child{background:#1c2b42!important}
 }
+
+/* Consumer storefront: neutral canvas and fully contained combo cards. */
+body.delivery-shop{background:#f7f7f8!important;background-image:none!important}
+body.delivery-shop .shop,body.delivery-shop .shopbody{background:#f7f7f8!important}
+body.delivery-shop .ambient{display:none!important}
+body.delivery-shop .shophead,body.delivery-shop :is(.product,.featured-card,.buy-combo-grid article){background:#fff!important;background-image:none!important}
+body.delivery-shop .bottomnav{background:#fffffff5!important}
+body.delivery-shop .buy-combo-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%;gap:16px}
+body.delivery-shop .buy-combo-grid article{display:grid!important;grid-template-columns:100px minmax(0,1fr);gap:16px;padding:16px;width:auto;min-width:0;max-width:100%;box-sizing:border-box;overflow:visible;border:1px solid #e9e9ed!important;border-radius:20px}
+body.delivery-shop .buy-combo-grid article>img{width:100px;height:110px;object-fit:cover;border-radius:14px}
+body.delivery-shop .buy-combo-grid article>div{min-width:0;overflow-wrap:anywhere}
+body.delivery-shop .buy-combo-grid h3{font-size:18px;line-height:1.25;margin:6px 0;color:#20232b}
+body.delivery-shop .buy-combo-grid small{font-size:13px;color:#656872}
+body.delivery-shop .buy-combo-grid strong{font-size:18px;line-height:1.4;margin:10px 0;color:#20232b}
+body.delivery-shop .buy-combo-grid p{font-size:14px;line-height:1.4}
+body.delivery-shop .buy-combo-grid .btn{width:100%;min-height:44px;white-space:normal;box-sizing:border-box;border:0;border-radius:12px;font-size:14px;background:#bd1837!important;color:#fff!important}
+body.delivery-shop .buy-shop-combos>h2{font-size:22px;line-height:1.25}
+body.delivery-shop :is(#mascotWidget,#assistantPanel,.bolt-help-trigger,.bolt-universal-assistant,.buy-bolt-support){display:none!important}
+body.delivery-shop #buy-profile{width:min(460px,calc(100% - 24px));max-height:88dvh;overflow:auto;box-sizing:border-box;border:1px solid #e5e5ea;border-radius:24px;padding:24px;background:#fff;color:#20232b}
+#buy-profile::backdrop{background:#10182870;backdrop-filter:blur(5px)}
+#buy-profile header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#buy-profile h2{font-size:24px;margin:0}
+#buy-profile [data-close]{width:40px;height:40px;border:0;border-radius:50%;background:#f0f1f4;color:#20232b;font-size:24px}
+#buy-profile form{display:grid;gap:16px;margin-top:20px}
+#buy-profile label{display:grid;gap:8px;font-size:14px;font-weight:600;color:#414651}
+#buy-profile :is(input:not([type=checkbox]),textarea){box-sizing:border-box;width:100%;min-width:0;padding:14px;background:#fff;color:#20232b;border:1px solid #d8dbe1;border-radius:12px;font-size:16px}
+#buy-profile .profile-remember{display:flex;align-items:center;gap:10px;font-weight:400}
+#buy-profile input[type=checkbox]{width:20px;height:20px;flex:none}
+#buy-profile p{font-size:14px;line-height:1.5;color:#626773}
+#buy-profile .btn{min-height:46px;background:#1b293e;color:#fff;border:0;border-radius:12px}
+@media(max-width:650px){body.delivery-shop .buy-combo-grid{grid-template-columns:minmax(0,1fr)!important}}
+@media(max-width:350px){body.delivery-shop .buy-combo-grid article{grid-template-columns:80px minmax(0,1fr);gap:12px;padding:12px}body.delivery-shop .buy-combo-grid article>img{width:80px;height:96px}}
