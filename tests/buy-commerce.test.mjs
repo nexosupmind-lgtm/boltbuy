@@ -63,7 +63,7 @@ function harness() {
   let failTable = "",
     loseCoupon = false;
   const calls = [], pushes = [];
-  let pushStatus = 201;
+  let pushStatus = 201, minimalWrites = false;
   async function mock(input, options = {}) {
     const url = new URL(input),
       method = options.method || "GET";
@@ -113,7 +113,7 @@ function harness() {
           ...row,
         });
       }
-      return Response.json(list);
+      return minimalWrites && !options.headers?.Prefer?.includes("return=representation") ? new Response(null,{status:201}) : Response.json(list);
     }
     if (method === "PATCH") {
       if (name === "bolt_coupons" && loseCoupon) return Response.json([]);
@@ -136,6 +136,7 @@ function harness() {
     calls,
     pushes,
     pushStatus: value => pushStatus=value,
+    minimalWrites: () => minimalWrites=true,
     failTable: (value) => (failTable = value),
     loseCoupon: () => (loseCoupon = true),
     async request(action, body, token = "", slug = "loja-a") {
@@ -543,4 +544,16 @@ test('Revoked merchant membership prevents delivery to a previously authorized d
  await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner');
  h.tables.bolt_memberships.length=0;
  assert.equal((await h.request('order',order())).status,200);assert.equal(h.pushes.length,0);
+});
+
+
+test('Real PostgREST empty HTTP 201 writes do not break first push activation or order creation',async()=>{
+ const h=harness();h.minimalWrites();
+ const key=await pushKey(h),subscription=await device();
+ assert.equal((await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner')).status,200);
+ const response=await h.request('order',order());assert.equal(response.status,200);
+ const bought=await response.json();assert.equal(bought.order.status,'recebido');assert.equal(h.pushes.length,1);
+ assert.equal((await h.request('push-subscribe',{audience:'customer',subscription:await device('https://web.push.apple.com/customer'),publicKey:key,token:bought.receipt.token})).status,200);
+ assert.equal((await h.request('status',{id:bought.order.id,status:'preparo'},'owner')).status,200);
+ assert.equal(h.pushes.length,2);
 });
