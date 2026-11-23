@@ -688,6 +688,23 @@ export async function onRequest({ request, env, waitUntil }) {
         receipt: await receipt(orders[0]),
       });
     }
+    if (["order-delete", "product-delete"].includes(action) && request.method === "POST") {
+      await member(undefined, true);
+      if (!UUID.test(body.id)) fail(400, "Identificador inválido.");
+      const order = action === "order-delete";
+      const table = order ? "bolt_orders" : "bolt_products";
+      const filter = "?id=eq." + body.id + "&tenant_id=eq." + tenant.id;
+      const rows = await db(table + filter + "&select=id");
+      if (!rows.length) fail(404, "Registro não encontrado nesta loja.");
+      // Record intent before deletion; reconciliation checks that the order is absent.
+      await db("bolt_audit_events", {method:"POST", body:JSON.stringify({
+        id:crypto.randomUUID(),tenant_id:tenant.id,event_type:order?"buy_order_delete":"buy_product_delete",
+        details:{target_id:body.id,actor_id:actor.id}
+      })});
+      const removed = await db(table + filter, {method:"DELETE",headers:{Prefer:"return=representation"}});
+      if (!removed.length) fail(409, "Registro já alterado. Atualize a página.");
+      return json(200,{ok:true,id:body.id});
+    }
     if (action === "orders" && request.method === "GET") {
       await member("orders");
       const orders = await db(
@@ -695,7 +712,14 @@ export async function onRequest({ request, env, waitUntil }) {
           tenant.id +
           "&status=neq.criando&select=*&order=created_at.desc&limit=100",
       );
-      if (!orders.length) return json(200, { ok: true, orders: [] });
+      const deletedIds = [];
+      for (let offset=0;;offset+=1000) {
+        const events=await db("bolt_audit_events?tenant_id=eq."+tenant.id+"&event_type=eq.buy_order_delete&select=details&order=created_at,id&limit=1000&offset="+offset);
+        const ids=[...new Set(events.map(e=>e.details?.target_id).filter(id=>UUID.test(id)))];
+        if(ids.length){const present=await db("bolt_orders?tenant_id=eq."+tenant.id+"&id=in.("+ids.join(',')+")&select=id");const live=new Set(present.map(o=>o.id));deletedIds.push(...ids.filter(id=>!live.has(id)));}
+        if(events.length<1000)break;
+      }
+      if (!orders.length) return json(200, { ok: true, orders: [], deletedIds });
       const ids = orders.map((o) => o.id).join(","),
         items = [];
       for (let offset = 0; offset < 10000; offset += 1000) {
@@ -717,6 +741,7 @@ export async function onRequest({ request, env, waitUntil }) {
       );
       return json(200, {
         ok: true,
+        deletedIds,
         orders: await Promise.all(
           orders.map((order) =>
             orderProjection(order, [

@@ -581,3 +581,30 @@ test('Test push surfaces provider refusal instead of claiming activation means d
  await h.request('push-subscribe',{audience:'admin',subscription,publicKey:key},'owner');h.pushStatus(403);
  const r=await h.request('push-test',{audience:'admin',subscription},'owner');assert.equal(r.status,502);assert.match((await r.json()).error,/HTTP 403/);
 });
+
+test('Deletion requires management permission and cannot cross stores',async()=>{
+ const h=harness();
+ for(const action of ['order-delete','product-delete']){
+  assert.equal((await h.request(action,{id:p1})).status,401);
+  assert.equal((await h.request(action,{id:p1},'staff')).status,403);
+ }
+ h.tables.bolt_products.push({id:cid,tenant_id:other,name:'Other'});
+ assert.equal((await h.request('product-delete',{id:cid},'owner')).status,404);
+ assert.equal(h.tables.bolt_products.length,3);
+ assert.equal((await h.request('product-delete',{id:p1},'owner')).status,200);
+ assert(!h.tables.bolt_products.some(p=>p.id===p1));
+ assert(h.tables.bolt_audit_events.some(e=>e.event_type==='buy_product_delete'&&e.details.actor_id==='owner'));
+});
+test('Deleted orders reconcile across devices; failed delete intents do not hide live orders',async()=>{
+ const h=harness();h.tables.bolt_orders.push({id:cid,tenant_id:tid,status:'recebido'});
+ h.tables.bolt_audit_events.push({id:crypto.randomUUID(),tenant_id:tid,event_type:'buy_order_delete',details:{target_id:cid}});
+ let r=await h.request('orders',null,'owner');assert.deepEqual((await r.json()).deletedIds,[]);
+ assert.equal((await h.request('order-delete',{id:cid},'owner')).status,200);
+ r=await h.request('orders',null,'owner');const data=await r.json();assert(data.deletedIds.includes(cid));assert.equal(data.orders.length,0);
+ assert.equal((await h.request('order-delete',{id:cid},'owner')).status,404);
+});
+test('Deletion stops if the audit write fails',async()=>{
+ const h=harness();h.failTable('bolt_audit_events');
+ assert.notEqual((await h.request('product-delete',{id:p1},'owner')).status,200);
+ assert(h.tables.bolt_products.some(p=>p.id===p1));
+});
