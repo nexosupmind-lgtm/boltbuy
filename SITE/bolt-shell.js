@@ -33,6 +33,10 @@ function setup(){
  }
 
  for(const [name,content]of [['theme-color','#0b1020'],['apple-mobile-web-app-capable','yes'],['apple-mobile-web-app-status-bar-style','black-translucent']]){if(!document.querySelector('meta[name="'+name+'"]')){const m=document.createElement('meta');m.name=name;m.content=content;document.head.append(m)}}
+ if(product==='buy'&&slug){
+  document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(e=>e.remove());
+  const icon=document.createElement('link');icon.rel='apple-touch-icon';icon.href='/api/buy-icon?slug='+encodeURIComponent(slug)+'&surface='+surface;document.head.append(icon);
+ }
  if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(()=>{});
  let deferred=null;const install=document.createElement('button');install.type='button';install.className='bolt-install';install.textContent='Instalar aplicativo';install.hidden=true;document.body.append(install);
  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;install.hidden=false});window.addEventListener('appinstalled',()=>{install.hidden=true;deferred=null});install.onclick=async()=>{if(deferred){await deferred.prompt();await deferred.userChoice;install.hidden=true;deferred=null}};

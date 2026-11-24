@@ -405,7 +405,7 @@ export async function onRequest({ request, env, waitUntil }) {
         version: snapshot?.updated_at || null,
       });
     }
-    if (["configure", "combo-delete"].includes(action) && request.method === "POST") {
+    if (["configure", "combo-delete", "appearance"].includes(action) && request.method === "POST") {
       await member("products", true);
       if ((body.version || null) !== (snapshot?.updated_at || null))
         fail(
@@ -417,13 +417,13 @@ export async function onRequest({ request, env, waitUntil }) {
         fail(404,"Combo não encontrado nesta loja.");
       let next;
       try {
-        next = deletingCombo ? {...config,combos:config.combos.filter(c=>c.id!==body.id)} : normalizeConfig(body.config, slug === "salgaditos");
+        next = action === "appearance" ? normalizeConfig({...config,...Object.fromEntries(Object.entries(body.images || {}).filter(([key])=>["adminIcon","shopIcon","coverImage"].includes(key)))},slug === "salgaditos") : deletingCombo ? {...config,combos:config.combos.filter(c=>c.id!==body.id)} : normalizeConfig(body.config, slug === "salgaditos");
       } catch (e) {
         fail(400, e.message);
       }
       const catalog = await products();
       if (
-        !deletingCombo && next.combos.some((c) =>
+        action === "configure" && next.combos.some((c) =>
           c.productIds.some((id) => !catalog.some((p) => p.id === id)),
         )
       )

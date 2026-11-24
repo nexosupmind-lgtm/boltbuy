@@ -21,6 +21,7 @@ export async function onRequest({request,env={}}){
    }
   }catch{}
  }
+ if(p==='buy')body.icons=[{src:'/api/buy-icon?slug='+encodeURIComponent(slug)+'&surface='+s,sizes:'512x512',purpose:'any'}];
  if(s==='family')body.icons=[{src:'/api/family-icon?slug='+encodeURIComponent(slug)+'&v=2',sizes:'512x512',purpose:'any'}];
  return new Response(JSON.stringify(body),{headers:{'content-type':'application/manifest+json','cache-control':'no-store'}});
 }

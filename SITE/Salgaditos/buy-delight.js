@@ -54,11 +54,12 @@
     image.onload = () => { cover.hidden = false; };
     image.onerror = () => { cover.hidden = true; };
     const refreshCover = () => {
-      const source = typeof load === 'function' ? load().products?.find(product => product.active && product.photo)?.photo : null;
+      const source = window.BOLT_BUY_COVER || (typeof load === 'function' ? load().products?.find(product => product.active && product.photo)?.photo : null);
       if (!source) { cover.hidden = true; image.removeAttribute('src'); return; }
       if (image.getAttribute('src') !== source) { cover.hidden = true; image.src = source; }
     };
     new MutationObserver(refreshCover).observe(catalogRoot, {childList:true,subtree:true});
+    window.addEventListener("buy-cover-ready",refreshCover);
     refreshCover();
   }
 })();

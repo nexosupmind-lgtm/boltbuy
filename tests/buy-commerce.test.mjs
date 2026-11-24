@@ -647,3 +647,16 @@ test('Combo deletion still enforces permission, target existence and optimistic 
  assert.equal((await h.request('combo-delete',{id:other,version},'owner')).status,404);
  assert.equal(h.tables.bolt_delivery_storefronts[0].settings.commerce.combos.length,1);
 });
+
+test('Appearance updates only images, preserves orders and rejects staff or stale writes',async()=>{
+ const h=harness(),snapshot=h.tables.bolt_delivery_storefronts[0],version=snapshot.updated_at;
+ const images={shopIcon:'data:image/jpeg;base64,/9j/2Q==',coverImage:'data:image/jpeg;base64,/9j/2Q==',combos:[],deliveryFee:0};
+ assert.equal((await h.request('appearance',{images,version},'staff')).status,403);
+ assert.equal((await h.request('appearance',{images,version:'stale'},'owner')).status,409);
+ const r=await h.request('appearance',{images,version},'owner');assert.equal(r.status,200);const d=await r.json();
+ assert.equal(d.config.shopIcon,images.shopIcon);assert.equal(d.config.combos.length,1);assert.equal(d.config.deliveryFee,7);
+ assert.equal(snapshot.settings.bannerTitle,'Preservar banner');assert.equal(h.tables.bolt_orders.length,0);
+});
+test('Image settings reject script URLs, SVG and oversized payloads',()=>{
+ for(const value of ['javascript:alert(1)','https://evil.test/a.jpg','data:image/svg+xml;base64,AAAA','data:image/jpeg;base64,'+'A'.repeat(82000)])assert.throws(()=>normalizeConfig({shopIcon:value}));
+});

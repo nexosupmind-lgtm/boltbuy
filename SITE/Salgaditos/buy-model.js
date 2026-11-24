@@ -1,3 +1,8 @@
+function assetImage(value, max) {
+  if (!value) return "";
+  if (typeof value !== "string" || value.length > max || !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(value)) throw Error("Imagem inválida ou muito grande.");
+  return value;
+}
 export const UUID =
   /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
 export const clean = (v, n = 160) =>
@@ -74,6 +79,9 @@ export function normalizeConfig(input = {}, legacy = false) {
     );
   return {
     pickupAddress: clean(input.pickupAddress, 400),
+    adminIcon: assetImage(input.adminIcon, 42000),
+    shopIcon: assetImage(input.shopIcon, 42000),
+    coverImage: assetImage(input.coverImage, 82000),
     deliveryFee: moneyValue(input.deliveryFee ?? (legacy ? 5 : 0)),
     whatsapp,
     pixKey,
