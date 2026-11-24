@@ -846,7 +846,9 @@ function installShop() {
   const comboSection = document.createElement("section");
   comboSection.id = "buy-shop-combos";
   comboSection.className = "buy-shop-combos";
-  document.getElementById("homeView").prepend(comboSection);
+  const promotions = document.querySelector("#homeView > .promo-slider-section");
+  if (promotions) promotions.after(comboSection);
+  else document.getElementById("homeView").prepend(comboSection);
   const status = document.createElement("div");
   status.id = "buy-store-status";
   status.className = "buy-store-status";
@@ -1033,7 +1035,7 @@ function renderCommerceShop() {
     if (host.dataset.signature !== signature) {
       host.dataset.signature = signature;
       host.innerHTML = combos.length
-        ? '<h2>Combos · monte do seu jeito</h2><div class="buy-combo-grid">' +
+        ? '<h2>Monte seu combo</h2><p class="combo-hint">Escolha o tamanho e depois o sabor. Deslize para ver mais →</p><div class="buy-combo-grid" tabindex="0" role="region" aria-label="Combos disponíveis, deslize para explorar">' +
           combos
             .map((c) => {
               const p = catalog().find(
