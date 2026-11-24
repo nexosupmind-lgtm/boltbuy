@@ -26,19 +26,6 @@ renderShop=function(){
 };
 el('phone').addEventListener('input',()=>renderShop());
 el('couponCode').addEventListener('input',()=>{if(el('couponCode').value.trim().toUpperCase()!==appliedCode)appliedCode=''});
-const originalCheckout=el('checkout').onsubmit;
-el('checkout').onsubmit=function(e){
- e.preventDefault();
- const d=load(),t=totals(d);
- if(!t.items.length)return notify('Adicione produtos ao carrinho.');
- const coupon=calculateDiscount(d,t);
- if(coupon.error)return notify(coupon.error);
- const id='S'+Date.now(),phone=normPhone(el('phone').value);
- if(phone.length<10)return notify('Informe um WhatsApp válido com DDD.');
- const o={id,date:stamp(),customer:el('customer').value.trim(),phone,address:el('mode').value==='delivery'?el('address').value.trim():'',mode:el('mode').value,channel:'Site',payment:el('payment').value,items:t.items.map(({p,qty})=>({id:p.id,name:p.name,qty,price:p.price})),subtotal:t.subtotal,fee:t.fee,discount:coupon.discount||0,coupon:coupon.coupon?.code||'',status:'recebido',history:[{status:'recebido',date:stamp()}]};
- if(!o.customer)return notify('Informe seu nome.');
- if(o.mode==='delivery'&&!o.address)return notify('Informe o endereço de entrega.');
- if(coupon.coupon){const current=(d.coupons||[]).find(c=>c.code===coupon.coupon.code);current.used=(current.used||0)+1}
- d.orders.push(o);save(d);saveIds([...myIds(),id]);cart={};appliedCode='';el('couponCode').value='';el('couponFeedback').textContent='';el('checkout').reset();seenStatus[id]='recebido';view('orders');notify('Pedido enviado! Acompanhe o status aqui.');
-};
+// Checkout is handled exclusively by buy-commerce after server confirmation.
+
 renderShop();
