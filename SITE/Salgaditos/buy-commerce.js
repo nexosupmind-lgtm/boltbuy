@@ -1048,7 +1048,7 @@ function renderCommerceShop() {
               const p = catalog().find(
                 (p) => p.active && c.productIds.includes(p.id),
               );
-              return `<article>${photo(p)}<div><small>${c.units} unidades</small><h3>${esc(c.name)}</h3><p>${esc(c.description)}</p><strong>${comboPriceLabel(c)}</strong><button class="btn red" type="button" data-open-combo="${c.id}">Escolher sabores</button></div></article>`;
+              return `<article role="button" tabindex="0" data-open-combo="${c.id}" aria-label="Escolher sabores de ${esc(c.name)}">${photo(p)}<div><small>${c.units} unidades</small><h3>${esc(c.name)}</h3><p>${esc(c.description)}</p><strong>${comboPriceLabel(c)}</strong></div></article>`;
             })
             .join("") +
           "</div>"
@@ -1056,7 +1056,14 @@ function renderCommerceShop() {
       host
         .querySelectorAll("[data-open-combo]")
         .forEach(
-          (b) => (b.onclick = () => window.addItem(b.dataset.openCombo)),
+          (b) => {
+            b.onclick = () => window.addItem(b.dataset.openCombo);
+            b.onkeydown = (event) => {
+              if(event.key === "Enter" || event.key === " "){
+                event.preventDefault();window.addItem(b.dataset.openCombo);
+              }
+            };
+          },
         );
     }
   }

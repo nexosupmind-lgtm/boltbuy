@@ -127,6 +127,11 @@
   wrap.append(label,toggle);return wrap;
  }
  document.querySelectorAll('button[onclick="askNotifications()"],#notifBtn').forEach(el=>el.replaceWith(makeSwitch()));
+ if(!admin){
+  const headerSwitch=document.querySelector('.shopbar .buy-notification-control');
+  const identity=document.querySelector('.shopbar .brand-identity');
+  if(headerSwitch&&identity)identity.append(headerSwitch);
+ }
  enable.before(makeSwitch());
  // Keep existing integrations pointing to guidance and diagnostics.
 
