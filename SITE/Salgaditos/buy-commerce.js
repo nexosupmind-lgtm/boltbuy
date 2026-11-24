@@ -1,4 +1,4 @@
-import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=quotes-3";
+import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=appearance-1";
 import { quotePDF } from "./buy-quote-pdf.js?v=quotes-3";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
@@ -25,6 +25,7 @@ let config = null,
   quoteItems = [],
   quoteId = crypto.randomUUID(),
   lastReceipt = null;
+window.addEventListener("buy-appearance-saved", e => { if(e.detail.slug === slug){config=e.detail.config;version=e.detail.version;} });
 const comboCart = new Map(),
   receiptsKey = "bolt_buy_receipts_" + slug;
 let receipts = {};
@@ -334,6 +335,7 @@ function renderAdmin() {
       e.submitter.disabled = false;
     }
   };
+  window.BOLT_BUY_APPEARANCE?.mount(document.getElementById("buy-service"), slug, ["coverImage"]);
   renderQuotes();
 }
 function refreshQuoteCatalog() {
@@ -1092,6 +1094,8 @@ async function refreshShopConfig() {
     const result = await api("public");
     configError = "";
     config = result.config;
+    window.BOLT_BUY_COVER = config.coverImage || "";
+    window.dispatchEvent(new Event("buy-cover-ready"));
     serverOffset = new Date(result.serverTime).getTime() - Date.now();
     renderShop();
     renderPickupAddress();
