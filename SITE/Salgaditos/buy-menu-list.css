@@ -47,3 +47,31 @@ body.delivery-shop .category-block .product .foodpic{grid-row:1/3}
 body.delivery-shop .category-block .product>.btn{grid-column:2;grid-row:3;justify-self:stretch;width:100%;min-height:44px;padding:9px 5px;text-align:center;background:#bd1837!important;color:#fff!important}
 @media(min-width:700px){body.delivery-shop .shopbar{grid-template-columns:minmax(0,1fr) auto;align-items:center}body.delivery-shop .shopbar>div:last-child{width:auto;border:0;padding:0;gap:16px}}
 @media(display-mode:standalone){body.delivery-shop{padding-top:env(safe-area-inset-top,0px)}}
+/* Tap the entire product row to explore before adding. */
+body.delivery-shop .category-block .product>.btn{display:none!important}
+body.delivery-shop .category-block .product{cursor:pointer;grid-template-rows:auto 1fr;min-height:130px;align-content:center}
+body.delivery-shop .category-block .product p{align-self:end;padding-bottom:4px}
+body.delivery-shop .category-block .product:focus-visible{outline:3px solid #bd1837;outline-offset:3px}
+body.delivery-shop dialog.delivery-detail{padding:0!important;border:1px solid #eceef2;border-radius:28px!important;background:#fff;color:#20232b;box-shadow:0 28px 90px #10182840;width:min(520px,calc(100% - 24px));max-height:90dvh;overflow-y:auto;overscroll-behavior:contain}
+body.delivery-shop dialog.delivery-detail::backdrop{background:#10182870;backdrop-filter:blur(8px)}
+body.delivery-shop dialog.delivery-detail>header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#fff;border-bottom:1px solid #f0f1f4;color:#687180;font-size:12px}
+body.delivery-shop dialog.delivery-detail>header button{width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#f3f4f7;color:#20232b;font-size:26px}
+body.delivery-shop dialog.delivery-detail .delivery-detail-body{display:block;padding:0;overflow:visible}
+body.delivery-shop dialog.delivery-detail .delivery-photo{display:block!important;height:220px;min-height:0;max-height:28dvh;width:100%;padding:0;background:#f5f5f7;border-radius:0;overflow:hidden}
+body.delivery-shop dialog.delivery-detail .delivery-photo img{width:100%;height:100%;object-fit:cover}
+body.delivery-shop dialog.delivery-detail .delivery-detail-body>section{padding:22px}
+body.delivery-shop dialog.delivery-detail h2{font-size:25px;line-height:1.2;letter-spacing:-.6px;margin:10px 0 12px;overflow-wrap:anywhere}
+body.delivery-shop dialog.delivery-detail .delivery-category{color:#9d1530;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700}
+body.delivery-shop dialog.delivery-detail section p{font-size:14px;line-height:1.6;color:#626875}
+body.delivery-shop dialog.delivery-detail .delivery-price{margin-top:18px;display:flex;flex-direction:column;gap:4px}
+body.delivery-shop dialog.delivery-detail .delivery-price strong{font-size:25px;color:#20232b}
+body.delivery-shop dialog.delivery-detail>footer{position:sticky;bottom:0;display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));background:#fffffff5;backdrop-filter:blur(16px);border-top:1px solid #eceef2}
+body.delivery-shop dialog.delivery-detail .delivery-quantity{display:flex;align-items:center;justify-content:space-between;border:1px solid #e6e8ed;border-radius:16px;gap:0}
+body.delivery-shop dialog.delivery-detail .delivery-quantity button{width:40px;min-height:48px;background:transparent;border:0;color:#bd1837;font-size:22px}
+body.delivery-shop dialog.delivery-detail [data-add]{border:0;border-radius:16px;background:#bd1837;color:white;font-size:14px;font-weight:700;min-height:50px;padding:12px}
+body.delivery-shop #buy-combo-picker form{padding:18px}
+body.delivery-shop #buy-combo-picker form>.delivery-photo{border-radius:18px;margin:14px 0}
+body.delivery-shop #buy-combo-picker [type=submit]{position:sticky;bottom:0;min-height:50px;box-shadow:0 0 0 10px #fff;border-radius:14px}
+body.delivery-shop #buy-combo-picker .buy-flavor{transition:background .2s,border-color .2s;cursor:pointer}
+@media(max-width:600px){body.delivery-shop dialog.delivery-detail{margin:auto auto 0!important;width:100%!important;max-width:100%!important;border-radius:28px 28px 0 0!important}}
+@media(prefers-reduced-motion:no-preference){body.delivery-shop dialog.delivery-detail[open]{animation:buy-detail-arrive .3s cubic-bezier(.2,.8,.2,1)}body.delivery-shop .category-block .product{transition:transform .18s,box-shadow .18s}body.delivery-shop .category-block .product:active{transform:scale(.985)}body.delivery-shop dialog.delivery-detail button:active{transform:scale(.96)}@keyframes buy-detail-arrive{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}}

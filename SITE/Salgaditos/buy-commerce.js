@@ -784,6 +784,13 @@ function installShop() {
     event.stopPropagation();
     productDetails(id);
   }, true);
+  document.getElementById("homeView").addEventListener("keydown", event => {
+    const card = event.target.closest("[data-product-id]");
+    if (card && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      productDetails(card.dataset.productId);
+    }
+  });
   const applyExisting = window.applyCoupon;
   window.applyCoupon = async () => {
     const code = document.getElementById("couponCode").value;
