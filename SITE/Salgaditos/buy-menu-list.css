@@ -28,3 +28,22 @@ body.delivery-shop .category-block .product>.btn:active,body.delivery-shop .buy-
 @media(min-width:900px){body.delivery-shop .category-block .shopproducts{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:350px){body.delivery-shop .category-block .product{grid-template-columns:minmax(0,1fr) 84px;padding:12px;gap:6px 12px}body.delivery-shop .category-block .product .foodpic{width:84px;height:90px}}
 @media(prefers-reduced-motion:no-preference){body.delivery-shop .buy-combo-grid{scroll-behavior:smooth}body.delivery-shop .category-block .product>.btn,body.delivery-shop .buy-combo-grid .btn{transition:transform .18s ease,background .18s ease}}
+/* Store identity and actions share one compact, predictable header. */
+body.delivery-shop .shophead{padding:0 0 16px!important;border-radius:0 0 26px 26px;background:#fff!important;overflow:hidden;box-shadow:0 8px 28px #17203908}
+body.delivery-shop .buy-store-cover{height:clamp(112px,28vw,210px);margin:0;overflow:hidden}
+body.delivery-shop .buy-store-cover img{width:100%;height:100%;object-fit:cover}
+body.delivery-shop .shopbar{padding:18px 18px 0;display:grid!important;grid-template-columns:minmax(0,1fr);gap:14px}
+body.delivery-shop .shopbar .brand-identity{display:flex;align-items:center;gap:12px;width:100%;min-width:0}
+body.delivery-shop .shopbar .brand-avatar{width:58px;height:58px;flex:0 0 58px;border-radius:18px;border:1px solid #e8eaf0;box-shadow:0 3px 12px #17203909;overflow:hidden}
+body.delivery-shop .shopbar .brand-avatar img{width:100%;height:100%;object-fit:contain}
+body.delivery-shop .shopbar .brand-text strong{font:750 22px/1.15 'Helvetica Neue',Arial,sans-serif;letter-spacing:-.7px;color:#192335}
+body.delivery-shop .shopbar .brand-text small{font-size:12px;line-height:1.4;margin-top:5px;color:#687180}
+body.delivery-shop .shopbar>div:last-child{display:flex!important;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;padding-top:10px;border-top:1px solid #f0f1f4;width:100%}
+body.delivery-shop .shopbar .pill.live{display:inline-flex;align-items:center;justify-content:center;flex:0 1 auto;width:auto;max-width:100%;min-height:30px;padding:6px 10px;border-radius:9px;font-size:11px;line-height:1.3;white-space:normal}
+body.delivery-shop .shopbar .buy-notification-control{display:inline-flex;align-items:center;gap:6px;width:auto;flex:0 0 auto;font-size:11px;margin:0;color:#687180}
+body.delivery-shop .shopbar .buy-notification-switch{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:0}
+body.delivery-shop #delivery-location{display:flex;align-items:center;text-align:left;width:calc(100% - 36px);margin:10px 18px 0;padding:12px 14px;min-height:46px;font-size:12px;line-height:1.4;font-weight:600;border-radius:14px;border:1px solid #eceef2;background:#f7f8fa;color:#333c4d;box-shadow:none}
+body.delivery-shop .category-block .product .foodpic{grid-row:1/3}
+body.delivery-shop .category-block .product>.btn{grid-column:2;grid-row:3;justify-self:stretch;width:100%;min-height:44px;padding:9px 5px;text-align:center;background:#bd1837!important;color:#fff!important}
+@media(min-width:700px){body.delivery-shop .shopbar{grid-template-columns:minmax(0,1fr) auto;align-items:center}body.delivery-shop .shopbar>div:last-child{width:auto;border:0;padding:0;gap:16px}}
+@media(display-mode:standalone){body.delivery-shop{padding-top:env(safe-area-inset-top,0px)}}
