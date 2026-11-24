@@ -89,3 +89,9 @@ body.delivery-shop #featuredProducts .product>.btn{display:none!important}
 body.delivery-shop :is(.buy-combo-grid article,.featured-card){cursor:pointer}
 body.delivery-shop :is(.buy-combo-grid article,.featured-card):focus-visible{outline:3px solid #bd1837;outline-offset:-3px}
 @media(prefers-reduced-motion:no-preference){body.delivery-shop :is(.buy-combo-grid article,.featured-card){transition:transform .18s}body.delivery-shop :is(.buy-combo-grid article,.featured-card):active{transform:scale(.98)}}
+/* Equal-height featured cards keep every price on the same baseline. */
+body.delivery-shop #featuredProducts{display:flex;align-items:stretch}
+body.delivery-shop #featuredProducts .featured-card{display:flex!important;flex-direction:column;align-self:stretch;height:auto;box-sizing:border-box;padding-bottom:18px}
+body.delivery-shop #featuredProducts .featured-card .foodpic{flex-shrink:0;width:100%;aspect-ratio:1;height:auto}
+body.delivery-shop #featuredProducts .featured-card h4{flex:0 0 auto;min-height:4.05em;margin:12px 0 0;padding:0 12px;font-size:15px;line-height:1.35;white-space:normal;overflow:visible;overflow-wrap:anywhere}
+body.delivery-shop #featuredProducts .featured-card>p{flex:0 0 auto;margin:0!important;margin-top:auto!important;padding:14px 12px 0;line-height:1.4;font-size:14px;text-align:center}
