@@ -240,7 +240,7 @@ function renderAdmin() {
       )
       .join("") ||
     "<p>Cadastre os produtos e suas fotos primeiro na aba Produtos.</p>"
-  }</div></fieldset><label class="buy-span"><input name="active" type="checkbox" checked> Disponível no shop</label><div class="buy-span actions"><button class="btn red" type="submit">Salvar combo</button><button class="btn" type="reset">Novo / limpar</button></div><p id="buy-combo-message" class="buy-span" role="status"></p></form></section><section class="panel"><h3>Combos cadastrados</h3><div id="buy-combo-list"></div></section>`;
+  }</div></fieldset><label class="buy-span"><input name="active" type="checkbox" checked> Disponível no shop</label><div class="buy-span actions"><button class="btn red" type="submit">Salvar combo</button><button class="btn" type="reset">Novo / limpar</button></div><p id="buy-combo-message" class="buy-span" role="status"></p></form></section><section class="panel"><h3>Combos cadastrados <span id="buy-combo-count"></span></h3><div id="buy-combo-list"></div></section>`;
   renderComboList();
   const form = document.getElementById("buy-combo-form");
   const syncPricing = () => {
@@ -254,7 +254,14 @@ function renderAdmin() {
   };
   form.elements.pricing.onchange = syncPricing;
   syncPricing();
-  form.addEventListener("reset", () => queueMicrotask(syncPricing));
+  form.addEventListener("reset", () => {
+    // Hidden inputs retain their edited value across native form.reset().
+    // Clear it synchronously so the next submission creates a new combo.
+    form.elements.id.value = "";
+    form.querySelector('[type="submit"]').textContent = "Salvar novo combo";
+    message("buy-combo-message", "Novo combo: preencha o nome, a quantidade e os sabores.");
+    queueMicrotask(syncPricing);
+  });
   form.elements.mode.onchange = () => {
     form.elements.maxFlavors.value =
       form.elements.mode.value === "single"
@@ -351,6 +358,7 @@ function refreshQuoteCatalog() {
 }
 function renderComboList() {
   refreshQuoteCatalog();
+  document.getElementById("buy-combo-count").textContent = `(${config.combos.length})`;
   document.getElementById("buy-combo-list").innerHTML =
     config.combos
       .map(
@@ -386,6 +394,8 @@ function renderComboList() {
           "description",
         ])
           f.elements[key].value = c[key];
+        f.querySelector('[type="submit"]').textContent = "Salvar alterações";
+        message("buy-combo-message", `Editando: ${c.name}. Para cadastrar outro, clique em Novo / limpar.`);
         f.elements.pricing.dispatchEvent(new Event("change"));
         f.elements.active.checked = c.active;
         f.querySelectorAll("[name=productIds]").forEach(
@@ -1138,7 +1148,11 @@ if (admin) {
   });
   setInterval(() => {
     if (document.visibilityState === "visible") void refreshOrders();
-  }, 30000);
+  }, 15000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") void refreshOrders();
+  });
+  window.addEventListener("online", () => void refreshOrders());
   window.addEventListener("bolt-catalog-ready", () => {
     if (!config) return;
     refreshQuoteCatalog();
