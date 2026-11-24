@@ -75,3 +75,17 @@ body.delivery-shop #buy-combo-picker [type=submit]{position:sticky;bottom:0;min-
 body.delivery-shop #buy-combo-picker .buy-flavor{transition:background .2s,border-color .2s;cursor:pointer}
 @media(max-width:600px){body.delivery-shop dialog.delivery-detail{margin:auto auto 0!important;width:100%!important;max-width:100%!important;border-radius:28px 28px 0 0!important}}
 @media(prefers-reduced-motion:no-preference){body.delivery-shop dialog.delivery-detail[open]{animation:buy-detail-arrive .3s cubic-bezier(.2,.8,.2,1)}body.delivery-shop .category-block .product{transition:transform .18s,box-shadow .18s}body.delivery-shop .category-block .product:active{transform:scale(.985)}body.delivery-shop dialog.delivery-detail button:active{transform:scale(.96)}@keyframes buy-detail-arrive{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}}
+/* Compact identity: notification switch sits beside the store name. */
+body.delivery-shop #delivery-location{display:none!important}
+body.delivery-shop .shopbar .brand-identity{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:center}
+body.delivery-shop .shopbar .brand-avatar{width:52px;height:52px;min-width:0}
+body.delivery-shop .shopbar .brand-text strong{font-size:clamp(17px,5vw,22px)}
+body.delivery-shop .shopbar .brand-identity .buy-notification-control{display:flex;flex-direction:column;gap:0;font-size:9px;line-height:1.2;justify-content:center}
+body.delivery-shop .shopbar .brand-identity .buy-notification-control>span{order:2}
+body.delivery-shop .shopbar>div:last-child{padding-top:0;border:0;justify-content:flex-start}
+body.delivery-shop .shopbar{gap:8px;padding-top:14px}
+body.delivery-shop .shophead{padding-bottom:12px!important}
+body.delivery-shop #featuredProducts .product>.btn{display:none!important}
+body.delivery-shop :is(.buy-combo-grid article,.featured-card){cursor:pointer}
+body.delivery-shop :is(.buy-combo-grid article,.featured-card):focus-visible{outline:3px solid #bd1837;outline-offset:-3px}
+@media(prefers-reduced-motion:no-preference){body.delivery-shop :is(.buy-combo-grid article,.featured-card){transition:transform .18s}body.delivery-shop :is(.buy-combo-grid article,.featured-card):active{transform:scale(.98)}}
