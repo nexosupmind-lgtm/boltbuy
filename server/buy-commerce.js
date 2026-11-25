@@ -421,7 +421,7 @@ export async function onRequest({ request, env, waitUntil }) {
         fail(404,"Combo não encontrado nesta loja.");
       let next;
       try {
-        next = action === "product-description" ? normalizeConfig({...config,productDescriptions:{...config.productDescriptions,[body.id]:body.description}},slug === "salgaditos") : action === "appearance" ? normalizeConfig({...config,...Object.fromEntries(Object.entries(body.images || {}).filter(([key])=>["adminIcon","shopIcon","coverImage"].includes(key)))},slug === "salgaditos") : deletingCombo ? {...config,combos:config.combos.filter(c=>c.id!==body.id)} : normalizeConfig(body.config, slug === "salgaditos");
+        next = action === "product-description" ? normalizeConfig({...config,productDescriptions:{...config.productDescriptions,[body.id]:body.description}},slug === "salgaditos") : action === "appearance" ? normalizeConfig({...config,...Object.fromEntries(Object.entries(body.images || {}).filter(([key])=>["adminIcon","shopIcon","coverImage","promotions"].includes(key)))},slug === "salgaditos") : deletingCombo ? {...config,combos:config.combos.filter(c=>c.id!==body.id)} : normalizeConfig(body.config, slug === "salgaditos");
       } catch (e) {
         fail(400, e.message);
       }
