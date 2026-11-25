@@ -79,6 +79,7 @@ export function normalizeConfig(input = {}, legacy = false) {
     );
   return {
     pickupAddress: clean(input.pickupAddress, 400),
+    productDescriptions: Object.fromEntries(Object.entries(input.productDescriptions || {}).filter(([id])=>/^[0-9a-f-]{36}$/i.test(id)).map(([id,text])=>[id,clean(text,1200)])),
     adminIcon: assetImage(input.adminIcon, 42000),
     shopIcon: assetImage(input.shopIcon, 42000),
     coverImage: assetImage(input.coverImage, 82000),

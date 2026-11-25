@@ -660,3 +660,15 @@ test('Appearance updates only images, preserves orders and rejects staff or stal
 test('Image settings reject script URLs, SVG and oversized payloads',()=>{
  for(const value of ['javascript:alert(1)','https://evil.test/a.jpg','data:image/svg+xml;base64,AAAA','data:image/jpeg;base64,'+'A'.repeat(82000)])assert.throws(()=>normalizeConfig({shopIcon:value}));
 });
+
+test('Product descriptions persist by tenant and preserve other commerce settings',async()=>{
+ const h=harness(),snapshot=h.tables.bolt_delivery_storefronts[0],version=snapshot.updated_at;
+ const body={id:p1,description:'Crocante por fora.\nRecheio de frango.',version};
+ assert.equal((await h.request('product-description',body,'staff')).status,403);
+ assert.equal((await h.request('product-description',{...body,id:other},'owner')).status,404);
+ assert.equal((await h.request('product-description',{...body,description:'x'.repeat(1201)},'owner')).status,400);
+ const result=await h.request('product-description',body,'owner');assert.equal(result.status,200);
+ const data=await result.json();assert.equal(data.config.productDescriptions[p1],body.description);assert.equal(data.config.combos.length,1);assert.equal(data.config.deliveryFee,7);
+ const visible=await (await h.request('public')).json();assert.equal(visible.config.productDescriptions[p1],body.description);
+ assert.equal((await h.request('product-description',{...body,version:data.version,description:''},'owner')).status,200);
+});

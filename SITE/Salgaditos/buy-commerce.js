@@ -1,4 +1,4 @@
-import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=appearance-1";
+import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=description-1";
 import { quotePDF } from "./buy-quote-pdf.js?v=quotes-3";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";

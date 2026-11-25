@@ -405,19 +405,23 @@ export async function onRequest({ request, env, waitUntil }) {
         version: snapshot?.updated_at || null,
       });
     }
-    if (["configure", "combo-delete", "appearance"].includes(action) && request.method === "POST") {
+    if (["configure", "combo-delete", "appearance", "product-description"].includes(action) && request.method === "POST") {
       await member("products", true);
       if ((body.version || null) !== (snapshot?.updated_at || null))
         fail(
           409,
           "As configurações mudaram em outra sessão. Recarregue antes de salvar.",
         );
+      if(action === "product-description"){
+        if(!UUID.test(body.id) || !(await products()).some(p=>p.id === body.id))fail(404,"Produto não encontrado nesta loja.");
+        if(typeof body.description !== "string" || body.description.length > 1200)fail(400,"A descrição deve ter até 1200 caracteres.");
+      }
       const deletingCombo = action === "combo-delete";
       if(deletingCombo && (!UUID.test(body.id) || !config.combos.some(c=>c.id===body.id)))
         fail(404,"Combo não encontrado nesta loja.");
       let next;
       try {
-        next = action === "appearance" ? normalizeConfig({...config,...Object.fromEntries(Object.entries(body.images || {}).filter(([key])=>["adminIcon","shopIcon","coverImage"].includes(key)))},slug === "salgaditos") : deletingCombo ? {...config,combos:config.combos.filter(c=>c.id!==body.id)} : normalizeConfig(body.config, slug === "salgaditos");
+        next = action === "product-description" ? normalizeConfig({...config,productDescriptions:{...config.productDescriptions,[body.id]:body.description}},slug === "salgaditos") : action === "appearance" ? normalizeConfig({...config,...Object.fromEntries(Object.entries(body.images || {}).filter(([key])=>["adminIcon","shopIcon","coverImage"].includes(key)))},slug === "salgaditos") : deletingCombo ? {...config,combos:config.combos.filter(c=>c.id!==body.id)} : normalizeConfig(body.config, slug === "salgaditos");
       } catch (e) {
         fail(400, e.message);
       }
