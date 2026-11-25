@@ -672,3 +672,9 @@ test('Product descriptions persist by tenant and preserve other commerce setting
  const visible=await (await h.request('public')).json();assert.equal(visible.config.productDescriptions[p1],body.description);
  assert.equal((await h.request('product-description',{...body,version:data.version,description:''},'owner')).status,200);
 });
+
+test('Photo promotion banners accept realistic encoded sizes and retain an upper bound',()=>{
+ const image='data:image/jpeg;base64,'+'A'.repeat(100000);
+ assert.equal(normalizeConfig({promotions:[{title:'Banner',image}]}).promotions[0].image,image);
+ assert.throws(()=>normalizeConfig({promotions:[{image:'data:image/jpeg;base64,'+'A'.repeat(180000)}]}));
+});
