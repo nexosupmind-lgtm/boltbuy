@@ -83,3 +83,20 @@ html body.buy-admin-app #posProducts .btn{min-height:40px;margin:0 10px!importan
  html body.buy-admin-app #productTable td:last-child{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;padding-top:4px!important}
  html body.buy-admin-app #productTable td:last-child .btn{flex:1;min-height:42px;padding:8px!important}
 }
+
+/* Revenue mix: a quiet ring and a readable value legend, without legacy bars. */
+html body.buy-admin-app #bars .channel-chart{display:grid;grid-template-columns:minmax(160px,220px) minmax(0,1fr);align-items:center;gap:28px;padding:12px 0;background:transparent!important}
+html body.buy-admin-app #bars .channel-ring{width:190px;aspect-ratio:1;border-radius:50%;background:var(--channel-fill)!important;padding:14px;margin:auto;box-shadow:0 0 28px #ed92200c}
+html body.buy-admin-app #bars .channel-ring>div{width:100%;height:100%;border-radius:50%;background:#211b17!important;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;text-align:center}
+html body.buy-admin-app #bars .channel-ring strong{font-size:22px!important;color:#ffe1ad!important;letter-spacing:-.5px}
+html body.buy-admin-app #bars .channel-ring :is(small,span){font-size:11px;color:#c5b7aa!important}
+html body.buy-admin-app #bars .channel-legend{display:grid;gap:0;min-width:0;background:transparent!important}
+html body.buy-admin-app #bars .channel-item{display:grid;grid-template-columns:8px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #ffffff0c;background:transparent!important;color:#eee1d2!important}
+html body.buy-admin-app #bars .channel-item:last-child{border-bottom:0}
+html body.buy-admin-app #bars .channel-dot{width:7px;height:7px;border-radius:50%}
+html body.buy-admin-app #bars .channel-name{font-size:13px;overflow-wrap:anywhere}
+html body.buy-admin-app #bars .channel-item>div{text-align:right;background:transparent!important}
+html body.buy-admin-app #bars .channel-item b{color:#f5e5d0!important;font-size:14px;font-variant-numeric:tabular-nums}
+html body.buy-admin-app #bars .channel-item small{display:block;margin-top:4px;color:#b4a08b!important;font-size:11px}
+@media(max-width:600px){html body.buy-admin-app #bars .channel-chart{grid-template-columns:minmax(0,1fr);gap:16px}html body.buy-admin-app #bars .channel-ring{width:180px}}
+@media(prefers-reduced-motion:no-preference){html body.buy-admin-app #bars .channel-ring{animation:channel-reveal .4s ease-out}@keyframes channel-reveal{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}}
