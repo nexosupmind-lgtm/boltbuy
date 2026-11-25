@@ -48,3 +48,15 @@ body.delivery-shop :is(.buy-combo-grid article,.featured-card){box-shadow:inset 
 body.delivery-shop .bottomnav{box-shadow:inset 0 1px #ffd4a22b,0 -6px 25px #ff760018,0 10px 35px #0008!important}
 body.delivery-shop .bottomnav button.active .buy-nav-icon{filter:drop-shadow(0 0 5px #ff9c00)}
 @media(hover:hover){body.delivery-shop .chip:hover{border-color:#ffac42!important;box-shadow:0 0 18px #ff890038}}
+body.delivery-shop :is(#featuredProducts,.featured-horizontal,#featuredSection,.featured-section,.reorder-list){background:transparent!important;background-image:none!important}
+body.delivery-shop .panel-head{background:transparent!important}
+body.delivery-shop .panel-head .pill{background:#2b2019!important;color:#cfbdab!important;border:1px solid #67452f}
+body.delivery-shop #featuredProducts .featured-card{padding-bottom:12px;flex-basis:156px}
+body.delivery-shop #featuredProducts .featured-card .foodpic{height:118px;aspect-ratio:auto}
+body.delivery-shop #featuredProducts .featured-card h4{font-size:13px;line-height:1.3;min-height:3.9em;margin-top:9px;padding:0 9px}
+body.delivery-shop #featuredProducts .featured-card>p{padding:8px 9px 0;font-size:14px;color:#ffad3d!important}
+body.delivery-shop .buy-combo-grid article>img{height:125px}
+body.delivery-shop .buy-combo-grid article>div{padding:12px;gap:5px}
+body.delivery-shop .buy-combo-grid h3{font-size:16px}
+body.delivery-shop>.chiprow,body.delivery-shop .shop>.chiprow{margin:12px 0 6px;padding:8px 16px 12px;box-sizing:border-box;width:100%;display:flex;flex-wrap:nowrap;gap:10px}
+body.delivery-shop .shop>.chiprow .chip{flex:0 0 auto;min-height:76px;min-width:76px;padding:10px 12px!important}
