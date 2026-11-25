@@ -1,4 +1,4 @@
-import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=promos-size-2";
+import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=banner-combo-1";
 import { quotePDF } from "./buy-quote-pdf.js?v=quotes-3";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
@@ -113,7 +113,7 @@ function pickCombo(combo, done) {
   const dialog = document.createElement("dialog");
   dialog.id = "buy-combo-picker";
   dialog.className = admin ? "buy-dialog" : "buy-dialog delivery-detail";
-  dialog.innerHTML = `<form><header><div><small>MONTE DO SEU JEITO</small><h2>${esc(combo.name)}</h2></div><button type="button" data-close aria-label="Fechar">×</button></header>${admin ? "" : '<div class="delivery-photo">' + photo(products[0]) + "</div>"}<p>${esc(combo.description)}</p><p>${combo.mode === "single" ? `Escolha um sabor para as ${combo.units} unidades.` : `Distribua ${combo.units} unidades entre até ${combo.maxFlavors} sabores.`}</p><div class="buy-flavors">${products.map((p) => `<label class="buy-flavor">${photo(p)}<strong>${esc(p.name)}</strong>${["unit", "option"].includes(combo.pricing) ? `<small>${amount(p.price)} por unidade · ${amount(Math.round(p.price * 100) * combo.units / 100)} por ${combo.units}</small>` : `<small>${amount(combo.pricing === "option" ? p.price : combo.price)} · pacote de ${combo.units}</small>`}${combo.mode === "single" ? `<input type="radio" name="flavor" value="${esc(p.id)}" required>` : `<input type="number" min="0" max="${combo.units}" step="1" value="0" data-flavor="${esc(p.id)}" aria-label="Quantidade de ${esc(p.name)}">`}</label>`).join("")}</div><p data-count role="status"></p><button class="btn red full" type="submit" disabled>Adicionar ao carrinho</button></form>`;
+  dialog.innerHTML = `<form><header><div><small>MONTE DO SEU JEITO</small><h2>${esc(combo.name)}</h2></div><button type="button" data-close aria-label="Fechar">×</button></header>${admin ? "" : '<div class="delivery-photo">' + photo(products[0]) + "</div>"}<p>${esc(combo.description)}</p><p class="hint">${combo.shipping === "included" ? "Frete incluso neste combo" : "Frete calculado à parte no checkout"}</p><p>${combo.mode === "single" ? `Escolha um sabor para as ${combo.units} unidades.` : `Distribua ${combo.units} unidades entre até ${combo.maxFlavors} sabores.`}</p><div class="buy-flavors">${products.map((p) => `<label class="buy-flavor">${photo(p)}<strong>${esc(p.name)}</strong>${["unit", "option"].includes(combo.pricing) ? `<small>${amount(p.price)} por unidade · ${amount(Math.round(p.price * 100) * combo.units / 100)} por ${combo.units}</small>` : `<small>${amount(combo.pricing === "option" ? p.price : combo.price)} · pacote de ${combo.units}</small>`}${combo.mode === "single" ? `<input type="radio" name="flavor" value="${esc(p.id)}" required>` : `<input type="number" min="0" max="${combo.units}" step="1" value="0" data-flavor="${esc(p.id)}" aria-label="Quantidade de ${esc(p.name)}">`}</label>`).join("")}</div><p data-count role="status"></p><button class="btn red full" type="submit" disabled>Adicionar ao carrinho</button></form>`;
   document.body.append(dialog);
   const form = dialog.querySelector("form"),
     submit = form.querySelector("[type=submit]");
@@ -233,7 +233,7 @@ function configSections() {
 }
 function renderAdmin() {
   const combos = document.getElementById("buy-combos");
-  combos.innerHTML = `<section class="panel"><h2>Combos com escolha de sabores</h2><p class="hint">Cadastre cada sabor com seu preço por unidade. No “Combo 15”, o valor será multiplicado por 15. Exemplo: R$ 0,50 × 15 = R$ 7,50. Para um valor independente dos sabores, escolha preço fixo.</p><form id="buy-combo-form" class="formgrid"><input name="id" type="hidden"><label class="field">Nome<input name="name" required maxlength="100" placeholder="Combo de 15 mini salgados"></label><label class="field">Como calcular o preço<select name="pricing"><option value="option">Preço unitário do sabor × unidades do combo</option><option value="fixed">Preço fixo do pacote</option><option value="unit">Somar o preço por unidade de cada sabor</option></select></label><label class="field" data-fixed-price>Preço fixo do pacote<input name="price" type="number" min="0" step=".01" required></label><label class="field">Unidades por combo<input name="units" type="number" min="1" max="1000" value="15" required></label><label class="field">Escolha dos sabores<select name="mode"><option value="single">Um sabor para o pacote inteiro</option><option value="mixed">Misturar sabores</option></select></label><label class="field">Máximo de sabores diferentes<input name="maxFlavors" type="number" min="1" max="100" value="1" required></label><label class="field">Descrição<input name="description" maxlength="600"></label><fieldset class="buy-span"><legend>Produtos / sabores disponíveis no combo</legend><div class="buy-product-checks">${
+  combos.innerHTML = `<section class="panel"><h2>Combos com escolha de sabores</h2><p class="hint">Cadastre cada sabor com seu preço por unidade. No “Combo 15”, o valor será multiplicado por 15. Exemplo: R$ 0,50 × 15 = R$ 7,50. Para um valor independente dos sabores, escolha preço fixo.</p><form id="buy-combo-form" class="formgrid"><input name="id" type="hidden"><label class="field">Nome<input name="name" required maxlength="100" placeholder="Combo de 15 mini salgados"></label><label class="field">Como calcular o preço<select name="pricing"><option value="option">Preço unitário do sabor × unidades do combo</option><option value="fixed">Preço fixo do pacote</option><option value="unit">Somar o preço por unidade de cada sabor</option></select></label><label class="field" data-fixed-price>Preço fixo do pacote<input name="price" type="number" min="0" step=".01" required></label><label class="field">Unidades por combo<input name="units" type="number" min="1" max="1000" value="15" required></label><label class="field">Escolha dos sabores<select name="mode"><option value="single">Um sabor para o pacote inteiro</option><option value="mixed">Misturar sabores</option></select></label><label class="field">Máximo de sabores diferentes<input name="maxFlavors" type="number" min="1" max="100" value="1" required></label><label class="field">Descrição<input name="description" maxlength="600"></label><label class="field">Abrir este combo pelo banner<select name="banner"><option value="0">Sem vínculo</option>${Array.from({length:8},(_,i)=>`<option value="${i+1}">Banner ${i+1}</option>`).join("")}</select></label><label class="field">Frete do combo<select name="shipping"><option value="separate">Cliente paga o frete à parte</option><option value="included">Frete incluso no preço</option></select></label><p class="hint buy-span">Com frete incluso, a entrega do pedido inteiro fica sem cobrança adicional, mesmo com outros itens no carrinho. Cadastre o preço do combo já considerando esse custo. O banner precisa estar cadastrado na vitrine.</p><fieldset class="buy-span"><legend>Produtos / sabores disponíveis no combo</legend><div class="buy-product-checks">${
     catalog()
       .map(
         (p) =>
@@ -287,7 +287,7 @@ function renderAdmin() {
         };
       const next = normalizeConfig({
         ...config,
-        combos: [...config.combos.filter((c) => c.id !== combo.id), combo],
+        combos: [...config.combos.filter((c) => c.id !== combo.id).map(c=>Number(combo.banner)>0 && c.banner===Number(combo.banner)?{...c,banner:0}:c), combo],
       });
       await saveConfig(next);
       renderComboList();
@@ -393,6 +393,8 @@ function renderComboList() {
           "units",
           "mode",
           "maxFlavors",
+          "banner",
+          "shipping",
           "description",
         ])
           f.elements[key].value = c[key];
@@ -827,9 +829,7 @@ function installShop() {
     const value = originalTotals(d);
     if (config)
       value.fee =
-        document.getElementById("mode").value === "delivery"
-          ? config.deliveryFee
-          : 0;
+        deliveryFeeFor(config, window.lines(d).map(l=>l.p), document.getElementById("mode").value);
     return value;
   };
   const originalAdd = window.addItem;
@@ -1213,3 +1213,13 @@ window.addEventListener("bolt-tenant-ready", theme);
 document.addEventListener("input", (e) => {
   if (e.target.closest(".buy-admin-page")) adminDirty = true;
 });
+
+if(!admin){
+ const bannerCombo = slide => config?.combos.find(c=>c.active && c.banner === [...document.querySelectorAll('#promoCarousel .promo-slide')].indexOf(slide)+1);
+ function decorateBanners(){document.querySelectorAll('#promoCarousel .promo-slide').forEach(slide=>{const c=bannerCombo(slide);if(c){slide.tabIndex=0;slide.setAttribute('role','button');slide.setAttribute('aria-label','Abrir combo '+c.name);slide.style.cursor='pointer';}});}
+ function openBanner(event){const slide=event.target.closest('#promoCarousel .promo-slide');if(!slide)return;const c=bannerCombo(slide);if(!c)return;event.preventDefault();event.stopPropagation();window.addItem(c.id);}
+ document.addEventListener('click',openBanner,true);
+ document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')openBanner(e);});
+ const promoRoot=document.getElementById('promoCarousel');if(promoRoot)new MutationObserver(decorateBanners).observe(promoRoot,{childList:true});
+ window.addEventListener('buy-cover-ready',decorateBanners);decorateBanners();
+}
