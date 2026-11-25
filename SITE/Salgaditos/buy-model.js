@@ -64,6 +64,11 @@ export function normalizeConfig(input = {}, legacy = false) {
       units: integer(c.units, 1, 1000),
       mode: c.pricing !== "option" && c.mode === "mixed" ? "mixed" : "single",
       maxFlavors: c.pricing === "option" ? 1 : integer(c.maxFlavors || c.units, 1, 100),
+      includedItems: (Array.isArray(c.includedItems)?c.includedItems:[]).slice(0,20).map(item=>{
+        if(!UUID.test(item.productId))throw Error('Produto incluído inválido.');
+        if(c.pricing !== 'fixed')throw Error('Combos com itens incluídos precisam de preço fixo.');
+        return {productId:item.productId,quantity:integer(item.quantity,1,100)};
+      }),
       productIds,
       active: c.active !== false,
     };
@@ -169,6 +174,10 @@ export function pricedItems(config, products, lines) {
         (c) => c.id === line.comboId && c.active,
       );
       if (!combo) throw Error("Combo indisponível. Atualize o cardápio.");
+      const included = (combo.includedItems||[]).map(item=>{
+        const p=byId.get(item.productId);if(!p)throw Error('Um item incluído no combo está indisponível.');
+        return {...item,name:p.name};
+      });
       const selections = Array.isArray(line.selections) ? line.selections : [],
         seen = new Set();
       const flavors = selections.map((s) => {
@@ -197,7 +206,7 @@ export function pricedItems(config, products, lines) {
         name:
           combo.name +
           " · " +
-          flavors.map((f) => `${f.quantity}× ${f.name}`).join(", "),
+          flavors.map((f) => `${f.quantity}× ${f.name}`).join(", ") + (included.length ? " + " + included.map(i=>`${i.quantity}× ${i.name}`).join(", ") : ""),
         price: comboPrice(combo, flavors, [...byId.values()]),
         qty,
         selections: flavors,
