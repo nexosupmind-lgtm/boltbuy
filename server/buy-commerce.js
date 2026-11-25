@@ -57,10 +57,10 @@ export async function onRequest({ request, env, waitUntil }) {
       fail(400, "Loja inválida.");
     if (!["GET", "POST"].includes(request.method))
       fail(405, "Método não permitido.");
-    if (Number(request.headers.get("content-length") || 0) > 200000)
+    if (Number(request.headers.get("content-length") || 0) > 2000000)
       fail(413, "Dados muito grandes.");
     const raw = request.method === "POST" ? await request.text() : "";
-    if (raw.length > 200000) fail(413, "Dados muito grandes.");
+    if (raw.length > 2000000) fail(413, "Dados muito grandes.");
     let body = {};
     try {
       if (raw) body = JSON.parse(raw);
