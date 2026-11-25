@@ -429,7 +429,7 @@ export async function onRequest({ request, env, waitUntil }) {
       const catalog = await products();
       if (
         action === "configure" && next.combos.some((c) =>
-          [...c.productIds,...(c.includedItems||[]).map(i=>i.productId)].some((id) => !catalog.some((p) => p.id === id)),
+          [...c.productIds,...(c.includedItems||[]).map(i=>i.productId),...(c.groups||[]).flatMap(g=>g.productIds)].some((id) => !catalog.some((p) => p.id === id)),
         )
       )
         fail(400, "Um sabor não pertence a esta loja.");

@@ -64,6 +64,13 @@ export function normalizeConfig(input = {}, legacy = false) {
       units: integer(c.units, 1, 1000),
       mode: c.pricing !== "option" && c.mode === "mixed" ? "mixed" : "single",
       maxFlavors: c.pricing === "option" ? 1 : integer(c.maxFlavors || c.units, 1, 100),
+      groupName: clean(c.groupName,80)||'Itens à escolha',
+      groups: (Array.isArray(c.groups)?c.groups:[]).slice(0,8).map((g,index)=>{
+        if(c.pricing!=='fixed')throw Error('Grupos de escolha precisam de preço fixo.');
+        const ids=[...new Set(g.productIds||[])];
+        if(!ids.length||ids.some(id=>!UUID.test(id)))throw Error('Selecione os produtos de cada grupo.');
+        return {id:'group-'+index,name:clean(g.name,80)||'Escolha adicional',units:integer(g.units,1,1000),productIds:ids};
+      }),
       includedItems: (Array.isArray(c.includedItems)?c.includedItems:[]).slice(0,20).map(item=>{
         if(!UUID.test(item.productId))throw Error('Produto incluído inválido.');
         if(c.pricing !== 'fixed')throw Error('Combos com itens incluídos precisam de preço fixo.');
@@ -180,7 +187,14 @@ export function pricedItems(config, products, lines) {
       });
       const selections = Array.isArray(line.selections) ? line.selections : [],
         seen = new Set();
-      const flavors = selections.map((s) => {
+      const groupChoices=[];
+      if(selections.some(s=>s.groupId && !(combo.groups||[]).some(g=>g.id===s.groupId)))throw Error('Grupo inválido.');
+      for(const g of combo.groups||[]){
+        const selected=selections.filter(s=>s.groupId===g.id), unique=new Set();let count=0;
+        for(const choice of selected){const p=byId.get(choice.productId);if(!p||!g.productIds.includes(p.id)||unique.has(p.id))throw Error('Opção inválida no grupo '+g.name);unique.add(p.id);const quantity=integer(choice.quantity,1,g.units);count+=quantity;groupChoices.push({productId:p.id,name:p.name,quantity,groupId:g.id});}
+        if(count!==g.units)throw Error('Complete '+g.units+' unidade(s) em '+g.name);
+      }
+      const flavors = selections.filter(s=>!s.groupId).map((s) => {
         const p = byId.get(s.productId);
         if (!p || !combo.productIds.includes(p.id) || seen.has(p.id))
           throw Error("Sabor indisponível neste combo.");
@@ -206,10 +220,10 @@ export function pricedItems(config, products, lines) {
         name:
           combo.name +
           " · " +
-          flavors.map((f) => `${f.quantity}× ${f.name}`).join(", ") + (included.length ? " + " + included.map(i=>`${i.quantity}× ${i.name}`).join(", ") : ""),
+          [...flavors,...groupChoices].map((f) => `${f.quantity}× ${f.name}`).join(", ") + (included.length ? " + " + included.map(i=>`${i.quantity}× ${i.name}`).join(", ") : ""),
         price: comboPrice(combo, flavors, [...byId.values()]),
         qty,
-        selections: flavors,
+        selections: [...flavors,...groupChoices],
       };
     }
     const p = byId.get(line.productId);
