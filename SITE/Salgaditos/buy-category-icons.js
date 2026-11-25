@@ -1,0 +1,1 @@
+(()=>{const icons={Todos:'♨',Salgados:'🥟',Especiais:'☆',Doces:'🧁',Bebidas:'🥤',Combos:'▱',Individuais:'◇'};const root=document.getElementById('chips');if(!root)return;const apply=()=>root.querySelectorAll('.chip').forEach(button=>{button.dataset.categoryIcon=icons[button.textContent.trim()]||'◇'});new MutationObserver(apply).observe(root,{childList:true});apply();})();
