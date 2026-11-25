@@ -1,0 +1,32 @@
+/* Shared ember identity for merchant tools and purchase sheets. */
+body.delivery-shop dialog.delivery-detail :is(header,form,section,.delivery-price,.delivery-category,[data-count]){background:#1b1512!important;background-image:none!important;color:#f8eee3!important;border-color:#60432f!important}
+body.delivery-shop dialog.delivery-detail :is(h2,strong){color:#fff2e5!important}
+body.delivery-shop dialog.delivery-detail .delivery-category{display:inline-block;background:#382515!important;color:#ffbd60!important;border-radius:8px;font-size:10px;padding:5px 9px}
+body.delivery-shop dialog.delivery-detail .delivery-detail-body>section{padding:16px 20px!important}
+body.delivery-shop dialog.delivery-detail .delivery-photo{height:170px!important;max-height:24dvh!important;min-height:0!important}
+body.delivery-shop dialog.delivery-detail .delivery-photo img{object-fit:contain!important;background:#120f0c}
+body.delivery-shop dialog.delivery-detail h2{font-size:22px!important;margin:8px 0 12px!important}
+body.delivery-shop dialog.delivery-detail .delivery-price{margin:12px 0 0!important;padding:12px 0 0!important;display:flex!important;flex-direction:row!important;align-items:center;justify-content:space-between;gap:12px;text-align:left}
+body.delivery-shop dialog.delivery-detail .delivery-price strong{font-size:23px!important;color:#ffb64b!important}
+body.delivery-shop dialog.delivery-detail :is(header button,[data-close],.delivery-quantity){background:#302219!important;color:#ffcd85!important;border:1px solid #755035!important}
+body.delivery-shop dialog.delivery-detail :is([data-add],[type=submit]){background:linear-gradient(120deg,#ffaf21,#ef6809)!important;color:#1c1004!important;min-height:48px!important;border:1px solid #ffc46a!important;border-radius:14px!important;font-size:14px!important;font-weight:750;box-shadow:0 4px 20px #f78a0020!important}
+body.delivery-shop dialog.delivery-detail :is([data-add],[type=submit]):disabled{background:#3a3026!important;color:#a99b8a!important;border-color:#584536!important;opacity:1;box-shadow:none!important}
+body.delivery-shop #buy-combo-picker form>header{padding:6px 0 12px!important}
+body.delivery-shop #buy-combo-picker [data-count]{padding:12px;border:1px solid #65442d;border-radius:12px;font-size:12px;line-height:1.5}
+body.delivery-shop #buy-combo-picker .buy-flavor{padding:12px!important;text-align:left;gap:6px 10px!important}
+body.delivery-shop #buy-combo-picker .buy-flavor strong{font-size:14px;line-height:1.3;text-align:left}
+body.delivery-shop #buy-combo-picker .buy-flavor small{font-size:12px;line-height:1.4}
+body.delivery-shop #buy-combo-picker input{accent-color:#ff9b22}
+body.buy-admin-app{color-scheme:dark;background:#100d0b!important;color:#f4e9de!important}
+body.buy-admin-app :is(.main,.sidebar,.topbar,.panel,.metric,.media-upload,.buy-admin-page,.tablewrap,dialog){background:#1b1512!important;background-image:none!important;color:#f4e9de!important;border-color:#64432f!important;box-shadow:0 8px 26px #0003,inset 0 1px #ffc7850c}
+body.buy-admin-app :is(h1,h2,h3,h4,strong,label,td,th){color:#f4e9de!important}
+body.buy-admin-app :is(p,small,.hint,.muted,.field small,.metric em){color:#c3b09e!important}
+body.buy-admin-app :is(input,textarea,select,option){background:#261c16!important;color:#f8eee3!important;border:1px solid #705039!important}
+body.buy-admin-app :is(input,textarea)::placeholder{color:#ab9785!important}
+body.buy-admin-app :is(.btn,button){background:#302218!important;color:#f5dfc5!important;border-color:#765132!important}
+body.buy-admin-app :is(.btn.red,button.active,.nav button.active,.admin-mobile-nav button.active){background:linear-gradient(130deg,#ffad20,#ed6508)!important;color:#241205!important;box-shadow:0 0 16px #ff8a002c}
+body.buy-admin-app :is(.metric strong,.totals strong){color:#ffb64c!important}
+body.buy-admin-app :is(.admin-mobile-nav,.buy-admin-dock,.bottomnav){background:#1c1511ed!important;border-color:#7b5032!important;backdrop-filter:blur(18px);box-shadow:0 -4px 22px #ff8c0015}
+body.buy-admin-app .tablewrap tbody tr:hover{background:#392719!important}
+body.buy-admin-app .tablewrap tbody tr:hover :is(td,small,strong){color:#fff0db!important}
+body.buy-admin-app :is(input,textarea,select,button):focus-visible,body.delivery-shop dialog.delivery-detail button:focus-visible{outline:2px solid #ffb342!important;outline-offset:3px}
