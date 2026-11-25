@@ -60,3 +60,9 @@ body.delivery-shop .buy-combo-grid article>div{padding:12px;gap:5px}
 body.delivery-shop .buy-combo-grid h3{font-size:16px}
 body.delivery-shop>.chiprow,body.delivery-shop .shop>.chiprow{margin:12px 0 6px;padding:8px 16px 12px;box-sizing:border-box;width:100%;display:flex;flex-wrap:nowrap;gap:10px}
 body.delivery-shop .shop>.chiprow .chip{flex:0 0 auto;min-height:76px;min-width:76px;padding:10px 12px!important}
+/* Uploaded promotion artwork owns its natural proportions, without overlay. */
+body.delivery-shop #promoCarousel{height:auto!important;max-height:none!important;align-items:flex-start}
+body.delivery-shop #promoCarousel .promo-slide.has-promo-image{display:block!important;height:auto!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important;padding:0!important;background-image:none!important;background-color:#19120e!important}
+body.delivery-shop #promoCarousel .has-promo-image::before,body.delivery-shop #promoCarousel .has-promo-image::after{display:none!important}
+body.delivery-shop #promoCarousel .buy-promo-full{display:block;width:100%;height:auto!important;max-height:none!important;object-fit:contain;border-radius:inherit;filter:none;opacity:1}
+body.delivery-shop #categorySections .category-block{scroll-margin-top:20px}
