@@ -57,6 +57,8 @@ export function normalizeConfig(input = {}, legacy = false) {
       id: c.id,
       name: clean(c.name, 100),
       description: clean(c.description, 600),
+      banner: Math.min(8, Math.max(0, Math.trunc(Number(c.banner)||0))),
+      shipping: c.shipping === "included" ? "included" : "separate",
       pricing: ["unit", "option"].includes(c.pricing) ? c.pricing : "fixed",
       price: ["unit", "option"].includes(c.pricing) ? 0 : moneyValue(c.price),
       units: integer(c.units, 1, 1000),
@@ -213,3 +215,10 @@ export function pricedItems(config, products, lines) {
 }
 export const subtotalOf = (items) =>
   items.reduce((s, x) => s + Math.round(x.price * 100) * x.qty, 0) / 100;
+
+// Only server-validated combo identifiers qualify; no client-provided free-shipping flag.
+export function deliveryFeeFor(config, items, mode) {
+ if(mode !== 'delivery') return 0;
+ const included = items.some(i => config.combos.some(c => c.active && c.id === i.comboId && c.shipping === 'included'));
+ return included ? 0 : config.deliveryFee;
+}

@@ -3,6 +3,7 @@ import {
   availability,
   pricedItems,
   subtotalOf,
+  deliveryFeeFor,
   clean,
   UUID,
   moneyValue,
@@ -514,7 +515,7 @@ export async function onRequest({ request, env, waitUntil }) {
         fail(400, e.message);
       }
       const subtotal = subtotalOf(items),
-        fee = mode === "delivery" ? config.deliveryFee : 0;
+        fee = deliveryFeeFor(config, items, mode);
       let discount = 0,
         couponId = null,
         couponReservation = null,
