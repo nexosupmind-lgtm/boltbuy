@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {normalizeConfig,pricedItems,deliveryFeeFor} from '../SITE/Salgaditos/buy-model.js';
+const id=n=>`${String(n).padStart(8,'0')}-1111-4111-8111-111111111111`;
+const config=normalizeConfig({deliveryFee:8,combos:[{id:id(9),name:'Trem Bão',pricing:'fixed',price:67.99,units:100,mode:'mixed',maxFlavors:3,productIds:[id(1),id(2)],shipping:'included',groups:[{name:'Bebida',units:1,productIds:[id(3),id(4)]}]}]});
+const products=[1,2,3,4].map(n=>({id:id(n),name:'Produto '+n,price:5,active:true}));
+const primary=[{productId:id(1),quantity:30},{productId:id(2),quantity:70}];
+const beverage={productId:id(3),quantity:1,groupId:'group-0'};
+const price=selections=>pricedItems(config,products,[{comboId:id(9),qty:1,selections}]);
+test('100 items plus one independent drink preserves fixed total and free shipping',()=>{const result=price([...primary,beverage]);assert.equal(result[0].price,67.99);assert.equal(result[0].selections.length,3);assert.match(result[0].name,/1× Produto 3/);assert.equal(deliveryFeeFor(config,result,'delivery'),0);});
+test('rejects incomplete, cross-group, excessive and unknown selections',()=>{assert.throws(()=>price(primary));assert.throws(()=>price([{productId:id(1),quantity:95},{...beverage,quantity:5}]));assert.throws(()=>price([...primary,{...beverage,productId:id(1)}]));assert.throws(()=>price([...primary,{...beverage,groupId:'fake'}]));assert.throws(()=>price([...primary,beverage,beverage]));});
