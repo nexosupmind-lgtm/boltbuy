@@ -1,4 +1,4 @@
-import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=description-1";
+import { normalizeConfig, availability, subtotalOf, comboPrice } from "./buy-model.js?v=promos-cloud-1";
 import { quotePDF } from "./buy-quote-pdf.js?v=quotes-3";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
@@ -1094,6 +1094,7 @@ async function refreshShopConfig() {
     const result = await api("public");
     configError = "";
     config = result.config;
+    if(Array.isArray(config.promotions)){const local=load();local.promotions=config.promotions;save(local);window.renderPromos?.();}
     window.BOLT_BUY_COVER = config.coverImage || "";
     window.dispatchEvent(new Event("buy-cover-ready"));
     serverOffset = new Date(result.serverTime).getTime() - Date.now();

@@ -20,3 +20,10 @@ body:is(.buy-admin-app,.delivery-shop) :is(input,textarea,select):focus-visible{
 body:is(.buy-admin-app,.delivery-shop) button:focus-visible{outline:3px solid #526aa7;outline-offset:3px}
 @media(prefers-reduced-motion:no-preference){body:is(.buy-admin-app,.delivery-shop) .btn{transition:transform .16s,box-shadow .2s,background-color .2s}body:is(.buy-admin-app,.delivery-shop) .btn:active{transform:scale(.97)}body.buy-admin-app .tablewrap tbody tr{transition:background-color .18s}body.delivery-shop .category-block .product{transition:transform .18s,box-shadow .2s}}
 @media(hover:hover){body.delivery-shop .category-block .product:hover{box-shadow:0 8px 24px #1820390d}}
+body.buy-admin-app :is(.main,.page,.panel,.formgrid,.media-upload,.media-upload-row){min-width:0;max-width:100%;box-sizing:border-box}
+body.buy-admin-app .media-upload-row{grid-template-columns:minmax(0,1fr)}
+body.buy-admin-app .media-upload :is(input,button,img){width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+body.buy-admin-app .media-upload :is(b,p,h4){overflow-wrap:anywhere;white-space:normal}
+body.buy-admin-app .media-upload input[type=file]{color:#dce5ee;font-size:12px}
+body.delivery-shop .promo-slide.has-promo-image{background-color:#23140c!important;background-image:var(--promo-image)!important;aspect-ratio:2/1;min-height:0;padding:0;background-size:cover}
+body.delivery-shop .promo-slide.has-promo-image :is(.promo-text,.promo-icon){display:none}
