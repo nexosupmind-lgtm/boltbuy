@@ -450,7 +450,7 @@ function renderComboList() {
 }
 function renderQuotes() {
   document.getElementById("buy-quotes").innerHTML =
-    `<section class="panel"><h2>Montar orçamento</h2><p class="hint">Selecione produtos e combos ou inclua itens personalizados. O orçamento é salvo antes da exportação em PDF A4.</p><form id="buy-quote-form" class="formgrid"><label class="field">Cliente<input name="customer" required maxlength="120"></label><label class="field">Contato<input name="phone" maxlength="30"></label><label class="field">Evento / data / local<input name="event" maxlength="160"></label><label class="field">Validade<input name="validUntil" type="date"></label><label class="field buy-span">Buscar no catálogo<input id="buy-quote-search" type="search" placeholder="Digite o nome do produto ou combo"></label><label class="field buy-span">Produto ou combo<select id="buy-quote-product"><option value="">Escolha para adicionar</option>${catalog()
+    `<section class="panel"><h2 id="buy-quote-title">Montar orçamento</h2><p class="hint">Selecione produtos e combos ou inclua itens personalizados. O orçamento é salvo antes da exportação em PDF A4.</p><form id="buy-quote-form" class="formgrid"><label class="field">Cliente<input name="customer" required maxlength="120"></label><label class="field">Contato<input name="phone" maxlength="30"></label><label class="field">Evento / data / local<input name="event" maxlength="160"></label><label class="field">Validade<input name="validUntil" type="date"></label><label class="field buy-span">Buscar no catálogo<input id="buy-quote-search" type="search" placeholder="Digite o nome do produto ou combo"></label><label class="field buy-span">Produto ou combo<select id="buy-quote-product"><option value="">Escolha para adicionar</option>${catalog()
       .filter((p) => p.active)
       .map(
         (p) =>
@@ -464,7 +464,7 @@ function renderQuotes() {
       )
       .join(
         "",
-      )}</select></label><label class="field buy-span">Mão de obra (opcional) — R$<input name="labor" id="buy-quote-labor" type="number" min="0" step="0.01" placeholder="0,00" inputmode="decimal"></label><div id="buy-quote-items" class="buy-span"></div><button type="button" class="btn" id="buy-quote-custom">Adicionar item personalizado</button><label class="buy-span"><input name="showPrices" type="checkbox"> Mostrar preço unitário e valor de cada item no PDF</label><label class="field buy-span">Observações e condições<textarea name="notes" maxlength="2000" placeholder="Condições de pagamento, entrega e demais informações."></textarea></label><div class="buy-span actions"><button class="btn red" type="submit">Salvar e exportar PDF</button><button class="btn" type="button" id="buy-quote-new">Novo orçamento</button></div><p id="buy-quote-message" class="buy-span" role="status"></p></form></section><section class="panel"><h3>Orçamentos salvos</h3><button class="btn small" id="buy-refresh-quotes">Atualizar lista</button><div id="buy-quote-history"></div></section>`;
+      )}</select></label><label class="field buy-span">Mão de obra (opcional) — R$<input name="labor" id="buy-quote-labor" type="number" min="0" step="0.01" placeholder="0,00" inputmode="decimal"></label><div id="buy-quote-items" class="buy-span"></div><button type="button" class="btn" id="buy-quote-custom">Adicionar item personalizado</button><label class="buy-span"><input name="showPrices" type="checkbox"> Mostrar preço unitário e valor de cada item no PDF</label><label class="field buy-span">Observações e condições<textarea name="notes" maxlength="2000" placeholder="Condições de pagamento, entrega e demais informações."></textarea></label><div class="buy-span actions"><button class="btn red" type="submit" id="buy-quote-submit">Salvar e exportar PDF</button><button class="btn" type="button" id="buy-quote-new">Novo orçamento</button></div><p id="buy-quote-message" class="buy-span" role="status"></p></form></section><section class="panel"><h3>Orçamentos salvos</h3><button class="btn small" id="buy-refresh-quotes">Atualizar lista</button><div id="buy-quote-history"></div></section>`;
   renderQuoteItems();
   document.getElementById("buy-quote-labor").oninput = updateQuoteTotal;
   document.getElementById('buy-quote-search').oninput=e=>{const q=e.target.value.toLocaleLowerCase('pt-BR');document.querySelectorAll('#buy-quote-product option').forEach(o=>{o.hidden=!!o.value&&!o.textContent.toLocaleLowerCase('pt-BR').includes(q);});};
@@ -494,10 +494,13 @@ function renderQuotes() {
     quoteItems = [];
     document.getElementById("buy-quote-form").reset();
     renderQuoteItems();
+    setQuoteEditMode(false);
+    message("buy-quote-message", "");
   };
   document.getElementById("buy-quote-form").onsubmit = async (e) => {
     e.preventDefault();
     const button = e.submitter;
+    const editing = document.getElementById("buy-quote-form").dataset.editing === "true";
     button.disabled = true;
     message("buy-quote-message", "Salvando orçamento…");
     try {
@@ -514,9 +517,14 @@ function renderQuotes() {
           },
           true,
         );
-      await exportQuote(result.quote);
-      message("buy-quote-message", "Orçamento salvo. PDF exportado.");
+      setQuoteEditMode(true);
       await refreshQuotes();
+      try {
+        await exportQuote(result.quote);
+        message("buy-quote-message", editing ? "Orçamento atualizado. PDF exportado." : "Orçamento salvo. PDF exportado.");
+      } catch (error) {
+        message("buy-quote-message", "Orçamento salvo. Não foi possível exportar o PDF: " + error.message);
+      }
     } catch (error) {
       message("buy-quote-message", error.message);
     } finally {
@@ -525,6 +533,36 @@ function renderQuotes() {
   };
   document.getElementById("buy-refresh-quotes").onclick = refreshQuotes;
   void refreshQuotes();
+}
+function setQuoteEditMode(editing) {
+  const form = document.getElementById("buy-quote-form");
+  form.dataset.editing = String(editing);
+  document.getElementById("buy-quote-title").textContent = editing ? "Editar orçamento" : "Montar orçamento";
+  document.getElementById("buy-quote-submit").textContent = editing ? "Salvar alterações e exportar PDF" : "Salvar e exportar PDF";
+  document.getElementById("buy-quote-new").textContent = editing ? "Sair da edição / Novo orçamento" : "Novo orçamento";
+}
+function editSavedQuote(row) {
+  if (!row || row.event_type !== "buy_quote") return;
+  const form = document.getElementById("buy-quote-form");
+  if (form.querySelector('[type="submit"]').disabled) return;
+  if ((quoteItems.length || Number(form.elements.labor.value) || form.elements.customer.value) &&
+      !confirm("Abrir este orçamento e substituir os dados atualmente no formulário?")) return;
+  const q = row.details;
+  form.reset();
+  quoteId = row.id;
+  for (const name of ["customer", "phone", "event", "validUntil", "notes"]) {
+    form.elements[name].value = q[name] || "";
+  }
+  form.elements.showPrices.checked = q.showPrices === true;
+  // Restore the labor field without counting the saved service item twice.
+  const saved = Array.isArray(q.items) ? q.items : [];
+  const laborIndex = saved.map(i => /^m[aã]o de obra$/i.test(String(i.name).trim()) && Number(i.qty) === 1).lastIndexOf(true);
+  form.elements.labor.value = laborIndex >= 0 ? Number(saved[laborIndex].price) : "";
+  quoteItems = saved.filter((_, i) => i !== laborIndex).map(i => ({name: i.name, qty: Number(i.qty), price: Number(i.price)}));
+  renderQuoteItems();
+  setQuoteEditMode(true);
+  message("buy-quote-message", "Editando orçamento #" + row.id.slice(0, 8).toUpperCase());
+  document.getElementById("buy-quote-title").scrollIntoView({behavior:"smooth", block:"start"});
 }
 function quoteItemsWithLabor() {
   const labor = Number(document.getElementById("buy-quote-labor")?.value || 0);
@@ -630,9 +668,10 @@ async function refreshQuotes() {
       result.quotes
         .map(
           (row) =>
-            `<article class="buy-admin-combo"><div><strong>${esc(row.details.customer)}</strong><p>${amount(row.details.total)} · ${new Date(row.details.date).toLocaleDateString("pt-BR")}</p></div><div class="buy-quote-actions"><button class="btn small" data-export-quote="${row.id}">Baixar PDF</button>${row.event_type==='buy_quote'?`<button class="btn small" data-convert-quote="${row.id}">Mandar para venda</button><button class="btn small" data-delete-quote="${row.id}">Excluir</button>`:`<span class="pill">${row.event_type==='buy_quote_converted'?'Convertido em venda':'Conversão em andamento'}</span>`}</div></article>`,
+            `<article class="buy-admin-combo"><div><strong>${esc(row.details.customer)}</strong><p>${amount(row.details.total)} · ${new Date(row.details.date).toLocaleDateString("pt-BR")}</p></div><div class="buy-quote-actions"><button class="btn small" data-export-quote="${row.id}">Baixar PDF</button>${row.event_type==='buy_quote'?`<button class="btn small" data-edit-quote="${row.id}">Editar</button><button class="btn small" data-convert-quote="${row.id}">Mandar para venda</button><button class="btn small" data-delete-quote="${row.id}">Excluir</button>`:`<span class="pill">${row.event_type==='buy_quote_converted'?'Convertido em venda':'Conversão em andamento'}</span>`}</div></article>`,
         )
         .join("") || "<p>Nenhum orçamento salvo.</p>";
+    host.querySelectorAll('[data-edit-quote]').forEach(b => b.onclick = () => editSavedQuote(result.quotes.find(r => r.id === b.dataset.editQuote)));
     host.querySelectorAll('[data-delete-quote]').forEach(b=>b.onclick=async()=>{
       if(!confirm('Excluir este orçamento?'))return;b.disabled=true;
       try{await api('quote-delete',{id:b.dataset.deleteQuote},true);await refreshQuotes();}catch(e){notify(e.message);b.disabled=false;}
