@@ -1,5 +1,5 @@
 import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=groups-4";
-import { quotePDF } from "./buy-quote-pdf.js?v=quotes-4";
+import { quotePDF } from "./buy-quote-pdf.js?v=quotes-reference-2";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
 const esc = (v) =>
@@ -585,7 +585,7 @@ async function logoJPEG() {
     canvas.width = Math.round(img.width * scale);
     canvas.height = Math.round(img.height * scale);
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#041131";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     const raw = atob(canvas.toDataURL("image/jpeg", 0.9).split(",")[1]);
