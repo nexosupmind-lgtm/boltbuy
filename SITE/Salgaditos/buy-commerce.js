@@ -1,5 +1,5 @@
 import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=groups-4";
-import { quotePDF } from "./buy-quote-pdf.js?v=quotes-reference-2";
+import { quotePDF } from "./buy-quote-pdf.js?v=quote-discount-1";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
 const esc = (v) =>
@@ -558,11 +558,17 @@ function editSavedQuote(row) {
   const saved = Array.isArray(q.items) ? q.items : [];
   const laborIndex = saved.map(i => /^m[aã]o de obra$/i.test(String(i.name).trim()) && Number(i.qty) === 1).lastIndexOf(true);
   form.elements.labor.value = laborIndex >= 0 ? Number(saved[laborIndex].price) : "";
-  quoteItems = saved.filter((_, i) => i !== laborIndex).map(i => ({name: i.name, qty: Number(i.qty), price: Number(i.price)}));
+  quoteItems = saved.filter((_, i) => i !== laborIndex).map(i => ({name: i.name, qty: Number(i.qty), price: Number(i.price), discount: Number(i.discount || 0)}));
   renderQuoteItems();
   setQuoteEditMode(true);
   message("buy-quote-message", "Editando orçamento #" + row.id.slice(0, 8).toUpperCase());
   document.getElementById("buy-quote-title").scrollIntoView({behavior:"smooth", block:"start"});
+}
+function quoteDiscountTotal(items) {
+  return items.reduce((sum,i)=>sum+Math.round((Number(i.discount)||0)*100)*Number(i.qty),0)/100;
+}
+function quoteNetTotal(items) {
+  return Math.round((subtotalOf(items)-quoteDiscountTotal(items))*100)/100;
 }
 function quoteItemsWithLabor() {
   const labor = Number(document.getElementById("buy-quote-labor")?.value || 0);
@@ -570,7 +576,7 @@ function quoteItemsWithLabor() {
 }
 function updateQuoteTotal() {
   const total = document.getElementById("buy-quote-total");
-  if (total) total.textContent = amount(subtotalOf(quoteItemsWithLabor()));
+  if (total) total.textContent = amount(quoteNetTotal(quoteItemsWithLabor()));
 }
 function renderQuoteItems() {
   const host = document.getElementById("buy-quote-items");
@@ -578,17 +584,21 @@ function renderQuoteItems() {
     quoteItems
       .map(
         (i, n) =>
-          `<div class="buy-quote-line"><span class="buy-quote-item-number">${n+1}</span><label>Descrição<input data-qi="${n}" data-field="name" value="${esc(i.name)}" required maxlength="300"></label><label>Qtd.<input data-qi="${n}" data-field="qty" type="number" min="1" max="10000" value="${i.qty}" required></label><label>Preço unitário<input data-qi="${n}" data-field="price" type="number" min="0" step=".01" value="${i.price}" required></label><button type="button" class="btn small" data-remove-qi="${n}" aria-label="Remover item ${n + 1}">×</button></div>`,
+          `<div class="buy-quote-line"><span class="buy-quote-item-number">${n+1}</span><label>Descrição<input data-qi="${n}" data-field="name" value="${esc(i.name)}" required maxlength="300"></label><label>Qtd.<input data-qi="${n}" data-field="qty" type="number" min="1" max="10000" value="${i.qty}" required></label><label>Preço unitário<input data-qi="${n}" data-field="price" type="number" min="0" step=".01" value="${i.price}" required></label><label>Desconto unit. (R$)<input data-qi="${n}" data-field="discount" type="number" min="0" max="${Number(i.price)}" step=".01" value="${Number(i.discount||0)}" required></label><button type="button" class="btn small" data-remove-qi="${n}" aria-label="Remover item ${n + 1}">×</button></div>`,
       )
       .join("") +
     '<p class="buy-quote-total">Total: <strong id="buy-quote-total">' +
-    amount(subtotalOf(quoteItemsWithLabor())) +
+    amount(quoteNetTotal(quoteItemsWithLabor())) +
     "</strong></p>";
   host.querySelectorAll("[data-qi]").forEach(
     (input) =>
       (input.oninput = () => {
         quoteItems[Number(input.dataset.qi)][input.dataset.field] =
           input.dataset.field === "name" ? input.value : Number(input.value);
+        const item=quoteItems[Number(input.dataset.qi)];
+        const discountInput=host.querySelector(`[data-qi="${input.dataset.qi}"][data-field="discount"]`);
+        discountInput.max=Math.max(0,Number(item.price)||0);
+        if(Number(item.discount||0)>Number(item.price)){item.discount=Math.max(0,Number(item.price)||0);discountInput.value=item.discount;}
         updateQuoteTotal();
       }),
   );

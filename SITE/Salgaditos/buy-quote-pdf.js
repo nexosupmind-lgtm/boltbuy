@@ -143,9 +143,10 @@ export function quotePDF(quote, store, logo) {
     round(m+20,y+4,34,31,8,[.82,.90,.98]);
     icon(kind,m+26,y+8,navy);
     lines.forEach((v,i)=>text(v,m+74,y+15+i*14,12,true));
-    text(labor?"SERVIÇO":"PRODUTO",m+74,y+16+lines.length*14,9,false,gray);
+    const discount=Number(item.discount||0);
+    text((labor?"SERVIÇO":"PRODUTO")+(quote.showPrices&&discount>0?" | DESC. UNIT. "+currency(discount):""),m+74,y+16+lines.length*14,9,false,gray);
     text(String(item.qty).padStart(2,"0"),quote.showPrices?372:W-83,y+24,13,true);
-    if(quote.showPrices){fit(currency(item.price),410,y+23,76,10);fit(currency(item.price*item.qty),490,y+23,68,10,true);}
+    if(quote.showPrices){fit(currency(item.price-discount),410,y+23,76,10);fit(currency(Math.round((item.price-discount)*100)*item.qty/100),490,y+23,68,10,true);}
     y+=h+4;
   }
   const address=wrap(store.address||"Consulte a loja",220,11);

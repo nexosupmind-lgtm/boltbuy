@@ -810,12 +810,12 @@ export async function onRequest({ request, env, waitUntil }) {
         return json(200,{ok:true});
       }
       if(!["PIX","Dinheiro","Cartão","Não informado"].includes(body.payment))fail(400,"Informe a forma de pagamento.");
-      const total=subtotalOf(q.items);
+      const subtotal=subtotalOf(q.items),discount=q.items.reduce((s,i)=>s+Math.round(Number(i.discount||0)*100)*i.qty,0)/100,total=Math.round((subtotal-discount)*100)/100;
       const details={...q,total,channel:"Orçamento",mode:"retirada",payment:body.payment,convertedAt:new Date().toISOString(),convertedBy:actor.id};
       const claimed=await db(path+"&event_type=eq.buy_quote",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({event_type:"buy_quote_converting",details})});
       if(!claimed.length)fail(409,"Conversão já iniciada.");
       // A durable claim and unique order ID prevent duplicate sales and unsafe retries.
-      await db("bolt_orders",{method:"POST",body:JSON.stringify({id:q.id,tenant_id:tenant.id,customer_name:q.customer,customer_phone:q.phone,delivery_address:q.event||"",status:"criando",subtotal:total,delivery_fee:0,discount:0,total})});
+      await db("bolt_orders",{method:"POST",body:JSON.stringify({id:q.id,tenant_id:tenant.id,customer_name:q.customer,customer_phone:q.phone,delivery_address:q.event||"",status:"criando",subtotal,delivery_fee:0,discount,total})});
       await db("bolt_order_items",{method:"POST",body:JSON.stringify(q.items.map(i=>({order_id:q.id,product_id:null,product_name:i.name,quantity:i.qty,unit_price:i.price})))});
       await db(path+"&event_type=eq.buy_quote_converting",{method:"PATCH",body:JSON.stringify({event_type:"buy_quote_converted"})});
       const orders=await db("bolt_orders?id=eq."+q.id+"&tenant_id=eq."+tenant.id+"&status=eq.criando",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({status:"confirmado"})});
@@ -850,7 +850,9 @@ export async function onRequest({ request, env, waitUntil }) {
           name: clean(i.name, 300),
           qty: integer(i.qty, 1, 10000),
           price: moneyValue(i.price),
+          ...(Number(i.discount||0)!==0?{discount:moneyValue(i.discount)}:{}),
         }));
+        if(items.some(i=>Number(i.discount||0)>i.price))throw Error("Desconto não pode superar o preço unitário.");
         if (items.some((i) => !i.name)) throw Error("Descreva todos os itens.");
       } catch (e) {
         fail(400, e.message);
@@ -863,7 +865,7 @@ export async function onRequest({ request, env, waitUntil }) {
         notes: clean(v.notes, 2000),
         validUntil: clean(v.validUntil, 10),
         items,
-        total: subtotalOf(items),
+        total: Math.round((subtotalOf(items)-items.reduce((s,i)=>s+Math.round(Number(i.discount||0)*100)*i.qty,0)/100)*100)/100,
         showPrices: v.showPrices === true,
         date: new Date().toISOString(),
       };
