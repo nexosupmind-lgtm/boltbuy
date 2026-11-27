@@ -576,7 +576,16 @@ function quoteItemsWithLabor() {
 }
 function updateQuoteTotal() {
   const total = document.getElementById("buy-quote-total");
-  if (total) total.textContent = amount(quoteNetTotal(quoteItemsWithLabor()));
+  const items=quoteItemsWithLabor();
+  if (total) total.textContent = amount(quoteNetTotal(items));
+  const gross=document.getElementById("buy-quote-gross"), discount=document.getElementById("buy-quote-discount");
+  if(gross)gross.textContent=amount(subtotalOf(items));
+  if(discount)discount.textContent="− "+amount(quoteDiscountTotal(items));
+  quoteItems.forEach((i,n)=>{
+    const net=document.querySelector('[data-quote-net="'+n+'"]'), old=document.querySelector('[data-quote-gross="'+n+'"]');
+    if(net)net.textContent=amount(quoteNetTotal([i]));
+    if(old){old.textContent=amount(subtotalOf([i]));old.hidden=!(Number(i.discount)>0);}
+  });
 }
 function renderQuoteItems() {
   const host = document.getElementById("buy-quote-items");
@@ -584,12 +593,10 @@ function renderQuoteItems() {
     quoteItems
       .map(
         (i, n) =>
-          `<div class="buy-quote-line"><span class="buy-quote-item-number">${n+1}</span><label>Descrição<input data-qi="${n}" data-field="name" value="${esc(i.name)}" required maxlength="300"></label><label>Qtd.<input data-qi="${n}" data-field="qty" type="number" min="1" max="10000" value="${i.qty}" required></label><label>Preço unitário<input data-qi="${n}" data-field="price" type="number" min="0" step=".01" value="${i.price}" required></label><label>Desconto unit. (R$)<input data-qi="${n}" data-field="discount" type="number" min="0" max="${Number(i.price)}" step=".01" value="${Number(i.discount||0)}" required></label><button type="button" class="btn small" data-remove-qi="${n}" aria-label="Remover item ${n + 1}">×</button></div>`,
+          `<article class="buy-quote-line bolt-quote-item"><div class="bolt-quote-item-head"><span class="buy-quote-item-number">${String(n+1).padStart(2,"0")}</span><span>ITEM DO ORÇAMENTO</span><button type="button" class="bolt-remove-item" data-remove-qi="${n}" aria-label="Remover item ${n+1}">×</button></div><label class="bolt-quote-description">Descrição<input data-qi="${n}" data-field="name" value="${esc(i.name)}" required maxlength="300"></label><label>Qtd.<input data-qi="${n}" data-field="qty" type="number" min="1" max="10000" value="${i.qty}" required></label><label>Preço unitário<input data-qi="${n}" data-field="price" type="number" min="0" step=".01" value="${i.price}" required></label><details class="bolt-discount bolt-quote-discount" ${Number(i.discount||0)>0?"open":""}><summary><span class="bolt-tag-icon">%</span><span>Desconto</span><span class="bolt-discount-chevron">⌄</span></summary><label class="bolt-money-field"><span>R$</span><input data-qi="${n}" data-field="discount" type="number" min="0" max="${Number(i.price)}" step=".01" value="${Number(i.discount||0)}" required aria-label="Desconto por unidade"></label><small>Por unidade</small></details><div class="bolt-quote-net"><span>Total do item</span><del data-quote-gross="${n}" ${Number(i.discount||0)>0?"":"hidden"}>${amount(Number(i.price)*Number(i.qty))}</del><strong data-quote-net="${n}">${amount(quoteNetTotal([i]))}</strong></div></article>`,
       )
       .join("") +
-    '<p class="buy-quote-total">Total: <strong id="buy-quote-total">' +
-    amount(quoteNetTotal(quoteItemsWithLabor())) +
-    "</strong></p>";
+    '<div class="bolt-quote-summary"><div><span>Subtotal</span><b id="buy-quote-gross">'+amount(subtotalOf(quoteItemsWithLabor()))+'</b></div><div class="bolt-saving"><span>Descontos</span><b id="buy-quote-discount">− '+amount(quoteDiscountTotal(quoteItemsWithLabor()))+'</b></div><div class="bolt-summary-total"><span>Total do orçamento</span><strong id="buy-quote-total">'+amount(quoteNetTotal(quoteItemsWithLabor()))+'</strong></div></div>';
   host.querySelectorAll("[data-qi]").forEach(
     (input) =>
       (input.oninput = () => {
