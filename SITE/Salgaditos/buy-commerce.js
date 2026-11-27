@@ -1,5 +1,5 @@
 import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=groups-4";
-import { quotePDF } from "./buy-quote-pdf.js?v=quotes-3";
+import { quotePDF } from "./buy-quote-pdf.js?v=quotes-4";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
 const esc = (v) =>
@@ -464,8 +464,9 @@ function renderQuotes() {
       )
       .join(
         "",
-      )}</select></label><div id="buy-quote-items" class="buy-span"></div><button type="button" class="btn" id="buy-quote-custom">Adicionar item personalizado</button><label class="buy-span"><input name="showPrices" type="checkbox"> Mostrar preço unitário e valor de cada item no PDF</label><label class="field buy-span">Observações e condições<textarea name="notes" maxlength="2000" placeholder="Condições de pagamento, entrega e demais informações."></textarea></label><div class="buy-span actions"><button class="btn red" type="submit">Salvar e exportar PDF</button><button class="btn" type="button" id="buy-quote-new">Novo orçamento</button></div><p id="buy-quote-message" class="buy-span" role="status"></p></form></section><section class="panel"><h3>Orçamentos salvos</h3><button class="btn small" id="buy-refresh-quotes">Atualizar lista</button><div id="buy-quote-history"></div></section>`;
+      )}</select></label><label class="field buy-span">Mão de obra (opcional) — R$<input name="labor" id="buy-quote-labor" type="number" min="0" step="0.01" placeholder="0,00" inputmode="decimal"></label><div id="buy-quote-items" class="buy-span"></div><button type="button" class="btn" id="buy-quote-custom">Adicionar item personalizado</button><label class="buy-span"><input name="showPrices" type="checkbox"> Mostrar preço unitário e valor de cada item no PDF</label><label class="field buy-span">Observações e condições<textarea name="notes" maxlength="2000" placeholder="Condições de pagamento, entrega e demais informações."></textarea></label><div class="buy-span actions"><button class="btn red" type="submit">Salvar e exportar PDF</button><button class="btn" type="button" id="buy-quote-new">Novo orçamento</button></div><p id="buy-quote-message" class="buy-span" role="status"></p></form></section><section class="panel"><h3>Orçamentos salvos</h3><button class="btn small" id="buy-refresh-quotes">Atualizar lista</button><div id="buy-quote-history"></div></section>`;
   renderQuoteItems();
+  document.getElementById("buy-quote-labor").oninput = updateQuoteTotal;
   document.getElementById('buy-quote-search').oninput=e=>{const q=e.target.value.toLocaleLowerCase('pt-BR');document.querySelectorAll('#buy-quote-product option').forEach(o=>{o.hidden=!!o.value&&!o.textContent.toLocaleLowerCase('pt-BR').includes(q);});};
   document.getElementById("buy-quote-product").onchange = (e) => {
     const value = e.target.value;
@@ -507,7 +508,7 @@ function renderQuotes() {
             quote: {
               ...Object.fromEntries(fd),
               id: quoteId,
-              items: quoteItems,
+              items: quoteItemsWithLabor(),
               showPrices: fd.has("showPrices"),
             },
           },
@@ -525,6 +526,14 @@ function renderQuotes() {
   document.getElementById("buy-refresh-quotes").onclick = refreshQuotes;
   void refreshQuotes();
 }
+function quoteItemsWithLabor() {
+  const labor = Number(document.getElementById("buy-quote-labor")?.value || 0);
+  return labor > 0 ? [...quoteItems, { name: "Mão de obra", qty: 1, price: labor }] : quoteItems;
+}
+function updateQuoteTotal() {
+  const total = document.getElementById("buy-quote-total");
+  if (total) total.textContent = amount(subtotalOf(quoteItemsWithLabor()));
+}
 function renderQuoteItems() {
   const host = document.getElementById("buy-quote-items");
   host.innerHTML =
@@ -535,16 +544,14 @@ function renderQuoteItems() {
       )
       .join("") +
     '<p class="buy-quote-total">Total: <strong id="buy-quote-total">' +
-    amount(subtotalOf(quoteItems)) +
+    amount(subtotalOf(quoteItemsWithLabor())) +
     "</strong></p>";
   host.querySelectorAll("[data-qi]").forEach(
     (input) =>
       (input.oninput = () => {
         quoteItems[Number(input.dataset.qi)][input.dataset.field] =
           input.dataset.field === "name" ? input.value : Number(input.value);
-        document.getElementById("buy-quote-total").textContent = amount(
-          subtotalOf(quoteItems),
-        );
+        updateQuoteTotal();
       }),
   );
   host.querySelectorAll("[data-remove-qi]").forEach(

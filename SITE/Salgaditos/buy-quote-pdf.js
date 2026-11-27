@@ -109,11 +109,11 @@ export function quotePDF(quote, store, logo) {
   function begin() {
     finish();
     page++;
-    rect(0, 0, W, 8, color);
-    rect(margin, 112, 523, 1, [0.85,0.88,0.92]);
-    text("PROPOSTA COMERCIAL", margin, 38, 9, true, color);
-    text("Orçamento", margin, 66, 26, true);
-    text((store.name || "").slice(0, 42), margin, 86, 11, true);
+    rect(0, 0, W, 120, [0.10, 0.14, 0.20]);
+    rect(0, 120, W, 5, color);
+    text("PROPOSTA COMERCIAL", margin, 30, 9, true, [0.80,0.84,0.89]);
+    text("Orçamento", margin, 60, 30, true, [1,1,1]);
+    text((store.name || "").slice(0, 42), margin, 83, 11, true, [1,1,1]);
     text(
       "Nº " +
         quote.id.slice(0, 8).toUpperCase() +
@@ -123,13 +123,14 @@ export function quotePDF(quote, store, logo) {
       103,
       8,
       false,
-      [0.4, 0.45, 0.53],
+      [0.80, 0.84, 0.89],
     );
     if (logoId) {
-      const scale = Math.min(100 / logo.width, 76 / logo.height);
-      commands += `q ${logo.width * scale} 0 0 ${logo.height * scale} ${W - margin - logo.width * scale} ${H - 22 - logo.height * scale} cm /Logo Do Q\n`;
+      rect(W-margin-112, 17, 112, 88, [1,1,1]);
+      const scale = Math.min(96 / logo.width, 72 / logo.height);
+      commands += `q ${logo.width * scale} 0 0 ${logo.height * scale} ${W - margin - 56 - logo.width * scale / 2} ${H - 61 - logo.height * scale / 2} cm /Logo Do Q\n`;
     }
-    y = 135;
+    y = 151;
   }
   const ensure = (h) => {
     if (y + h > 770) {
@@ -150,12 +151,12 @@ export function quotePDF(quote, store, logo) {
   };
   const tableHead = () => {
     ensure(32);
-    rect(margin, y, 523, 27, [0.94, 0.95, 0.97]);
-    text("DESCRIÇÃO", margin + 10, y + 18, 9, true);
-    text("QTD.", quote.showPrices ? 370 : 501, y + 18, 9, true);
+    rect(margin, y, 523, 27, [0.10, 0.14, 0.20]);
+    text("DESCRIÇÃO", margin + 10, y + 18, 9, true, [1,1,1]);
+    text("QTD.", quote.showPrices ? 370 : 501, y + 18, 9, true, [1,1,1]);
     if (quote.showPrices) {
-      text("UNIT.", 425, y + 18, 9, true);
-      text("VALOR", 500, y + 18, 9, true);
+      text("UNIT.", 425, y + 18, 9, true, [1,1,1]);
+      text("VALOR", 500, y + 18, 9, true, [1,1,1]);
     }
     y += 38;
   };
@@ -169,13 +170,14 @@ export function quotePDF(quote, store, logo) {
       quote.validUntil.split("-").reverse().join("/"),
     );
   tableHead();
-  for (const item of quote.items) {
+  for (const [index, item] of quote.items.entries()) {
     const lines = wrap(item.name, quote.showPrices ? 310 : 435, 11),
       height = Math.max(35, lines.length * 16 + 15);
     if (y + height > 748) {
       begin();
       tableHead();
     }
+    if (index % 2 === 0) rect(margin, y-7, 523, lines.length*16+20, [0.96,0.97,0.98]);
     for (let i = 0; i < lines.length; i++) {
       ensure(22);
       text(lines[i], margin + 10, y + 12);
@@ -194,10 +196,10 @@ export function quotePDF(quote, store, logo) {
   }
   ensure(96);
   y += 12;
-  rect(margin, y, 523, 73, [0.95, 0.96, 0.98]);
-  rect(margin, y, 4, 73, color);
-  text("TOTAL DO ORÇAMENTO", margin + 16, y + 25, 10, true);
-  text(currency(quote.total), margin + 16, y + 54, 24, true, color);
+  rect(margin, y, 523, 73, [0.10, 0.14, 0.20]);
+  rect(margin, y, 5, 73, color);
+  text("TOTAL DO ORÇAMENTO", margin + 18, y + 25, 10, true, [0.80,0.84,0.89]);
+  text(currency(quote.total), margin + 18, y + 54, 25, true, [1,1,1]);
   y += 100;
   paragraph("OBSERVAÇÕES E CONDIÇÕES", quote.notes);
   paragraph("RETIRADA NA LOJA", store.address);
