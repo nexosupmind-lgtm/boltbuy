@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const routes = {
-    buy: [['Shop','shop','/Salgaditos/cliente.html'],['Admin','delivery-admin','/Salgaditos/admin.html']],
+    buy: [['Shop','shop','/delivery/cliente.html'],['Admin','delivery-admin','/delivery/admin.html']],
     class: [['Login','login','/portal.html'],['Admin da escola','class-admin','/Boltclass/index.html'],['Professor','teacher','/teacher.html'],['Portal da família','family','/family.html']],
     barber: [['Site','barber-site','/Boltbarber/'],['Login','barber-login','/Boltbarber/'],['Administrativo','barber-admin','/Boltbarber/']],
     church: [['Login','login','/portal.html'],['Admin da igreja','church-admin','/Boltchurch/index.html'],['Portal do membro','member','/member.html']]

@@ -5,7 +5,7 @@
   window.BOLT_VISUAL_RUNTIME = true;
   const q = new URLSearchParams(location.search);
   const path = location.pathname.replace(/\.html$/, '');
-  const surface = path.includes('/Salgaditos/') || ['/shop', '/admin'].includes(path)
+  const surface = path.includes('/Salgaditos/') || path.includes('/delivery/') || ['/shop', '/admin'].includes(path)
     ? (/cliente|shop/.test(path) ? 'shop' : 'delivery-admin')
     : path.startsWith('/Boltbarber') ? ({ admin: 'barber-admin', login: 'barber-login' }[q.get('view')] || 'barber-site')
     : path.includes('/Boltclass/') ? 'class-admin'

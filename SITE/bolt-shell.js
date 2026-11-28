@@ -1,7 +1,7 @@
 /* Shared install experience and support. No private state is cached by the service worker. */
 (()=>{'use strict';
 const q=new URLSearchParams(location.search),cleanPath=location.pathname.replace(/\/+$/,'').replace(/\.html$/,'')||'/',path=({'/admin':'/Salgaditos/admin','/shop':'/Salgaditos/cliente'}[cleanPath]||cleanPath),master=document.documentElement.dataset.boltApp==='master'||['/','/index'].includes(path),family=path==='/family',member=path==='/member';
-const product=master?'master':family||path.startsWith('/Boltclass')?'class':member||path.startsWith('/Boltchurch')?'church':path.includes('/Salgaditos/')?'buy':q.get('product');
+const product=master?'master':family||path.startsWith('/Boltclass')?'class':member||path.startsWith('/Boltchurch')?'church':(path.includes('/Salgaditos/')||path.includes('/delivery/'))?'buy':q.get('product');
 if(!['master','buy','class','church'].includes(product))return;
 const surface=master?'master':family?'family':member?'member':product==='buy'&&path.endsWith('/cliente')?'consumer':'admin',slug=product==='buy'?(q.get('tenant')||'salgaditos'):q.get('slug');
 const shopDock=surface==='consumer'?document.querySelector('.delivery-shop .bottomnav'):null;
