@@ -47,3 +47,38 @@ html body.buy-admin-app .buy-menu-copy small{font-size:10px;line-height:1.35;let
 @media(hover:hover){html body.buy-admin-app .buy-menu-grid .buy-menu-tile:hover{transform:translateY(-2px);background:#213c60!important;border-color:#578de2!important}}
 @media(max-width:760px){html body.buy-admin-app dialog.buy-admin-menu{margin:auto auto 0;width:100%;max-height:88dvh;border-radius:28px 28px 0 0;padding:20px 17px max(24px,env(safe-area-inset-bottom))!important}html body.buy-admin-app .main .quick{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}html body.buy-admin-app .main .metric:first-child{background:#17365e!important;border-color:#345d90!important}}
 @media(prefers-reduced-motion:reduce){html body.buy-admin-app .buy-menu-tile{transition:none!important}}
+
+/* Compact, searchable addon library and clear product selection cards */
+html body.buy-admin-app .bolt-addon-central{border:1px solid #34506d!important;border-radius:20px!important;padding:22px!important;background:linear-gradient(145deg,#14243a,#0d192b)!important}
+html body.buy-admin-app .bolt-addon-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px}
+html body.buy-admin-app .bolt-addon-heading h3{font-size:22px!important;letter-spacing:-.4px;margin:4px 0 5px}
+html body.buy-admin-app .bolt-addon-eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;color:#84b4ff!important}
+html body.buy-admin-app .bolt-addon-count{background:#243b59;border:1px solid #405a79;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:750;white-space:nowrap}
+html body.buy-admin-app .bolt-addon-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+html body.buy-admin-app .bolt-addon-toolbar input{flex:1;min-width:200px;border-radius:12px;padding:12px 14px!important}
+html body.buy-admin-app #bolt-library-summary{font-size:12px;color:#a5b9d3!important}
+html body.buy-admin-app #bolt-library-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:10px}
+html body.buy-admin-app .bolt-addon-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 14px;padding:14px 15px;border:1px solid #2d4562;border-radius:16px;background:#17283e!important;min-width:0}
+html body.buy-admin-app .bolt-addon-card-name{font-size:14px;overflow-wrap:anywhere}
+html body.buy-admin-app .bolt-addon-card-price{font-weight:800;color:#8fc0ff!important;white-space:nowrap;font-variant-numeric:tabular-nums}
+html body.buy-admin-app .bolt-addon-card-actions{display:flex;gap:6px;grid-column:1/-1;justify-content:flex-end}
+html body.buy-admin-app .bolt-addon-card-actions button{min-height:34px;border-radius:10px!important}
+html body.buy-admin-app .bolt-addon-card-actions .bolt-addon-delete{color:#ffb5b5!important;border-color:#8c4545!important;background:#51292d!important}
+html body.buy-admin-app .bolt-addon-empty{grid-column:1/-1;padding:22px;border:1px dashed #49617d;border-radius:14px;color:#a7bbd3!important;text-align:center}
+html body.buy-admin-app .bolt-addon-create{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,130px) auto;gap:12px;align-items:end;margin-top:18px;padding:16px;border:1px solid #2b4260;border-radius:16px;background:#0e1b2d}
+html body.buy-admin-app .bolt-addon-create label{display:grid;gap:6px;font-size:12px;font-weight:700}
+html body.buy-admin-app .bolt-addon-create input{width:100%;min-width:0;padding:12px!important;border-radius:11px!important}
+html body.buy-admin-app .bolt-addon-create button{min-height:43px;white-space:nowrap}
+html body.buy-admin-app .bolt-addon-central #bolt-library-status{min-height:18px;font-size:12px;color:#84b4ff!important}
+html body.buy-admin-app .bolt-product-addons{border:1px solid #2e4562!important;border-radius:18px!important;padding:18px!important;background:#101d2e!important}
+html body.buy-admin-app .bolt-product-addons #bolt-addon-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:9px;margin-top:12px}
+html body.buy-admin-app .bolt-product-addons .bolt-addon-choice{display:grid!important;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:10px!important;padding:12px!important;border:1px solid #2b4260!important;border-radius:13px!important;background:#17283e!important}
+html body.buy-admin-app .bolt-product-addons .bolt-addon-choice span{min-width:0;font-weight:600}
+html body.buy-admin-app .bolt-product-addons .bolt-addon-choice strong{color:#8fc0ff!important;font-variant-numeric:tabular-nums}
+html body.buy-admin-app .bolt-product-addons #bolt-addon-all{border-radius:11px!important;margin-top:14px}
+html body.buy-admin-app .bolt-addon-edit-dialog{width:min(440px,calc(100% - 28px));border:1px solid #45617f;border-radius:20px;padding:22px;background:#122138!important;color:#eaf1fc!important}
+html body.buy-admin-app .bolt-addon-edit-dialog::backdrop{background:#0008;backdrop-filter:blur(4px)}
+html body.buy-admin-app .bolt-addon-edit-dialog form{display:grid;gap:14px}
+html body.buy-admin-app .bolt-addon-edit-dialog h2{margin:0}
+html body.buy-admin-app .bolt-addon-edit-dialog .actions{display:flex;gap:10px;justify-content:flex-end}
+@media(max-width:640px){html body.buy-admin-app .bolt-addon-create{grid-template-columns:1fr 1fr}html body.buy-admin-app .bolt-addon-create button{grid-column:1/-1;width:100%}html body.buy-admin-app .bolt-addon-heading{flex-wrap:wrap}html body.buy-admin-app .bolt-addon-card{padding:12px}}

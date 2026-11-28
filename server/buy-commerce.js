@@ -414,7 +414,7 @@ export async function onRequest({ request, env, waitUntil }) {
           "As configurações mudaram em outra sessão. Recarregue antes de salvar.",
         );
       if(action === "product-description"){
-        if(!UUID.test(body.id) || !(await products()).some(p=>p.id === body.id))fail(404,"Produto não encontrado nesta loja.");
+        if(!UUID.test(body.id) || !(await db("bolt_products?id=eq."+body.id+"&tenant_id=eq."+tenant.id+"&select=id")).length)fail(404,"Produto não encontrado nesta loja.");
         if(typeof body.description !== "string" || body.description.length > 1200)fail(400,"A descrição deve ter até 1200 caracteres.");
         if(body.addons!==undefined&&!Array.isArray(body.addons))fail(400,"Adicionais inválidos.");
       }
@@ -427,9 +427,10 @@ export async function onRequest({ request, env, waitUntil }) {
       } catch (e) {
         fail(400, e.message);
       }
-      const catalog = await products();
+      const combosChanged=action==="configure"&&JSON.stringify(next.combos)!==JSON.stringify(config.combos);
+      const catalog=combosChanged?await products():[];
       if (
-        action === "configure" && next.combos.some((c) =>
+        combosChanged && next.combos.some((c) =>
           [...c.productIds,...(c.includedItems||[]).map(i=>i.productId),...(c.groups||[]).flatMap(g=>g.productIds)].some((id) => !catalog.some((p) => p.id === id)),
         )
       )
