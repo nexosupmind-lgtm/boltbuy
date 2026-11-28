@@ -35,9 +35,9 @@ try {
 } catch {}
 async function api(action, body, authenticated = false) {
   const session = authenticated
-    ? (await window.BOLT_SUPABASE?.auth.getSession())?.data?.session
+    ? (window.BOLT_VALID_SESSION?await window.BOLT_VALID_SESSION():(await window.BOLT_SUPABASE?.auth.getSession())?.data?.session)
     : null;
-  const r = await fetch(
+  const r = await (authenticated&&window.BOLT_AUTH_FETCH?window.BOLT_AUTH_FETCH:fetch)(
     "/api/buy-commerce?tenant=" +
       encodeURIComponent(slug) +
       (body ? "" : "&action=" + action),

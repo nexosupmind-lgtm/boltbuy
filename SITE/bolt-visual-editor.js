@@ -132,9 +132,9 @@
       if(busy||!ready)return;
       busy=true;el('visual-fields').disabled=true;buttons();status('Publicando personalização…');
       try {
-        const auth=await window.BOLT_SUPABASE?.auth.getSession();
+        const auth=await (window.BOLT_VALID_SESSION?window.BOLT_VALID_SESSION().then(session=>({data:{session}})):window.BOLT_SUPABASE?.auth.getSession());
         const token=auth?.data?.session?.access_token;if(!token)throw Error('Entre novamente no Master.');
-        const response=await fetch(endpoint,{method:'PUT',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({revision,visual})});
+        const response=await (window.BOLT_AUTH_FETCH||fetch)(endpoint,{method:'PUT',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({revision,visual})});
         const data=await response.json();if(!response.ok)throw Error(data.error||'Falha ao publicar.');
         revision=data.revision;saved=copy(data.visual);visual=copy(data.visual);
         status('Personalização publicada para este cliente.');send();
@@ -142,14 +142,14 @@
     };
     async function receive(event) {
       if (event.origin === location.origin && event.source === frame.contentWindow && event.data?.type === 'bolt-family-preview-ready' && context.product === 'class' && new URL(frame.src).pathname === '/family.html') {
-        const auth = await window.BOLT_SUPABASE?.auth.getSession();
+        const auth = await (window.BOLT_VALID_SESSION?window.BOLT_VALID_SESSION().then(session=>({data:{session}})):window.BOLT_SUPABASE?.auth.getSession());
         if(auth?.data?.session?.access_token)frame.contentWindow.postMessage({type:'bolt-family-preview',token:auth.data.session.access_token},location.origin);
         return;
       }
       if(event.origin!==location.origin||event.source!==frame.contentWindow||event.data?.product!==context.product||event.data?.slug!==context.slug)return;
       const data=event.data;
       if (data.type === 'bolt-workspace-preview-ready') {
-        const auth = await window.BOLT_SUPABASE?.auth.getSession();
+        const auth = await (window.BOLT_VALID_SESSION?window.BOLT_VALID_SESSION().then(session=>({data:{session}})):window.BOLT_SUPABASE?.auth.getSession());
         if(auth?.data?.session?.access_token)frame.contentWindow.postMessage({type:'bolt-workspace-preview-token',product:context.product,slug:context.slug,token:auth.data.session.access_token},location.origin);
         return;
       }
