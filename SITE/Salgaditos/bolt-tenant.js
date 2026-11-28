@@ -1,6 +1,6 @@
 /* Tenant identity. Missing identity uses neutral UI; never another business's assets. */
 (()=>{'use strict';
-const slug=new URLSearchParams(location.search).get('tenant')||'salgaditos',legacy=slug==='salgaditos';
+const slug=(window.BOLT_ROUTE_TENANT||new URLSearchParams(location.search).get('tenant'))||'salgaditos',legacy=slug==='salgaditos';
 let list=[];try{list=JSON.parse(localStorage.getItem('bolt_tenants_v1')||'[]')}catch{}
 const cached=list.find(x=>x.slug===slug)||{};
 const t=window.BOLT_TENANT={slug,name:cached.name||slug,owner:cached.owner||'',primary:cached.primary||'#475569',background:cached.background||'#0f172a',logo:cached.logo||'',tagline:cached.tagline||'',plan:cached.plan||''};
@@ -15,7 +15,7 @@ function apply(){
   const text=(sel,value)=>document.querySelectorAll(sel).forEach(e=>e.textContent=value);
   text('.topbar h1','Bem-vindo ao '+t.name);text('.topbar > div > p',t.tagline);text('.hero h2',t.name);text('.hero > div > p','Gestão do estabelecimento');text('.banner-kicker',t.name);text('.shophero .hero-copy h2',t.tagline||t.name);text('.splash span',t.name);
  }
- const a=document.querySelector('.top-actions a[href^="cliente.html"]');if(a)a.href='cliente.html?tenant='+encodeURIComponent(slug);
+ const a=document.querySelector('.top-actions a[href^="cliente.html"]');if(a)a.href='/'+encodeURIComponent(slug)+'/cliente';
  const icon=document.querySelector('link[rel="icon"]');if(icon&&!legacy){if(imageURL(t.logo))icon.href=t.logo;else icon.removeAttribute('href')}
  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',bg);
 }
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded',async()=>{apply();try{
 document.addEventListener('DOMContentLoaded',()=>{
 const p=JSON.parse(localStorage.getItem('bolt_plans_v2')||'null')||[];
 const current=p.find(x=>x.name===window.BOLT_TENANT.plan);
-if(!location.pathname.includes('admin.html'))return;
+if(!/\/admin(?:\.html)?\/?$/i.test(location.pathname))return;
 const mappings={pdv:'pos',products:'products',orders:'orders',ifood:'platform',reports:'reports',banners:'settings',customers:'customers',stock:'stock'};
 const blocked=current?Object.entries(mappings).filter(([f])=>!current.features.includes(f)).map(([,id])=>id):[];
 const lock=()=>{

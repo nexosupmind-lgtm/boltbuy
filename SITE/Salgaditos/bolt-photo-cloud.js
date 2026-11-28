@@ -8,7 +8,7 @@ window.boltUploadProductPhoto=async function(file){
  const sb=window.BOLT_SUPABASE||window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:true}});
  const {data:{session},error:authError}=await sb.auth.getSession();
  if(authError||!session)throw Error('Sua sessão expirou. Saia e entre novamente no Admin.');
- const slug=new URLSearchParams(location.search).get('tenant')||'salgaditos';
+ const slug=(window.BOLT_ROUTE_TENANT||new URLSearchParams(location.search).get('tenant'))||'salgaditos';
  const {data:tenant,error:tenantError}=await sb.from('bolt_tenants').select('id').eq('slug',slug).single();
  if(tenantError||!tenant)throw Error('Empresa não encontrada no Supabase ou sem permissão. Confira o vínculo do usuário.');
  const {data:membership,error:membershipError}=await sb.from('bolt_memberships').select('tenant_id').eq('tenant_id',tenant.id).eq('user_id',session.user.id).maybeSingle();

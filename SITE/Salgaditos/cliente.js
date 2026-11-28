@@ -1,4 +1,4 @@
-let viewName='home',category='Todos',cart={};const MY_KEY='bolt_orders_'+(new URLSearchParams(location.search).get('tenant')||'salgaditos');let seenStatus={};function myIds(){try{return JSON.parse(localStorage.getItem(MY_KEY))||[]}catch(e){return []}}function saveIds(ids){localStorage.setItem(MY_KEY,JSON.stringify(ids))}
+let viewName='home',category='Todos',cart={};const MY_KEY='bolt_orders_'+((window.BOLT_ROUTE_TENANT||new URLSearchParams(location.search).get('tenant'))||'salgaditos');let seenStatus={};function myIds(){try{return JSON.parse(localStorage.getItem(MY_KEY))||[]}catch(e){return []}}function saveIds(ids){localStorage.setItem(MY_KEY,JSON.stringify(ids))}
 function view(name){viewName=name;['home','cart','orders'].forEach(n=>el(n+'View').classList.toggle('hide',name!==n));document.querySelectorAll('[data-view]').forEach(e=>e.classList.toggle('active',e.dataset.view===name));renderShop();window.scrollTo(0,0)}
 function addItem(id,n=1){cart[id]=Math.max(0,(cart[id]||0)+n);renderShop()}
 function lines(d){return Object.entries(cart).filter(([,q])=>q>0).map(([id,qty])=>({p:d.products.find(p=>p.id===id),qty})).filter(x=>x.p)}

@@ -3,7 +3,7 @@
  const admin=document.body.classList.contains('buy-admin-app');
  if(!admin&&!document.body.classList.contains('delivery-shop'))return;
  if(new URLSearchParams(location.search).has('preview'))return;
- const slug=new URLSearchParams(location.search).get('tenant')||'salgaditos';
+ const slug=(window.BOLT_ROUTE_TENANT||new URLSearchParams(location.search).get('tenant'))||'salgaditos';
  const audience=admin?'admin':'customer',prefKey='buy_push_enabled_'+audience+'_'+slug;
  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
  const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;

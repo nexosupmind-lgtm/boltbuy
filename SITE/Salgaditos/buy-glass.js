@@ -51,7 +51,7 @@
  if(!document.body.classList.contains('delivery-shop'))return;
  const dialog=document.getElementById('buy-profile'),form=document.getElementById('buy-profile-form'),open=document.getElementById('buy-profile-open');
  if(!dialog||!form||!open)return;
- const key='buy_customer_profile_'+(new URLSearchParams(location.search).get('tenant')||'salgaditos');
+ const key='buy_customer_profile_'+((window.BOLT_ROUTE_TENANT||new URLSearchParams(location.search).get('tenant'))||'salgaditos');
  const fields=['customer','phone','address'],status=document.getElementById('buy-profile-status');
  let remembered=false;
  try{

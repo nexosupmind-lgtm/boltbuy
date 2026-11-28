@@ -1,7 +1,7 @@
 import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=addon-qty-3";
 import { quotePDF } from "./buy-quote-pdf.js?v=quote-discount-1";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
-  slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
+  slug = (window.BOLT_ROUTE_TENANT||new URLSearchParams(location.search).get('tenant')) || "salgaditos";
 const esc = (v) =>
   String(v ?? "").replace(
     /[&<>"']/g,
