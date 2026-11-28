@@ -416,13 +416,14 @@ export async function onRequest({ request, env, waitUntil }) {
       if(action === "product-description"){
         if(!UUID.test(body.id) || !(await products()).some(p=>p.id === body.id))fail(404,"Produto não encontrado nesta loja.");
         if(typeof body.description !== "string" || body.description.length > 1200)fail(400,"A descrição deve ter até 1200 caracteres.");
+        if(body.addons!==undefined&&!Array.isArray(body.addons))fail(400,"Adicionais inválidos.");
       }
       const deletingCombo = action === "combo-delete";
       if(deletingCombo && (!UUID.test(body.id) || !config.combos.some(c=>c.id===body.id)))
         fail(404,"Combo não encontrado nesta loja.");
       let next;
       try {
-        next = action === "product-description" ? normalizeConfig({...config,productDescriptions:{...config.productDescriptions,[body.id]:body.description}},slug === "salgaditos") : action === "appearance" ? normalizeConfig({...config,...Object.fromEntries(Object.entries(body.images || {}).filter(([key])=>["adminIcon","shopIcon","coverImage","promotions"].includes(key)))},slug === "salgaditos") : deletingCombo ? {...config,combos:config.combos.filter(c=>c.id!==body.id)} : normalizeConfig(body.config, slug === "salgaditos");
+        next = action === "product-description" ? normalizeConfig({...config,productDescriptions:{...config.productDescriptions,[body.id]:body.description},productAddons:body.addons===undefined?config.productAddons:{...config.productAddons,[body.id]:body.addons}},slug === "salgaditos") : action === "appearance" ? normalizeConfig({...config,...Object.fromEntries(Object.entries(body.images || {}).filter(([key])=>["adminIcon","shopIcon","coverImage","promotions"].includes(key)))},slug === "salgaditos") : deletingCombo ? {...config,combos:config.combos.filter(c=>c.id!==body.id)} : normalizeConfig(body.config, slug === "salgaditos");
       } catch (e) {
         fail(400, e.message);
       }

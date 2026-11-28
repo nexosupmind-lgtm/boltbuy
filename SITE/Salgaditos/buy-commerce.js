@@ -1,4 +1,4 @@
-import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=groups-4";
+import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=addons-1";
 import { quotePDF } from "./buy-quote-pdf.js?v=quote-discount-1";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
@@ -26,6 +26,7 @@ let config = null,
   quoteId = crypto.randomUUID(),
   lastReceipt = null;
 window.addEventListener("buy-appearance-saved", e => { if(e.detail.slug === slug){config=e.detail.config;version=e.detail.version;} });
+const addonCart = new Map();
 const comboCart = new Map(),
   receiptsKey = "bolt_buy_receipts_" + slug;
 let receipts = {};
@@ -861,16 +862,32 @@ function productDetails(id) {
   dialog.className = "delivery-detail";
   dialog.setAttribute("aria-label", "Detalhes do produto");
   dialog.innerHTML = `<header><span>Seu próximo favorito</span><button type="button" aria-label="Fechar detalhes">×</button></header><div class="delivery-detail-body"><div class="delivery-photo">${photo(item)}</div><section><span class="delivery-category">${esc(item.category || "Cardápio")}</span><h2>${esc(item.name)}</h2>${item.description ? `<p>${esc(item.description)}</p>` : ""}<div class="delivery-price"><small>Valor unitário</small><strong>${amount(item.price)}</strong></div></section></div><footer><div class="delivery-quantity"><button type="button" data-less aria-label="Diminuir quantidade">−</button><output aria-live="polite">1</output><button type="button" data-more aria-label="Aumentar quantidade">+</button></div><button type="button" data-add></button></footer>`;
+  const addons=config?.productAddons?.[item.id]||[];
+  if(addons.length){
+    const section=document.createElement("div");section.className="buy-addon-picker";
+    section.innerHTML='<h3>Personalize seu pedido</h3><p>Escolha os adicionais opcionais</p>'+addons.map(a=>'<label><input type="checkbox" value="'+esc(a.id)+'"><span>'+esc(a.name)+'</span><strong>+ '+amount(a.price)+'</strong></label>').join('');
+    dialog.querySelector(".delivery-detail-body").append(section);
+    section.addEventListener("change",()=>update());
+  }
+  const selected=()=>addons.filter(a=>[...dialog.querySelectorAll('.buy-addon-picker input:checked')].some(i=>i.value===a.id));
   let qty = 1;
   function update() {
     dialog.querySelector("output").textContent = qty;
     dialog.querySelector("[data-less]").disabled = qty <= 1;
-    dialog.querySelector("[data-add]").textContent = "Adicionar · " + amount(qty * item.price);
+    dialog.querySelector("[data-add]").textContent = "Adicionar · " + amount(qty * (item.price+selected().reduce((s,a)=>s+a.price,0)));
   }
   dialog.querySelector("header button").onclick = () => dialog.close();
-  dialog.querySelector("[data-more]").onclick = () => { qty++; update(); };
+  dialog.querySelector("[data-more]").onclick = () => { qty=Math.min(99,qty+1); update(); };
   dialog.querySelector("[data-less]").onclick = () => { qty--; update(); };
-  dialog.querySelector("[data-add]").onclick = () => { window.addItem(id, qty); dialog.close(); };
+  dialog.querySelector("[data-add]").onclick = () => {
+    const choices=selected();
+    if(choices.length){
+      const key="addon-"+crypto.randomUUID();
+      addonCart.set(key,{...item,id:key,productId:item.id,addonIds:choices.map(a=>a.id),name:item.name+" · "+choices.map(a=>a.name).join(", "),price:(Math.round(item.price*100)+choices.reduce((s,a)=>s+Math.round(a.price*100),0))/100});
+      cart[key]=qty;renderShop();notify("Produto personalizado adicionado.");
+    }else window.addItem(id,qty);
+    dialog.close();
+  };
   dialog.onclose = () => dialog.remove();
   document.body.append(dialog);
   update();
@@ -921,6 +938,7 @@ function installShop() {
   window.lines = function (d) {
     return [
       ...originalLines(d),
+      ...Object.entries(cart).filter(([id,q])=>q>0&&addonCart.has(id)).map(([id,qty])=>({p:addonCart.get(id),qty})),
       ...Object.entries(cart)
         .filter(([id, q]) => q > 0 && comboCart.has(id))
         .map(([id, qty]) => ({ p: comboCart.get(id), qty })),
@@ -947,6 +965,7 @@ function installShop() {
       });
       return;
     }
+    if (addonCart.has(id)) {cart[id]=Math.min(99,Math.max(0,(cart[id]||0)+n));if(!cart[id])addonCart.delete(id);renderShop();return;}
     if (comboCart.has(id)) {
       cart[id] = Math.max(0, (cart[id] || 0) + n);
       renderShop();
@@ -1006,7 +1025,7 @@ function installShop() {
         items: t.items.map(({ p, qty }) =>
           p.comboId
             ? { comboId: p.comboId, selections: p.selections, qty }
-            : { productId: p.id, qty },
+            : { productId: p.productId||p.id, qty, ...(p.addonIds?{addonIds:p.addonIds}:{}) },
         ),
       };
       const result = await api("order", body);
@@ -1018,7 +1037,7 @@ function installShop() {
       mergeOrders([result.order]);
       saveIds([...new Set([...myIds(), result.order.id])]);
       cart = {};
-      comboCart.clear();
+      comboCart.clear();addonCart.clear();
       pendingId = null;
       if (typeof appliedCode === "string") appliedCode = "";
       form.reset();
@@ -1196,6 +1215,7 @@ async function refreshShopConfig() {
     const result = await api("public");
     configError = "";
     config = result.config;
+    window.BOLT_CATEGORY_ORDER=config.categoryOrder||[];
     if(Array.isArray(config.promotions)){const local=load();local.promotions=config.promotions;save(local);window.renderPromos?.();}
     window.BOLT_BUY_COVER = config.coverImage || "";
     window.dispatchEvent(new Event("buy-cover-ready"));

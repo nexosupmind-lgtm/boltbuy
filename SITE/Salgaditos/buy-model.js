@@ -94,6 +94,12 @@ export function normalizeConfig(input = {}, legacy = false) {
   return {
     pickupAddress: clean(input.pickupAddress, 400),
     promotions: Array.isArray(input.promotions) ? input.promotions.slice(0,8).map(p=>({title:clean(p.title,100),subtitle:clean(p.subtitle,200),emoji:clean(p.emoji,10),image:assetImage(p.image,180000)})) : null,
+    categoryOrder: [...new Set((Array.isArray(input.categoryOrder)?input.categoryOrder:[]).map(v=>clean(v,60)).filter(Boolean))].slice(0,100),
+    productAddons: Object.fromEntries(Object.entries(input.productAddons||{}).filter(([id])=>UUID.test(id)).map(([id,options])=>{
+      if(!Array.isArray(options)||options.length>30)throw Error("Limite de 30 adicionais por produto.");
+      const seen=new Set();
+      return [id,options.map(a=>{if(!UUID.test(a.id)||seen.has(a.id)||!clean(a.name,80))throw Error("Adicional inválido.");seen.add(a.id);return {id:a.id,name:clean(a.name,80),price:moneyValue(a.price)};})];
+    })),
     productDescriptions: Object.fromEntries(Object.entries(input.productDescriptions || {}).filter(([id])=>/^[0-9a-f-]{36}$/i.test(id)).map(([id,text])=>[id,clean(text,1200)])),
     adminIcon: assetImage(input.adminIcon, 42000),
     shopIcon: assetImage(input.shopIcon, 42000),
@@ -228,11 +234,16 @@ export function pricedItems(config, products, lines) {
     }
     const p = byId.get(line.productId);
     if (!p) throw Error("Produto indisponível. Atualize o cardápio.");
+    const requested=line.addonIds??[];
+    if(!Array.isArray(requested)||new Set(requested).size!==requested.length||requested.length>30)throw Error("Confira os adicionais.");
+    const available=config.productAddons?.[p.id]||[];
+    const addons=requested.map(id=>{const a=available.find(x=>x.id===id);if(!a)throw Error("Adicional indisponível. Atualize o cardápio.");return a;});
     return {
       productId: p.id,
-      name: clean(p.name),
-      price: moneyValue(p.price),
+      name: clean(p.name)+(addons.length?" · "+addons.map(a=>a.name).join(", "):""),
+      price: (Math.round(moneyValue(p.price)*100)+addons.reduce((s,a)=>s+Math.round(a.price*100),0))/100,
       qty,
+      ...(addons.length?{addons}:{}),
     };
   });
 }
