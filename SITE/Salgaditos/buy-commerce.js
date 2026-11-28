@@ -372,7 +372,7 @@ function renderAdmin() {
       e.submitter.disabled = false;
     }
   };
-  window.BOLT_BUY_APPEARANCE?.mount(document.getElementById("buy-service"), slug, ["coverImage"]);
+  window.BOLT_BUY_APPEARANCE?.mount(document.getElementById("buy-cover-settings"), slug, ["coverImage"]);
   renderQuotes();
 }
 function refreshQuoteCatalog() {
