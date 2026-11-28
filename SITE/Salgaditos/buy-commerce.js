@@ -1,4 +1,4 @@
-import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=category-delete-2";
+import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=addon-qty-3";
 import { quotePDF } from "./buy-quote-pdf.js?v=quote-discount-1";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
@@ -862,19 +862,31 @@ function productDetails(id) {
   dialog.className = "delivery-detail";
   dialog.setAttribute("aria-label", "Detalhes do produto");
   dialog.innerHTML = `<header><span>Seu próximo favorito</span><button type="button" aria-label="Fechar detalhes">×</button></header><div class="delivery-detail-body"><div class="delivery-photo">${photo(item)}</div><section><span class="delivery-category">${esc(item.category || "Cardápio")}</span><h2>${esc(item.name)}</h2>${item.description ? `<p>${esc(item.description)}</p>` : ""}<div class="delivery-price"><small>Valor unitário</small><strong>${amount(item.price)}</strong></div></section></div><footer><div class="delivery-quantity"><button type="button" data-less aria-label="Diminuir quantidade">−</button><output aria-live="polite">1</output><button type="button" data-more aria-label="Aumentar quantidade">+</button></div><button type="button" data-add></button></footer>`;
-  const addons=config?.productAddons?.[item.id]||[];
+  const addons=config?.productAddons?.[item.id]||[], addonCounts=new Map();
   if(addons.length){
     const section=document.createElement("div");section.className="buy-addon-picker";
-    section.innerHTML='<h3>Personalize seu pedido</h3><p>Escolha os adicionais opcionais</p>'+addons.map(a=>'<label><input type="checkbox" value="'+esc(a.id)+'"><span>'+esc(a.name)+'</span><strong>+ '+amount(a.price)+'</strong></label>').join('');
+    section.innerHTML='<h3>Personalize seu pedido</h3><p>Escolha a quantidade de cada adicional por lanche.</p>'+addons.map(a=>'<div class="buy-addon-row" data-addon="'+esc(a.id)+'"><div class="buy-addon-info"><strong>'+esc(a.name)+'</strong><small>'+ (a.price===0?'Grátis':'+ '+amount(a.price)+' / un.')+'</small></div><div class="buy-addon-stepper"><button type="button" data-addon-minus aria-label="Diminuir '+esc(a.name)+'">−</button><output aria-live="polite">0</output><button type="button" data-addon-plus aria-label="Aumentar '+esc(a.name)+'">+</button></div></div>').join('');
     dialog.querySelector(".delivery-detail-body").append(section);
-    section.addEventListener("change",()=>update());
+    section.addEventListener("click",event=>{
+      const button=event.target.closest('button'),row=button?.closest('[data-addon]');
+      if(!row)return;
+      const id=row.dataset.addon,delta=button.hasAttribute('data-addon-plus')?1:-1;
+      addonCounts.set(id,Math.max(0,Math.min(99,(addonCounts.get(id)||0)+delta)));update();
+    });
   }
-  const selected=()=>addons.filter(a=>[...dialog.querySelectorAll('.buy-addon-picker input:checked')].some(i=>i.value===a.id));
+  const selected=()=>addons.filter(a=>(addonCounts.get(a.id)||0)>0).map(a=>({...a,quantity:addonCounts.get(a.id)}));
   let qty = 1;
   function update() {
-    dialog.querySelector("output").textContent = qty;
+    dialog.querySelector("footer output").textContent = qty;
+    dialog.querySelectorAll('[data-addon]').forEach(row=>{
+      const n=addonCounts.get(row.dataset.addon)||0;
+      row.querySelector('output').textContent=n;
+      row.querySelector('[data-addon-minus]').disabled=n===0;
+      row.querySelector('[data-addon-plus]').disabled=n>=99;
+      row.classList.toggle('selected',n>0);
+    });
     dialog.querySelector("[data-less]").disabled = qty <= 1;
-    dialog.querySelector("[data-add]").textContent = "Adicionar · " + amount(qty * (item.price+selected().reduce((s,a)=>s+a.price,0)));
+    dialog.querySelector("[data-add]").textContent = "Adicionar · " + amount(qty * (item.price+selected().reduce((s,a)=>s+a.price*a.quantity,0)));
   }
   dialog.querySelector("header button").onclick = () => dialog.close();
   dialog.querySelector("[data-more]").onclick = () => { qty=Math.min(99,qty+1); update(); };
@@ -883,15 +895,18 @@ function productDetails(id) {
     const choices=selected();
     if(choices.length){
       const key="addon-"+crypto.randomUUID();
-      addonCart.set(key,{...item,id:key,productId:item.id,addonIds:choices.map(a=>a.id),name:item.name+" · "+choices.map(a=>a.name).join(", "),price:(Math.round(item.price*100)+choices.reduce((s,a)=>s+Math.round(a.price*100),0))/100});
+      addonCart.set(key,{...item,id:key,productId:item.id,addonSelections:choices.map(a=>({id:a.id,quantity:a.quantity})),name:item.name+" · "+choices.map(a=>a.quantity+"× "+a.name).join(", "),price:(Math.round(item.price*100)+choices.reduce((s,a)=>s+Math.round(a.price*100)*a.quantity,0))/100});
       cart[key]=qty;renderShop();notify("Produto personalizado adicionado.");
     }else window.addItem(id,qty);
     dialog.close();
   };
-  dialog.onclose = () => dialog.remove();
+  const scrollY=window.scrollY,previousStyle=document.body.style.cssText;
   document.body.append(dialog);
   update();
   dialog.showModal();
+  document.documentElement.classList.add("buy-product-modal-open");
+  Object.assign(document.body.style,{position:"fixed",top:"-"+scrollY+"px",left:"0",right:"0",width:"100%",overflow:"hidden"});
+  dialog.onclose=()=>{dialog.remove();document.documentElement.classList.remove("buy-product-modal-open");document.body.style.cssText=previousStyle;window.scrollTo(0,scrollY);};
 }
 function installShop() {
   const locationButton = document.getElementById("delivery-location");
@@ -1025,7 +1040,7 @@ function installShop() {
         items: t.items.map(({ p, qty }) =>
           p.comboId
             ? { comboId: p.comboId, selections: p.selections, qty }
-            : { productId: p.productId||p.id, qty, ...(p.addonIds?{addonIds:p.addonIds}:{}) },
+            : { productId: p.productId||p.id, qty, ...(p.addonSelections?{addonSelections:p.addonSelections}:{}) },
         ),
       };
       const result = await api("order", body);

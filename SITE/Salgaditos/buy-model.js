@@ -235,14 +235,16 @@ export function pricedItems(config, products, lines) {
     }
     const p = byId.get(line.productId);
     if (!p) throw Error("Produto indisponível. Atualize o cardápio.");
-    const requested=line.addonIds??[];
-    if(!Array.isArray(requested)||new Set(requested).size!==requested.length||requested.length>30)throw Error("Confira os adicionais.");
+    const legacy=line.addonIds??[];
+    if(line.addonSelections===undefined&&!Array.isArray(legacy))throw Error("Confira os adicionais.");
+    const requested=line.addonSelections??legacy.map(id=>({id,quantity:1}));
+    if(!Array.isArray(requested)||requested.length>30||requested.some(s=>!s||typeof s.id!=="string")||new Set(requested.map(s=>s.id)).size!==requested.length)throw Error("Confira os adicionais.");
     const available=config.productAddons?.[p.id]||[];
-    const addons=requested.map(id=>{const a=available.find(x=>x.id===id);if(!a)throw Error("Adicional indisponível. Atualize o cardápio.");return a;});
+    const addons=requested.map(s=>{const a=available.find(x=>x.id===s.id);if(!a)throw Error("Adicional indisponível. Atualize o cardápio.");return {...a,quantity:integer(s.quantity,1,99)};});
     return {
       productId: p.id,
-      name: clean(p.name)+(addons.length?" · "+addons.map(a=>a.name).join(", "):""),
-      price: (Math.round(moneyValue(p.price)*100)+addons.reduce((s,a)=>s+Math.round(a.price*100),0))/100,
+      name: clean(p.name)+(addons.length?" · "+addons.map(a=>a.quantity+"× "+a.name).join(", "):""),
+      price: (Math.round(moneyValue(p.price)*100)+addons.reduce((s,a)=>s+Math.round(a.price*100)*a.quantity,0))/100,
       qty,
       ...(addons.length?{addons}:{}),
     };
