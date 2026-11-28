@@ -96,6 +96,7 @@ export function normalizeConfig(input = {}, legacy = false) {
     promotions: Array.isArray(input.promotions) ? input.promotions.slice(0,8).map(p=>({title:clean(p.title,100),subtitle:clean(p.subtitle,200),emoji:clean(p.emoji,10),image:assetImage(p.image,180000)})) : null,
     categoriesConfigured: input.categoriesConfigured===true || (Array.isArray(input.categoryOrder)&&input.categoryOrder.length>0),
     categoryOrder: [...new Set((Array.isArray(input.categoryOrder)?input.categoryOrder:[]).map(v=>clean(v,60)).filter(Boolean))].slice(0,100),
+    addonLibrary: (Array.isArray(input.addonLibrary)?input.addonLibrary:[]).slice(0,500).map(a=>{if(!UUID.test(a.id)||!clean(a.name,80))throw Error("Adicional inválido.");return {id:a.id,name:clean(a.name,80),price:moneyValue(a.price)};}),
     productAddons: Object.fromEntries(Object.entries(input.productAddons||{}).filter(([id])=>UUID.test(id)).map(([id,options])=>{
       if(!Array.isArray(options)||options.length>30)throw Error("Limite de 30 adicionais por produto.");
       const seen=new Set();
