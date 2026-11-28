@@ -41,6 +41,7 @@ async function checkAccess(s){if(!s?.user)return false;
 function unlock(){document.getElementById('bolt-password').value='';authorized=true;document.documentElement.classList.remove('bolt-locked');document.getElementById('bolt-auth-root').hidden=true;
  if(!document.getElementById('bolt-logout')){const b=document.createElement('button');b.id='bolt-logout';b.className='bolt-logout';b.textContent='⏻ Sair';b.addEventListener('click',async()=>{authorized=false;await client.auth.signOut();session=null;document.documentElement.classList.add('bolt-locked');document.getElementById('bolt-auth-root').hidden=false;document.getElementById('bolt-login-form').classList.remove('show');{document.getElementById('bolt-login-form').hidden=false;document.getElementById('bolt-enter').hidden=true;document.getElementById('bolt-switch-account').hidden=true}document.getElementById('bolt-enter').textContent='ENTRAR ⚡';b.remove()});document.body.appendChild(b)}
  if(isMaster&&typeof window.boltCloudInit==='function')window.boltCloudInit();
+ window.dispatchEvent(new Event('bolt-auth-ready'));
 }
 window.BOLT_GET_SESSION=()=>session;
 document.addEventListener('DOMContentLoaded',setup);
