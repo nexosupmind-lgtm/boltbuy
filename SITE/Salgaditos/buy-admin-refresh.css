@@ -1,0 +1,49 @@
+
+/* Admin-only cool neutral palette; storefront keeps merchant styling. */
+html body.buy-admin-app{color-scheme:dark;background:#0a1220!important;color:#eaf1fc!important;--white:#eaf1fc;--muted:#a3b2c8;--card:#142033}
+html body.buy-admin-app :is(.main,.sidebar,.topbar,.panel,.metric,.media-upload,.buy-admin-page,.tablewrap,dialog),html body.buy-admin-app .main :is(.panel,.metric,.topbar,.order-card,.product),html body.buy-admin-app .main .metric:first-child{background:#121e30!important;background-image:none!important;color:#eaf1fc!important;border-color:#293a53!important;box-shadow:0 8px 24px #02081725!important}
+html body.buy-admin-app .main{background:#0a1220!important;box-shadow:none!important}
+html body.buy-admin-app .sidebar{background:#0e1929!important}
+html body.buy-admin-app :is(h1,h2,h3,h4,strong,label,td,th),html body.buy-admin-app .main :is(.panel,.metric,.topbar,.order-card,.product) :is(h1,h2,h3,h4,label,strong,td){color:#eaf1fc!important}
+html body.buy-admin-app :is(p,small,.hint,.muted,.field small,.metric em),html body.buy-admin-app .main :is(.hint,.muted,.metric small,.metric em,.topbar p,.product p,.empty),html body.buy-admin-app .main .metric:first-child :is(small,em){color:#a3b2c8!important}
+html body.buy-admin-app :is(input,textarea,select,option),html body.buy-admin-app .main :is(input,textarea,select,option){background:#0d1727!important;color:#eef4ff!important;border-color:#354760!important}
+html body.buy-admin-app :is(input,textarea)::placeholder{color:#8e9db4!important}
+html body.buy-admin-app :is(.btn,button),html body.buy-admin-app .main .btn:not(.red),html body.buy-admin-app .main .quick :is(.btn,.btn.red,.buy-combo-shortcut){background:#1a2a40!important;color:#e6efff!important;border-color:#344a67!important;box-shadow:none!important}
+html body.buy-admin-app :is(.btn.red,.btn.green,button.active,.nav.active,.nav button.active){background:#377df5!important;color:white!important;border-color:#377df5!important}
+html body.buy-admin-app .main .metric strong,html body.buy-admin-app .main .metric:first-child strong,html body.buy-admin-app .totals strong,html body.buy-admin-app #posProducts p{color:#84b4ff!important}
+html body.buy-admin-app .main .metric::before{background:#5795ff!important}
+html body.buy-admin-app .main :is(th,.tablewrap){background:#142033!important;color:#a3b2c8!important;border-color:#293a53!important}
+html body.buy-admin-app .main td{border-color:#293a53!important}
+html body.buy-admin-app .tablewrap tbody tr:hover{background:#1c3150!important}
+html body.buy-admin-app .tablewrap tbody tr:hover :is(td,small,strong){color:#edf5ff!important}
+html body.buy-admin-app #posProducts .foodpic{background:#0d1727!important}
+html body.buy-admin-app #bars .channel-ring>div{background:#121e30!important}
+html body.buy-admin-app #bars .channel-ring strong{color:#a9cbff!important}
+html body.buy-admin-app #bars .channel-ring :is(small,span),html body.buy-admin-app #bars .channel-item small{color:#a3b2c8!important}
+html body.buy-admin-app #bars .channel-item,html body.buy-admin-app #bars .channel-item b{color:#eaf1fc!important}
+html body.buy-admin-app :is(input,textarea,select,button):focus-visible{outline:2px solid #76aaff!important;outline-offset:2px}
+html body.buy-admin-app .main .buy-notification-switch{background:transparent!important;border:0!important;padding:0!important}
+html body.buy-admin-app .buy-admin-dock{background:#101e32f5!important;border:1px solid #344962!important;box-shadow:0 8px 32px #0006!important;backdrop-filter:blur(20px)!important}
+html body.buy-admin-app .buy-admin-dock button{background:transparent!important;color:#a7b7d0!important;border:0!important}
+html body.buy-admin-app .buy-admin-dock button.active{background:#367df5!important;color:#fff!important;box-shadow:0 3px 14px #357df540!important}
+html body.buy-admin-app dialog.buy-admin-menu{width:min(560px,calc(100% - 24px));max-height:87dvh;background:#0e192a!important;border:1px solid #344962!important;border-radius:28px;padding:22px!important;box-shadow:0 24px 80px #0008!important;overflow:auto;color:#eaf1fc!important}
+html body.buy-admin-app .buy-admin-menu::backdrop{background:#020817b0;backdrop-filter:blur(7px)}
+html body.buy-admin-app .buy-admin-menu header{align-items:flex-start;gap:12px;padding:4px 0 18px;border-bottom:1px solid #26364d;margin-bottom:20px}
+html body.buy-admin-app .buy-admin-menu header small{color:#78adff!important;font-size:10px;letter-spacing:.13em}
+html body.buy-admin-app .buy-admin-menu h2{font-size:23px;letter-spacing:-.7px;margin:8px 0 5px;line-height:1.2}
+html body.buy-admin-app .buy-admin-menu header p{margin:0;font-size:12px}
+html body.buy-admin-app .buy-admin-menu header button{flex:0 0 38px;width:38px;height:38px;border-radius:12px!important;background:#1c2c43!important;color:#dbeaff!important;font-size:22px}
+html body.buy-admin-app .buy-admin-menu-items{display:flex;flex-direction:column;gap:18px}
+html body.buy-admin-app .buy-menu-group h3{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#9fb0cb!important;margin:0 0 10px}
+html body.buy-admin-app .buy-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+html body.buy-admin-app .buy-menu-grid .buy-menu-tile{display:flex;flex-direction:column;align-items:flex-start;gap:11px;min-width:0;min-height:107px;padding:12px!important;border-radius:16px!important;background:#17263b!important;color:#eaf1fc!important;border:1px solid #2b3e59!important;text-align:left;transition:transform .16s,background .16s,border-color .16s}
+html body.buy-admin-app .buy-menu-grid .buy-menu-tile.current{background:#193968!important;border-color:#568ff5!important}
+html body.buy-admin-app .buy-menu-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:#29466d;color:#a5caff}
+html body.buy-admin-app .buy-menu-icon svg{width:20px;height:20px}
+html body.buy-admin-app .buy-menu-tile.current .buy-menu-icon{background:#387df5;color:white}
+html body.buy-admin-app .buy-menu-copy{display:grid;gap:4px;min-width:0}
+html body.buy-admin-app .buy-menu-copy strong{font-size:13px;line-height:1.25;overflow-wrap:anywhere}
+html body.buy-admin-app .buy-menu-copy small{font-size:10px;line-height:1.35;letter-spacing:0;color:#aabbd3!important;font-weight:400}
+@media(hover:hover){html body.buy-admin-app .buy-menu-grid .buy-menu-tile:hover{transform:translateY(-2px);background:#213c60!important;border-color:#578de2!important}}
+@media(max-width:760px){html body.buy-admin-app dialog.buy-admin-menu{margin:auto auto 0;width:100%;max-height:88dvh;border-radius:28px 28px 0 0;padding:20px 17px max(24px,env(safe-area-inset-bottom))!important}html body.buy-admin-app .main .quick{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}html body.buy-admin-app .main .metric:first-child{background:#17365e!important;border-color:#345d90!important}}
+@media(prefers-reduced-motion:reduce){html body.buy-admin-app .buy-menu-tile{transition:none!important}}
