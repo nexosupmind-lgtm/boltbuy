@@ -5,7 +5,7 @@
   window.BOLT_VISUAL_RUNTIME = true;
   const q = new URLSearchParams(location.search);
   const path = location.pathname.replace(/\.html$/, '');
-  const surface = path.includes('/Salgaditos/') || path.includes('/delivery/') || ['/shop', '/admin'].includes(path)
+  const surface = path.includes('/Salgaditos/') || path.includes('/delivery/') || !!window.BOLT_ROUTE_TENANT || ['/shop', '/admin'].includes(path)
     ? (/cliente|shop/.test(path) ? 'shop' : 'delivery-admin')
     : path.startsWith('/Boltbarber') ? ({ admin: 'barber-admin', login: 'barber-login' }[q.get('view')] || 'barber-site')
     : path.includes('/Boltclass/') ? 'class-admin'
@@ -19,7 +19,7 @@
     : surface.startsWith('barber-') ? 'barber'
     : ['class-admin', 'family', 'teacher'].includes(surface) ? 'class'
     : ['church-admin', 'member'].includes(surface) ? 'church' : q.get('product');
-  const slug = q.get('tenant') || q.get('slug') || (product === 'buy' ? 'salgaditos' : '');
+  const slug = window.BOLT_ROUTE_TENANT || q.get('tenant') || q.get('slug') || (product === 'buy' ? 'salgaditos' : '');
   if (!slug) return;
   const embedded = window.parent !== window && q.get('studioVisual') === '1';
   let edit = false, rules = [], preview = false;

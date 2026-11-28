@@ -1,1 +1,1 @@
-{"version":1,"include":["/api/*"],"exclude":[]}
+{"version":1,"include":["/api/*","/*"],"exclude":["/assets/*","/Salgaditos/*","/Boltclass/*","/Boltchurch/*","/Boltbarber/*","/delivery/*"]}

@@ -75,8 +75,8 @@
     function loadPage(route) {
       clearSelection();
       surface=route[1];
-      const url=new URL(route[2],location.origin);
-      url.searchParams.set(['buy','barber'].includes(context.product)?'tenant':'slug',context.slug);
+      const url=new URL(context.product==='buy'?'/'+encodeURIComponent(context.slug)+'/'+(route[1]==='delivery-admin'?'admin':'cliente'):route[2],location.origin);
+      if(context.product!=='buy')url.searchParams.set(context.product==='barber'?'tenant':'slug',context.slug);
       url.searchParams.set('product',context.product);
       if (route[1] === 'barber-admin') url.searchParams.set('view','admin');
       if (route[1] === 'barber-login') url.searchParams.set('view','login');

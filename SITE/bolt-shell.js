@@ -1,9 +1,9 @@
 /* Shared install experience and support. No private state is cached by the service worker. */
 (()=>{'use strict';
 const q=new URLSearchParams(location.search),cleanPath=location.pathname.replace(/\/+$/,'').replace(/\.html$/,'')||'/',path=({'/admin':'/Salgaditos/admin','/shop':'/Salgaditos/cliente'}[cleanPath]||cleanPath),master=document.documentElement.dataset.boltApp==='master'||['/','/index'].includes(path),family=path==='/family',member=path==='/member';
-const product=master?'master':family||path.startsWith('/Boltclass')?'class':member||path.startsWith('/Boltchurch')?'church':(path.includes('/Salgaditos/')||path.includes('/delivery/'))?'buy':q.get('product');
+const product=master?'master':family||path.startsWith('/Boltclass')?'class':member||path.startsWith('/Boltchurch')?'church':(path.includes('/Salgaditos/')||path.includes('/delivery/')||!!window.BOLT_ROUTE_TENANT)?'buy':q.get('product');
 if(!['master','buy','class','church'].includes(product))return;
-const surface=master?'master':family?'family':member?'member':product==='buy'&&path.endsWith('/cliente')?'consumer':'admin',slug=product==='buy'?(q.get('tenant')||'salgaditos'):q.get('slug');
+const surface=master?'master':family?'family':member?'member':product==='buy'&&path.endsWith('/cliente')?'consumer':'admin',slug=product==='buy'?(window.BOLT_ROUTE_TENANT||q.get('tenant')||'salgaditos'):q.get('slug');
 const shopDock=surface==='consumer'?document.querySelector('.delivery-shop .bottomnav'):null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const face=()=>'<svg class="bolt-shared-face" viewBox="0 0 1584 1068" aria-hidden="true"><defs><clipPath id="bolt-shared-cut"><path clip-rule="evenodd" d="M0 0H1584V1068H0Z M450 350H680V725H450Z M905 350H1135V725H905Z"/></clipPath></defs><image href="/Boltclass/assets/bolt-avatar.png" width="1584" height="1068" clip-path="url(#bolt-shared-cut)"/><g class="bolt-shared-eyes" fill="white"><rect x="472" y="376" width="185" height="327" rx="92"/><rect x="926" y="376" width="186" height="327" rx="93"/></g></svg>';
