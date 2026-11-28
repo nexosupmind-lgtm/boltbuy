@@ -1,4 +1,4 @@
-import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=addons-1";
+import { normalizeConfig, availability, subtotalOf, comboPrice, deliveryFeeFor } from "./buy-model.js?v=category-delete-2";
 import { quotePDF } from "./buy-quote-pdf.js?v=quote-discount-1";
 const admin = document.body.classList.contains("buy-admin-app") || /\/admin(?:\.html)?\/?$/.test(location.pathname),
   slug = new URLSearchParams(location.search).get("tenant") || "salgaditos";
@@ -1215,7 +1215,7 @@ async function refreshShopConfig() {
     const result = await api("public");
     configError = "";
     config = result.config;
-    window.BOLT_CATEGORY_ORDER=config.categoryOrder||[];
+    window.BOLT_CATEGORY_ORDER=config.categoryOrder||[];window.BOLT_CATEGORIES_CONFIGURED=config.categoriesConfigured===true;
     if(Array.isArray(config.promotions)){const local=load();local.promotions=config.promotions;save(local);window.renderPromos?.();}
     window.BOLT_BUY_COVER = config.coverImage || "";
     window.dispatchEvent(new Event("buy-cover-ready"));
